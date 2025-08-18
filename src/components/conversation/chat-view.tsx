@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
+import { Card, CardContent } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Send, Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -23,13 +24,19 @@ export type UserData = {
   isSmoker: boolean;
   desiredSum: number;
   insuranceDuration: number;
-  occupation: string;
-  healthStatus: boolean;
   phone?: string;
 }
 
+export type FinancialData = {
+    protectionPeriod: number;
+    monthlyExpenses: number;
+    totalDebts: number;
+    existingInsurance: number;
+    savings: number;
+}
+
 export type UserAction = {
-  type: 'input' | 'buttons' | 'date';
+  type: 'input' | 'buttons' | 'date' | 'cards';
   options?: any;
 }
 
@@ -70,12 +77,15 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
   }
 
   const renderUserActions = () => {
-    if (!userAction || !isWaitingForResponse) return null;
+    // Only show actions if Marius is waiting for a response, UNLESS it's the special cards case
+    if (!isWaitingForResponse && userAction?.type !== 'cards') return null;
+    if (!userAction) return null;
+
 
     switch (userAction.type) {
       case "buttons":
         return (
-          <div className="flex flex-col sm:flex-row gap-2 mt-2 justify-center">
+          <div className="flex flex-col sm:flex-row gap-2 mt-2 justify-center animate-in fade-in-50">
             {userAction.options?.map((option: string, index: number) => (
               <Button
                 key={index}
@@ -90,7 +100,7 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
         );
       case "input":
         return (
-            <div className="flex w-full max-w-sm items-center space-x-2 mt-2">
+            <div className="flex w-full max-w-sm items-center space-x-2 mt-2 animate-in fade-in-50">
               <Input
                 type={userAction.options?.type || 'text'}
                 placeholder={userAction.options?.placeholder || ''}
@@ -98,8 +108,9 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
                 className="bg-white"
+                autoFocus
               />
-              <Button type="submit" onClick={handleSend}>
+              <Button type="submit" onClick={handleSend} disabled={!inputValue.trim()}>
                 <Send className="h-4 w-4" />
                 <span className="sr-only">Trimite</span>
               </Button>
@@ -112,7 +123,7 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
               <Button
                 variant={"outline"}
                 className={cn(
-                  "w-[280px] justify-start text-left font-normal bg-white",
+                  "w-[280px] justify-start text-left font-normal bg-white animate-in fade-in-50",
                   !date && "text-muted-foreground"
                 )}
               >
@@ -133,14 +144,30 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
             </PopoverContent>
           </Popover>
         )
+      case "cards":
+        return (
+            <div className="flex flex-col gap-3 mt-2 justify-center w-full max-w-md">
+                {userAction.options?.map((cardText: string, index: number) => (
+                    <Card 
+                        key={index}
+                        className="bg-white/60 backdrop-blur-sm border-white/30 text-center animate-in fade-in slide-in-from-bottom-5 duration-500"
+                        style={{ animationDelay: `${index * 300}ms` }}
+                    >
+                        <CardContent className="p-3">
+                            <p className="text-foreground/80 font-medium">{cardText}</p>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+        )
       default:
         return null;
     }
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto flex flex-col h-[80vh] data-[state=open]:animate-in data-[state=open]:fade-in-50" data-state="open">
-      <div id="dialog-flow" className="flex-grow space-y-6 overflow-y-auto p-4 rounded-lg">
+    <div className="w-full max-w-4xl mx-auto flex flex-col h-[85vh] data-[state=open]:animate-in data-[state=open]:fade-in-50" data-state="open">
+      <div id="dialog-flow" className="flex-grow space-y-6 overflow-y-auto p-4 rounded-lg scroll-smooth">
         {conversation.map((message) => (
           <div
             key={message.id}
@@ -150,7 +177,7 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
             )}
           >
             {message.author === "Marius" && (
-              <Avatar className="h-8 w-8 hidden sm:flex">
+              <Avatar className="h-8 w-8 hidden sm:flex self-start">
                 <AvatarFallback className="bg-primary text-primary-foreground">
                   M
                 </AvatarFallback>
@@ -164,13 +191,13 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
                   : "bg-primary text-primary-foreground rounded-br-none"
               )}
             >
-              <p>{message.content}</p>
+              <p className="whitespace-pre-wrap">{message.content}</p>
             </div>
           </div>
         ))}
         {isWaitingForResponse && conversation.length > 0 && userAction === null && (
           <div className="flex items-end gap-3 w-full justify-start">
-             <Avatar className="h-8 w-8 hidden sm:flex">
+             <Avatar className="h-8 w-8 hidden sm:flex self-start">
                 <AvatarFallback className="bg-primary text-primary-foreground">
                   M
                 </AvatarFallback>
@@ -186,7 +213,7 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
         )}
         <div ref={endOfMessagesRef} />
       </div>
-      <div id="user-actions" className="py-4 flex justify-center items-center min-h-[60px]">
+      <div id="user-actions" className="py-4 flex justify-center items-center min-h-[70px]">
         {renderUserActions()}
       </div>
     </div>
@@ -194,3 +221,5 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
 };
 
 export default ChatView;
+
+    

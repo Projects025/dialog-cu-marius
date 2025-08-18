@@ -1,7 +1,7 @@
 import { differenceInYears } from 'date-fns';
-import type { UserData } from '@/components/conversation/chat-view';
+import type { UserData, FinancialData } from '@/components/conversation/chat-view';
 
-// Exemplu de matrice de risc (valori ilustrative per 1000 EUR asigurați)
+// Matrice de risc (valori ilustrative per 1000 EUR asigurați)
 const baseRiskRate = {
     male: [
         { age: 25, rate: 0.7 },
@@ -30,26 +30,24 @@ const baseRiskRate = {
 const getBaseRate = (age: number, gender: 'Masculin' | 'Feminin'): number => {
     const genderKey = gender === 'Masculin' ? 'male' : 'female';
     const rates = baseRiskRate[genderKey];
-
-    // Găsește cea mai apropiată rată pentru vârsta dată
-    let closestRate = rates[rates.length - 1].rate;
-    for (let i = rates.length - 2; i >= 0; i--) {
-        if (age <= rates[i].age) {
-            closestRate = rates[i].rate;
-        } else {
-            // Interpolare liniară simplă pentru vârste intermediare
-            const lower = rates[i];
-            const upper = rates[i+1];
-            const ratio = (age - lower.age) / (upper.age - lower.age);
-            closestRate = lower.rate + ratio * (upper.rate - lower.rate);
-            break;
-        }
+    
+    // Găsește prima rată unde vârsta este mai mare sau egală
+    const rateEntry = rates.find(r => age <= r.age);
+    
+    if (rateEntry) {
+        return rateEntry.rate;
     }
-    return closestRate;
+    
+    // Dacă vârsta e mai mare decât maximul din tabel, folosim ultima valoare
+    // sau extrapolăm, dar pentru simplitate folosim ultima.
+    return rates[rates.length - 1].rate;
 };
 
-
 export const calculatePremium = (data: UserData) => {
+    // Asigură-te că există o dată de naștere validă
+    if (!data.birthDate) {
+        return { annualPremium: 0, monthlyPremium: 0 };
+    }
     const age = differenceInYears(new Date(), data.birthDate);
 
     // 1. Rata de Risc de Bază
@@ -78,3 +76,23 @@ export const calculatePremium = (data: UserData) => {
         monthlyPremium
     };
 };
+
+
+export const calculateDeficit = (data: FinancialData): number => {
+    const { 
+        protectionPeriod = 0,
+        monthlyExpenses = 0,
+        totalDebts = 0,
+        existingInsurance = 0,
+        savings = 0
+    } = data;
+
+    const totalNeeds = (monthlyExpenses * protectionPeriod * 12) + totalDebts;
+    const existingResources = existingInsurance + savings;
+    
+    const deficit = totalNeeds - existingResources;
+
+    // Deficitul nu poate fi negativ. Dacă resursele depășesc nevoile, plasa de siguranță este completă.
+    return Math.max(0, deficit);
+};
+    
