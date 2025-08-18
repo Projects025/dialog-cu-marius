@@ -5,7 +5,6 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
 import { Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +24,7 @@ export type Message = {
   author: "Marius" | "user";
   type: "text" | "response";
   content: any;
+  style?: 'normal' | 'dramatic';
 };
 
 export type UserData = {
@@ -44,7 +44,7 @@ export type FinancialData = {
 }
 
 export type UserAction = {
-  type: 'input' | 'buttons' | 'date' | 'cards';
+  type: 'input' | 'buttons' | 'date';
   options?: any;
 }
 
@@ -147,7 +147,7 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
   };
 
   const renderUserActions = () => {
-    if (!userAction || (!isWaitingForResponse && userAction.type !== 'cards')) return null;
+    if (!userAction || !isWaitingForResponse) return null;
 
     switch (userAction.type) {
       case "buttons":
@@ -187,22 +187,6 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
         return (
           <DateOfBirthPicker onDateSelect={onResponse} />
         )
-      case "cards":
-        return (
-            <div className="flex flex-col gap-3 w-full">
-                {userAction.options?.map((cardText: string, index: number) => (
-                    <Card 
-                        key={index}
-                        className="bg-white/60 backdrop-blur-sm border-white/30 text-center animate-in fade-in slide-in-from-bottom-5 duration-500"
-                        style={{ animationDelay: `${index * 300}ms` }}
-                    >
-                        <CardContent className="p-3">
-                            <p className="text-foreground/80 font-medium">{cardText}</p>
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
-        )
       default:
         return null;
     }
@@ -234,7 +218,8 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
                     "max-w-md md:max-w-lg rounded-2xl px-4 py-3 shadow-md",
                     message.author === "Marius"
                     ? "bg-white/80 backdrop-blur-sm text-gray-800 rounded-bl-none"
-                    : "bg-primary text-primary-foreground rounded-br-none"
+                    : "bg-primary text-primary-foreground rounded-br-none",
+                    message.style === 'dramatic' && "bg-gray-800/80 text-white italic border border-destructive/50"
                 )}
                 >
                 <p className="whitespace-pre-wrap">{message.content}</p>
