@@ -4,12 +4,10 @@ import { useState, useEffect, useRef } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Calendar } from "@/components/ui/calendar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Send, Calendar as CalendarIcon } from "lucide-react";
+import { Send } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
 
 export type Message = {
   id: number;
@@ -23,7 +21,6 @@ export type UserData = {
   gender: 'Masculin' | 'Feminin';
   isSmoker: boolean;
   desiredSum: number;
-  insuranceDuration: number;
   phone?: string;
 }
 
@@ -47,9 +44,69 @@ interface ChatViewProps {
   isWaitingForResponse: boolean;
 }
 
+const DateOfBirthPicker = ({ onDateSelect }: { onDateSelect: (date: Date) => void }) => {
+    const [day, setDay] = useState<string>("");
+    const [month, setMonth] = useState<string>("");
+    const [year, setYear] = useState<string>("");
+
+    const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
+    const months = [
+        { value: "0", label: "Ianuarie" }, { value: "1", label: "Februarie" },
+        { value: "2", label: "Martie" }, { value: "3", label: "Aprilie" },
+        { value: "4", label: "Mai" }, { value: "5", label: "Iunie" },
+        { value: "6", label: "Iulie" }, { value: "7", label: "August" },
+        { value: "8", label: "Septembrie" }, { value: "9", label: "Octombrie" },
+        { value: "10", label: "Noiembrie" }, { value: "11", label: "Decembrie" },
+    ];
+    const currentYear = new Date().getFullYear();
+    const years = Array.from({ length: 53 }, (_, i) => (currentYear - 18 - i).toString());
+
+    useEffect(() => {
+        if (day && month && year) {
+            const selectedDate = new Date(parseInt(year), parseInt(month), parseInt(day));
+            onDateSelect(selectedDate);
+        }
+    }, [day, month, year, onDateSelect]);
+
+
+    return (
+        <div className="flex flex-col gap-4 p-4 rounded-lg bg-white/50 backdrop-blur-sm border border-white/30 animate-in fade-in-50">
+             <div className="grid grid-cols-3 gap-3">
+                <div className="flex flex-col gap-1.5">
+                    <label htmlFor="day" className="text-sm font-medium text-foreground/80">Ziua</label>
+                    <Select onValueChange={setDay} value={day}>
+                        <SelectTrigger id="day"><SelectValue placeholder="Zi" /></SelectTrigger>
+                        <SelectContent>
+                            {days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                </div>
+                 <div className="flex flex-col gap-1.5">
+                    <label htmlFor="month" className="text-sm font-medium text-foreground/80">Luna</label>
+                    <Select onValueChange={setMonth} value={month}>
+                        <SelectTrigger id="month"><SelectValue placeholder="Lună" /></SelectTrigger>
+                        <SelectContent>
+                            {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                </div>
+                 <div className="flex flex-col gap-1.5">
+                    <label htmlFor="year" className="text-sm font-medium text-foreground/80">Anul</label>
+                    <Select onValueChange={setYear} value={year}>
+                        <SelectTrigger id="year"><SelectValue placeholder="An" /></SelectTrigger>
+                        <SelectContent>
+                            {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
 const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }: ChatViewProps) => {
   const [inputValue, setInputValue] = useState("");
-  const [date, setDate] = useState<Date | undefined>();
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -69,29 +126,25 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
     }
   };
 
-  const handleDateSelect = (selectedDate: Date | undefined) => {
+  const handleDateSelect = (selectedDate: Date) => {
     if (selectedDate) {
-      setDate(selectedDate);
       onResponse(selectedDate);
     }
   }
 
   const renderUserActions = () => {
-    // Only show actions if Marius is waiting for a response, UNLESS it's the special cards case
-    if (!isWaitingForResponse && userAction?.type !== 'cards') return null;
-    if (!userAction) return null;
-
+    if (!userAction || (!isWaitingForResponse && userAction.type !== 'cards')) return null;
 
     switch (userAction.type) {
       case "buttons":
         return (
-          <div className="flex flex-col sm:flex-row gap-2 mt-2 justify-center animate-in fade-in-50">
+          <div className="flex flex-col gap-3 w-full animate-in fade-in-50">
             {userAction.options?.map((option: string, index: number) => (
               <Button
                 key={index}
                 onClick={() => onResponse(option)}
                 variant="outline"
-                className="bg-white hover:bg-gray-100 text-primary-foreground border-gray-200 shadow-sm"
+                className="bg-white hover:bg-gray-100 text-primary-foreground border-gray-200 shadow-sm justify-start p-4 h-auto"
               >
                 {option}
               </Button>
@@ -100,7 +153,7 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
         );
       case "input":
         return (
-            <div className="flex w-full max-w-sm items-center space-x-2 mt-2 animate-in fade-in-50">
+            <div className="flex w-full items-center space-x-2 animate-in fade-in-50">
               <Input
                 type={userAction.options?.type || 'text'}
                 placeholder={userAction.options?.placeholder || ''}
@@ -118,35 +171,11 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
         );
       case "date":
         return (
-           <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
-                className={cn(
-                  "w-[280px] justify-start text-left font-normal bg-white animate-in fade-in-50",
-                  !date && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {date ? format(date, "PPP") : <span>Alege o dată</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={handleDateSelect}
-                initialFocus
-                captionLayout="dropdown-buttons"
-                fromYear={1930}
-                toYear={new Date().getFullYear() - 18}
-              />
-            </PopoverContent>
-          </Popover>
+          <DateOfBirthPicker onDateSelect={handleDateSelect} />
         )
       case "cards":
         return (
-            <div className="flex flex-col gap-3 mt-2 justify-center w-full max-w-md">
+            <div className="flex flex-col gap-3 w-full">
                 {userAction.options?.map((cardText: string, index: number) => (
                     <Card 
                         key={index}
@@ -166,8 +195,9 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto flex flex-col h-[85vh] data-[state=open]:animate-in data-[state=open]:fade-in-50" data-state="open">
-      <div id="dialog-flow" className="flex-grow space-y-6 overflow-y-auto p-4 rounded-lg scroll-smooth">
+    <div className="w-full max-w-4xl mx-auto flex flex-col md:flex-row h-[85vh] gap-6 data-[state=open]:animate-in data-[state=open]:fade-in-50" data-state="open">
+      {/* Zona de Dialog */}
+      <div id="dialog-flow" className="flex-grow space-y-6 overflow-y-auto p-4 rounded-lg scroll-smooth w-full md:w-auto">
         {conversation.map((message) => (
           <div
             key={message.id}
@@ -213,7 +243,9 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
         )}
         <div ref={endOfMessagesRef} />
       </div>
-      <div id="user-actions" className="py-4 flex justify-center items-center min-h-[70px]">
+      
+      {/* Zona de Acțiune */}
+      <div id="user-actions" className="flex-shrink-0 w-full md:w-80 py-4 flex flex-col justify-center items-center min-h-[150px]">
         {renderUserActions()}
       </div>
     </div>
@@ -221,5 +253,3 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
 };
 
 export default ChatView;
-
-    
