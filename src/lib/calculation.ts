@@ -28,7 +28,7 @@ const getBaseRate = (age: number, gender: 'Masculin' | 'Feminin'): number => {
 };
 
 export const calculatePremium = (data: UserData) => {
-    if (!data.birthDate || !data.gender) {
+    if (!data.birthDate || !data.gender || !data.desiredSum) {
         return { annualPremium: 0, monthlyPremium: 0 };
     }
     const age = differenceInYears(new Date(), data.birthDate);
@@ -42,7 +42,7 @@ export const calculatePremium = (data: UserData) => {
     // 3. Suma Asigurată / 1000
     const sumFactor = data.desiredSum / 1000;
 
-    // 4. Formula Finală (fără multiplicator de durată)
+    // 4. Formula Finală
     const annualPremium = baseRate * smokerMultiplier * sumFactor;
     const monthlyPremium = annualPremium / 12;
 

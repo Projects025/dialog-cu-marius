@@ -33,11 +33,11 @@ export default function Home() {
       setCurrentUserAction({ type, options });
     }
   };
-
+  
   const conversationFlow = useCallback(
     (step: number, response?: any) => {
       setIsWaitingForResponse(true);
-  
+      
       const performFinalCalculation = (deficit: number, protectionPeriod: number) => {
         const finalUserData = { ...userData, desiredSum: deficit } as UserData;
         const result = calculatePremium(finalUserData);
@@ -48,10 +48,8 @@ export default function Home() {
             type: "text",
             content: `Pentru a oferi familiei tale protecția de ${deficit.toLocaleString('ro-RO')} €, pe o perioadă de ${protectionPeriod} ani, costul estimat al asigurării tale de viață ar fi de aproximativ ${result.monthlyPremium.toFixed(2)} € pe lună.`,
           });
-          // This call was moved to a separate step (12) to ensure it happens after the message.
+          conversationFlow(13); 
         }, 800);
-        
-        setTimeout(() => conversationFlow(12), 1600);
       };
 
       setTimeout(() => {
@@ -121,7 +119,6 @@ export default function Home() {
                     content: "Reține, aceasta este o estimare generică. O analiză a nevoilor ar oferi o imagine mult mai clară.",
                 });
             }, 800);
-            // Jump to consultant question (step 13) after quick estimate
              setTimeout(() => conversationFlow(13), 2000); 
           }
         } else if (step === 6) { // Ask for monthly expenses
@@ -204,12 +201,10 @@ export default function Home() {
                     "...să renunțe la planurile pentru educația copiilor.",
                     "...să ceară ajutor familiei sau prietenilor."
                 ]);
-                setIsWaitingForResponse(false); // Allows cards to show without needing input
+                setIsWaitingForResponse(false); 
 
-                // After showing cards, move to the solution
                 setTimeout(() => {
                     updateUserActions(null);
-                    // The solution and calculation are now in the next step
                     conversationFlow(12);
                 }, 7000); 
 
@@ -272,13 +267,12 @@ export default function Home() {
         type: "text",
         content: "Bun venit! Sunt Marius, asistentul tău virtual. Te voi ajuta să înțelegi nevoia reală de protecție financiară a familiei tale.",
     });
-    conversationFlow(1);
+    setTimeout(() => conversationFlow(1), 500);
   }, [addMessage, conversationFlow]);
 
 
   const handleRiskSelect = (riskTitle: string) => {
      if (riskTitle !== 'Deces') {
-        // For now, only the "Deces" flow is fully implemented
         alert("Momentan, doar fluxul pentru riscul de 'Deces' este complet funcțional. Te rog să selectezi acest card pentru a continua.");
         return;
     }
@@ -290,7 +284,6 @@ export default function Home() {
   };
 
   const handleResponse = (response: any) => {
-    // A special case for the emotional cards, where there's no response needed
     if (currentUserAction?.type === 'cards') return;
 
     if (!isWaitingForResponse) return;
@@ -298,25 +291,17 @@ export default function Home() {
     updateUserActions(null);
     
     let nextStep = currentStep + 1;
-    // Special navigation logic
-    if (currentStep === 4) { // After transition question
-      if (response === "Nu, vreau doar o estimare rapidă") {
-         // We do the quick calculation in step 5, then we need to jump to step 13
-         setCurrentStep(5);
-         conversationFlow(5, response);
-         // This is a special case, we don't want to proceed to step 6, but to 13
-         // The flow will handle this jump internally
-         return; 
-      }
-    } else if (currentStep === 5 && financialData.protectionPeriod === undefined) {
-      // This means we came from "Nu, vreau doar o estimare rapidă"
-      // The flow at step 5 already jumps to 13.
-      setCurrentStep(13);
-      return;
-    } else if(currentStep === 10) { // After deficit reflection
-      nextStep = 11;
-    } else if (currentStep === 12) { // After final premium, ask for consultant
-        nextStep = 13;
+    if (currentStep === 4 && response === "Nu, vreau doar o estimare rapidă") {
+      setCurrentStep(5);
+      conversationFlow(5, response);
+      return; 
+    }
+    
+    if (currentStep === 5 && !financialData.protectionPeriod) {
+       // This path is triggered after a quick estimate. The flow already jumps to 13.
+       // We just need to set the state to wait for that step's response.
+       setCurrentStep(13);
+       return;
     }
 
     conversationFlow(nextStep, response);
@@ -331,7 +316,7 @@ export default function Home() {
 
 
   return (
-    <div className="container mx-auto min-h-screen px-4 py-8 md:py-16 flex flex-col items-center justify-center">
+    <div className="container mx-auto min-h-screen px-4 py-8 md:py-12 flex flex-col items-center justify-center">
       {view === "landing" ? (
         <LandingView onRiskSelect={handleRiskSelect} isFadingOut={isFadingOut} />
       ) : (

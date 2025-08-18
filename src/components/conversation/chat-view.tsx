@@ -9,6 +9,17 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// --- CSS for hiding scrollbar ---
+const styles = `
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+`;
+
 export type Message = {
   id: number;
   author: "Marius" | "user";
@@ -48,6 +59,7 @@ const DateOfBirthPicker = ({ onDateSelect }: { onDateSelect: (date: Date) => voi
     const [day, setDay] = useState<string>("");
     const [month, setMonth] = useState<string>("");
     const [year, setYear] = useState<string>("");
+    const [error, setError] = useState<string>("");
 
     const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
     const months = [
@@ -61,17 +73,23 @@ const DateOfBirthPicker = ({ onDateSelect }: { onDateSelect: (date: Date) => voi
     const currentYear = new Date().getFullYear();
     const years = Array.from({ length: 53 }, (_, i) => (currentYear - 18 - i).toString());
 
-    useEffect(() => {
+    const handleConfirm = () => {
         if (day && month && year) {
             const selectedDate = new Date(parseInt(year), parseInt(month), parseInt(day));
+            if (selectedDate.getDate() !== parseInt(day)) {
+                setError("Data selectată nu este validă.");
+                return;
+            }
+            setError("");
             onDateSelect(selectedDate);
+        } else {
+            setError("Te rog să completezi toate câmpurile.");
         }
-    }, [day, month, year, onDateSelect]);
-
+    };
 
     return (
-        <div className="flex flex-col gap-4 p-4 rounded-lg bg-white/50 backdrop-blur-sm border border-white/30 animate-in fade-in-50">
-             <div className="grid grid-cols-3 gap-3">
+        <div className="flex flex-col gap-4 p-4 rounded-lg bg-white/50 backdrop-blur-sm border border-white/30 animate-in fade-in-50 w-full">
+             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="flex flex-col gap-1.5">
                     <label htmlFor="day" className="text-sm font-medium text-foreground/80">Ziua</label>
                     <Select onValueChange={setDay} value={day}>
@@ -100,6 +118,8 @@ const DateOfBirthPicker = ({ onDateSelect }: { onDateSelect: (date: Date) => voi
                     </Select>
                 </div>
             </div>
+            {error && <p className="text-sm text-red-600">{error}</p>}
+            <Button onClick={handleConfirm} className="w-full">Confirmă</Button>
         </div>
     );
 };
@@ -126,12 +146,6 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
     }
   };
 
-  const handleDateSelect = (selectedDate: Date) => {
-    if (selectedDate) {
-      onResponse(selectedDate);
-    }
-  }
-
   const renderUserActions = () => {
     if (!userAction || (!isWaitingForResponse && userAction.type !== 'cards')) return null;
 
@@ -144,7 +158,7 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
                 key={index}
                 onClick={() => onResponse(option)}
                 variant="outline"
-                className="bg-white hover:bg-gray-100 text-primary-foreground border-gray-200 shadow-sm justify-start p-4 h-auto"
+                className="bg-white/50 backdrop-blur-sm border-white/30 text-foreground shadow-md justify-start p-4 h-auto hover:bg-white/80"
               >
                 {option}
               </Button>
@@ -171,7 +185,7 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
         );
       case "date":
         return (
-          <DateOfBirthPicker onDateSelect={handleDateSelect} />
+          <DateOfBirthPicker onDateSelect={onResponse} />
         )
       case "cards":
         return (
@@ -195,60 +209,65 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto flex flex-col md:flex-row h-[85vh] gap-6 data-[state=open]:animate-in data-[state=open]:fade-in-50" data-state="open">
-      {/* Zona de Dialog */}
-      <div id="dialog-flow" className="flex-grow space-y-6 overflow-y-auto p-4 rounded-lg scroll-smooth w-full md:w-auto">
-        {conversation.map((message) => (
-          <div
-            key={message.id}
-            className={cn(
-              "flex items-end gap-3 w-full animate-in fade-in slide-in-from-bottom-5 duration-500",
-              message.author === "Marius" ? "justify-start" : "justify-end"
-            )}
-          >
-            {message.author === "Marius" && (
-              <Avatar className="h-8 w-8 hidden sm:flex self-start">
-                <AvatarFallback className="bg-primary text-primary-foreground">
-                  M
-                </AvatarFallback>
-              </Avatar>
-            )}
+    <>
+    <style>{styles}</style>
+    <div id="chat-container" className="w-full max-w-5xl mx-auto flex flex-col h-[calc(100vh-8rem)] bg-black/5 rounded-2xl shadow-2xl overflow-hidden data-[state=open]:animate-in data-[state=open]:fade-in-50" data-state="open">
+        {/* Zona de Dialog */}
+        <div id="dialog-flow" className="flex-grow space-y-6 overflow-y-auto p-4 md:p-6 no-scrollbar">
+            {conversation.map((message) => (
             <div
-              className={cn(
-                "max-w-md md:max-w-lg rounded-2xl px-4 py-3 shadow-md",
-                message.author === "Marius"
-                  ? "bg-white/80 backdrop-blur-sm text-gray-800 rounded-bl-none"
-                  : "bg-primary text-primary-foreground rounded-br-none"
-              )}
+                key={message.id}
+                className={cn(
+                "flex items-end gap-3 w-full animate-in fade-in slide-in-from-bottom-5 duration-500",
+                message.author === "Marius" ? "justify-start" : "justify-end"
+                )}
             >
-              <p className="whitespace-pre-wrap">{message.content}</p>
-            </div>
-          </div>
-        ))}
-        {isWaitingForResponse && conversation.length > 0 && userAction === null && (
-          <div className="flex items-end gap-3 w-full justify-start">
-             <Avatar className="h-8 w-8 hidden sm:flex self-start">
-                <AvatarFallback className="bg-primary text-primary-foreground">
-                  M
-                </AvatarFallback>
-              </Avatar>
-            <div className="bg-white/80 backdrop-blur-sm text-gray-800 rounded-2xl rounded-bl-none px-4 py-3 shadow-md">
-                <div className="flex items-center gap-2">
-                    <span className="h-2 w-2 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                    <span className="h-2 w-2 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                    <span className="h-2 w-2 bg-primary rounded-full animate-bounce"></span>
+                {message.author === "Marius" && (
+                <Avatar className="h-8 w-8 hidden sm:flex self-start">
+                    <AvatarFallback className="bg-primary text-primary-foreground">
+                    M
+                    </AvatarFallback>
+                </Avatar>
+                )}
+                <div
+                className={cn(
+                    "max-w-md md:max-w-lg rounded-2xl px-4 py-3 shadow-md",
+                    message.author === "Marius"
+                    ? "bg-white/80 backdrop-blur-sm text-gray-800 rounded-bl-none"
+                    : "bg-primary text-primary-foreground rounded-br-none"
+                )}
+                >
+                <p className="whitespace-pre-wrap">{message.content}</p>
                 </div>
             </div>
-          </div>
-        )}
-        <div ref={endOfMessagesRef} />
-      </div>
+            ))}
+            {isWaitingForResponse && conversation.length > 0 && userAction === null && (
+            <div className="flex items-end gap-3 w-full justify-start">
+                <Avatar className="h-8 w-8 hidden sm:flex self-start">
+                    <AvatarFallback className="bg-primary text-primary-foreground">
+                    M
+                    </AvatarFallback>
+                </Avatar>
+                <div className="bg-white/80 backdrop-blur-sm text-gray-800 rounded-2xl rounded-bl-none px-4 py-3 shadow-md">
+                    <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                        <span className="h-2 w-2 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                        <span className="h-2 w-2 bg-primary rounded-full animate-bounce"></span>
+                    </div>
+                </div>
+            </div>
+            )}
+            <div ref={endOfMessagesRef} />
+        </div>
       
-      {/* Zona de Acțiune */}
-      <div id="user-actions" className="flex-shrink-0 w-full md:w-80 py-4 flex flex-col justify-center items-center min-h-[150px]">
-        {renderUserActions()}
-      </div>
+        {/* Zona de Acțiune */}
+        <div id="user-actions-container" className="flex-shrink-0 p-4 bg-transparent">
+            <div className="w-full md:w-auto md:max-w-sm ml-auto flex flex-col justify-center items-center">
+             {renderUserActions()}
+            </div>
+        </div>
     </div>
+    </>
   );
 };
 
