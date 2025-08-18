@@ -32,26 +32,28 @@ export default function Home() {
     } else {
       setCurrentUserAction({ type, options });
     }
+    setIsWaitingForResponse(type !== null);
   };
   
+  const performFinalCalculation = useCallback((deficit: number, protectionPeriod: number) => {
+      const finalUserData = { ...userData, desiredSum: deficit } as UserData;
+      const result = calculatePremium(finalUserData);
+      
+      setTimeout(() => {
+        addMessage({
+          author: "Marius",
+          type: "text",
+          content: `Pentru a oferi familiei tale protecția de ${deficit.toLocaleString('ro-RO')} €, pe o perioadă de ${protectionPeriod} ani, costul estimat al asigurării tale de viață ar fi de aproximativ ${result.monthlyPremium.toFixed(2)} € pe lună.`,
+        });
+        setCurrentStep(13);
+        conversationFlow(13); 
+      }, 800);
+    },[userData]); // Simplified dependencies
+
   const conversationFlow = useCallback(
     (step: number, response?: any) => {
       setIsWaitingForResponse(true);
       
-      const performFinalCalculation = (deficit: number, protectionPeriod: number) => {
-        const finalUserData = { ...userData, desiredSum: deficit } as UserData;
-        const result = calculatePremium(finalUserData);
-        
-        setTimeout(() => {
-          addMessage({
-            author: "Marius",
-            type: "text",
-            content: `Pentru a oferi familiei tale protecția de ${deficit.toLocaleString('ro-RO')} €, pe o perioadă de ${protectionPeriod} ani, costul estimat al asigurării tale de viață ar fi de aproximativ ${result.monthlyPremium.toFixed(2)} € pe lună.`,
-          });
-          conversationFlow(13); 
-        }, 800);
-      };
-
       setTimeout(() => {
         if (step === 1) { // Ask for birth date
           addMessage({
@@ -118,7 +120,7 @@ export default function Home() {
                     type: "text",
                     content: "Reține, aceasta este o estimare generică. O analiză a nevoilor ar oferi o imagine mult mai clară.",
                 });
-            }, 800);
+             }, 800);
              setTimeout(() => conversationFlow(13), 2000); 
           }
         } else if (step === 6) { // Ask for monthly expenses
@@ -258,7 +260,7 @@ export default function Home() {
         }
       }, 800);
     },
-    [addMessage, userData, financialData]
+    [addMessage, userData, financialData, performFinalCalculation]
   );
   
   const startConversation = useCallback(() => {
@@ -267,7 +269,10 @@ export default function Home() {
         type: "text",
         content: "Bun venit! Sunt Marius, asistentul tău virtual. Te voi ajuta să înțelegi nevoia reală de protecție financiară a familiei tale.",
     });
-    setTimeout(() => conversationFlow(1), 500);
+    setTimeout(() => {
+        setCurrentStep(1);
+        conversationFlow(1);
+    }, 500);
   }, [addMessage, conversationFlow]);
 
 
@@ -279,40 +284,40 @@ export default function Home() {
     setIsFadingOut(true);
     setTimeout(() => {
       setView("chat");
-      setCurrentStep(1);
     }, 500);
   };
 
   const handleResponse = (response: any) => {
     if (currentUserAction?.type === 'cards') return;
-
-    if (!isWaitingForResponse) return;
-    setIsWaitingForResponse(false);
-    updateUserActions(null);
     
-    let nextStep = currentStep + 1;
+    updateUserActions(null);
+    setIsWaitingForResponse(false);
+    
+    const nextStep = currentStep + 1;
+    
+    // Path for quick estimate
     if (currentStep === 4 && response === "Nu, vreau doar o estimare rapidă") {
-      setCurrentStep(5);
+      setCurrentStep(5); 
       conversationFlow(5, response);
       return; 
     }
     
-    if (currentStep === 5 && !financialData.protectionPeriod) {
-       // This path is triggered after a quick estimate. The flow already jumps to 13.
-       // We just need to set the state to wait for that step's response.
+    // After quick estimate, flow jumps to step 13 for consultant question.
+    if (currentStep === 5 && !financialData.protectionPeriod && userData.desiredSum === 100000) {
        setCurrentStep(13);
+       // The flow is already running, just wait for the next action
        return;
     }
 
-    conversationFlow(nextStep, response);
     setCurrentStep(nextStep);
+    conversationFlow(nextStep, response);
   };
   
   useEffect(() => {
-    if (currentStep === 1 && view === 'chat') {
+    if (view === 'chat' && conversation.length === 0) {
        startConversation();
     }
-  }, [currentStep, view, startConversation]);
+  }, [view, startConversation, conversation.length]);
 
 
   return (
