@@ -10,17 +10,23 @@ import { cn } from "@/lib/utils";
 export type Message = {
   id: number;
   author: "Marius" | "user";
-  type: "text" | "options" | "input" | "response";
+  type: "text" | "response";
   content: any;
 };
 
+export type UserAction = {
+  type: 'input' | 'buttons';
+  options?: string[];
+}
+
 interface ChatViewProps {
   conversation: Message[];
+  userAction: UserAction | null;
   onResponse: (response: string) => void;
   isWaitingForResponse: boolean;
 }
 
-const ChatView = ({ conversation, onResponse, isWaitingForResponse }: ChatViewProps) => {
+const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }: ChatViewProps) => {
   const [inputValue, setInputValue] = useState("");
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
 
@@ -41,15 +47,14 @@ const ChatView = ({ conversation, onResponse, isWaitingForResponse }: ChatViewPr
     }
   };
 
-  const renderMessageContent = (message: Message) => {
-    switch (message.type) {
-      case "text":
-      case "response":
-        return <p>{message.content}</p>;
-      case "options":
+  const renderUserActions = () => {
+    if (!userAction) return null;
+
+    switch (userAction.type) {
+      case "buttons":
         return (
-          <div className="flex flex-col sm:flex-row gap-2 mt-2 justify-end">
-            {message.content.map((option: string, index: number) => (
+          <div className="flex flex-col sm:flex-row gap-2 mt-2 justify-center">
+            {userAction.options?.map((option: string, index: number) => (
               <Button
                 key={index}
                 onClick={() => onResponse(option)}
@@ -86,9 +91,9 @@ const ChatView = ({ conversation, onResponse, isWaitingForResponse }: ChatViewPr
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto flex flex-col h-[75vh] data-[state=open]:animate-in data-[state=open]:fade-in-50" data-state="open">
-      <div className="flex-grow space-y-6 overflow-y-auto p-4 rounded-lg">
-        {conversation.map((message, index) => (
+    <div className="w-full max-w-4xl mx-auto flex flex-col h-[80vh] data-[state=open]:animate-in data-[state=open]:fade-in-50" data-state="open">
+      <div id="dialog-flow" className="flex-grow space-y-6 overflow-y-auto p-4 rounded-lg">
+        {conversation.map((message) => (
           <div
             key={message.id}
             className={cn(
@@ -108,15 +113,33 @@ const ChatView = ({ conversation, onResponse, isWaitingForResponse }: ChatViewPr
                 "max-w-md md:max-w-lg rounded-2xl px-4 py-3 shadow-md",
                 message.author === "Marius"
                   ? "bg-white/80 backdrop-blur-sm text-gray-800 rounded-bl-none"
-                  : "bg-primary text-primary-foreground rounded-br-none",
-                (message.type === 'options' || message.type === 'input') && "bg-transparent shadow-none p-0"
+                  : "bg-primary text-primary-foreground rounded-br-none"
               )}
             >
-              {renderMessageContent(message)}
+              <p>{message.content}</p>
             </div>
           </div>
         ))}
+        {isWaitingForResponse && conversation.length > 0 && (
+          <div className="flex items-end gap-3 w-full justify-start">
+             <Avatar className="h-8 w-8 hidden sm:flex">
+                <AvatarFallback className="bg-primary text-primary-foreground">
+                  M
+                </AvatarFallback>
+              </Avatar>
+            <div className="bg-white/80 backdrop-blur-sm text-gray-800 rounded-2xl rounded-bl-none px-4 py-3 shadow-md">
+                <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                    <span className="h-2 w-2 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                    <span className="h-2 w-2 bg-primary rounded-full animate-bounce"></span>
+                </div>
+            </div>
+          </div>
+        )}
         <div ref={endOfMessagesRef} />
+      </div>
+      <div id="user-actions" className="py-4 flex justify-center items-center">
+        {renderUserActions()}
       </div>
     </div>
   );
