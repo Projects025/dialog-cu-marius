@@ -233,21 +233,24 @@ export default function Home() {
         }
         
         await new Promise(resolve => setTimeout(resolve, 1500));
-        updateUserActions('buttons', ["Este o soluție la acest risc?"]);
-        setIsWaitingForResponse(false);
-
+        // Transition directly to the next logical step
+        setCurrentStep(12);
+        conversationFlow(12);
+        
       } else if (step === 12) { // The solution and final calculation
-        run(() => {
-            addMessage({ author: "user", type: "response", content: response });
-            addMessage({
-                author: "Marius",
-                type: "text",
-                content: "Este un scenariu dificil, dar vestea bună este că există o soluție directă și accesibilă pentru a elimina complet acest risc. O asigurare de viață corect dimensionată acoperă exact acest deficit."
-            });
-            const finalUserData = { ...userData } as UserData;
-            const finalFinancialData = { ...financialData } as FinancialData;
-            performFinalCalculation(finalUserData.desiredSum!, finalFinancialData.protectionPeriod!);
-        });
+          run(() => {
+              if (response === "Este o soluție la acest risc?") {
+                addMessage({ author: "user", type: "response", content: response });
+              }
+              addMessage({
+                  author: "Marius",
+                  type: "text",
+                  content: "Este un scenariu dificil, dar vestea bună este că există o soluție directă și accesibilă pentru a elimina complet acest risc. O asigurare de viață corect dimensionată acoperă exact acest deficit."
+              });
+              const finalUserData = { ...userData } as UserData;
+              const finalFinancialData = { ...financialData } as FinancialData;
+              performFinalCalculation(finalUserData.desiredSum!, finalFinancialData.protectionPeriod!);
+          });
       } else if (step === 13) { // Ask about consultant
         run(() => {
             addMessage({
@@ -322,8 +325,15 @@ export default function Home() {
     updateUserActions(null);
     setIsWaitingForResponse(false);
     
-    const nextStep = currentStep + 1;
+    let nextStep = currentStep + 1;
     
+    // Special handling for the button after dramatic realities, which is now gone
+    // We now transition automatically in step 11
+    if (currentStep === 11) {
+        // The flow continues automatically inside step 11 now
+        return;
+    }
+
     if (currentStep === 4 && response === "Nu, vreau doar o estimare rapidă") {
       setCurrentStep(5); 
       conversationFlow(5, response);
@@ -331,15 +341,15 @@ export default function Home() {
     }
     
     if (currentStep === 5 && !financialData.protectionPeriod && userData.desiredSum === 100000) {
+       // This handles the "quick estimate" path
        setCurrentStep(13);
+       conversationFlow(13)
        return;
     }
     
-    if (currentStep === 11 && response === "Este o soluție la acest risc?") {
-        setCurrentStep(12);
-        conversationFlow(12, response);
-        return;
-    }
+    // The button that triggered step 12 is now removed.
+    // The logic flows from 11 to 12 automatically.
+    // So we can remove this special check.
 
     setCurrentStep(nextStep);
     conversationFlow(nextStep, response);
