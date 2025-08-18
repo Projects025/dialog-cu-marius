@@ -33,37 +33,29 @@ export default function Home() {
     }
   };
 
-  const startConversation = () => {
-    addMessage({
-        author: "Marius",
-        type: "text",
-        content: "Bun venit! Sunt Marius, asistentul tău virtual. Te voi ajuta să estimezi costul unei asigurări de viață.",
-    });
-    conversationFlow(1);
-  }
-
-  const performCalculation = useCallback(() => {
-    const finalUserData = { ...userData } as UserData;
-    const result = calculatePremium(finalUserData);
-    
-    addMessage({
-      author: "Marius",
-      type: "text",
-      content: `Mulțumesc pentru informații. Pe baza profilului tău, o asigurare de viață de ${finalUserData.desiredSum.toLocaleString('ro-RO')} € pe o perioadă de ${finalUserData.insuranceDuration} de ani ar avea un cost estimat de aproximativ ${result.monthlyPremium.toFixed(2)} € pe lună.`,
-    });
-     addMessage({
-      author: "Marius",
-      type: "text",
-      content: "Aceasta este o estimare preliminară. Un consultant te poate ajuta să optimizezi oferta exact pentru nevoile tale."
-    });
-    updateUserActions(null);
-    setIsWaitingForResponse(false);
-  }, [userData, addMessage]);
-
-
   const conversationFlow = useCallback(
     (step: number, response?: any) => {
       setIsWaitingForResponse(true);
+
+      const performCalculation = () => {
+        const finalUserData = { ...userData } as UserData;
+        const result = calculatePremium(finalUserData);
+        
+        addMessage({
+          author: "Marius",
+          type: "text",
+          content: `Mulțumesc pentru informații. Pe baza profilului tău, o asigurare de viață de ${finalUserData.desiredSum.toLocaleString('ro-RO')} € pe o perioadă de ${finalUserData.insuranceDuration} de ani ar avea un cost estimat de aproximativ ${result.monthlyPremium.toFixed(2)} € pe lună.`,
+        });
+         addMessage({
+          author: "Marius",
+          type: "text",
+          content: "Aceasta este o estimare preliminară. Un consultant te poate ajuta să optimizezi oferta exact pentru nevoile tale."
+        });
+        
+        // Ask about consultant
+        setTimeout(() => conversationFlow(9), 800);
+      };
+      
       setTimeout(() => {
         if (step === 1) {
           addMessage({
@@ -137,11 +129,55 @@ export default function Home() {
             setIsWaitingForResponse(true);
             updateUserActions(null);
             setTimeout(performCalculation, 1500);
+        } else if (step === 9) {
+          addMessage({
+            author: "Marius",
+            type: "text",
+            content: "Dorești să fii contactat de un consultant pentru o ofertă personalizată și fără obligații?",
+          });
+          updateUserActions('buttons', ['Da, doresc', 'Nu, mulțumesc']);
+        } else if (step === 10) {
+          addMessage({ author: "user", type: "response", content: response });
+          if (response === 'Da, doresc') {
+            addMessage({
+              author: "Marius",
+              type: "text",
+              content: "Excelent! Te rog să introduci numărul tău de telefon și un consultant te va contacta în cel mai scurt timp.",
+            });
+            updateUserActions('input', { placeholder: 'Nr. de telefon', type: 'tel' });
+          } else {
+            addMessage({
+              author: "Marius",
+              type: "text",
+              content: "Am înțeles. Îți mulțumesc pentru timpul acordat! Dacă te răzgândești, știi unde mă găsești.",
+            });
+            updateUserActions(null);
+            setIsWaitingForResponse(false);
+          }
+        } else if (step === 11) {
+            addMessage({ author: "user", type: "response", content: response });
+            setUserData(prev => ({...prev, phone: response}));
+             addMessage({
+              author: "Marius",
+              type: "text",
+              content: "Mulțumesc! Datele tale au fost înregistrate. Un consultant te va suna în curând. O zi excelentă!",
+            });
+            updateUserActions(null);
+            setIsWaitingForResponse(false);
         }
       }, 800);
     },
-    [addMessage, performCalculation]
+    [addMessage, userData]
   );
+  
+  const startConversation = useCallback(() => {
+    addMessage({
+        author: "Marius",
+        type: "text",
+        content: "Bun venit! Sunt Marius, asistentul tău virtual. Te voi ajuta să estimezi costul unei asigurări de viață.",
+    });
+    conversationFlow(1);
+  }, [addMessage, conversationFlow]);
 
   const handleRiskSelect = (riskTitle: string) => {
     setIsFadingOut(true);
@@ -165,7 +201,7 @@ export default function Home() {
     if (currentStep === 1 && view === 'chat') {
        startConversation();
     }
-  }, [currentStep, view]);
+  }, [currentStep, view, startConversation]);
 
 
   return (

@@ -25,6 +25,7 @@ export type UserData = {
   insuranceDuration: number;
   occupation: string;
   healthStatus: boolean;
+  phone?: string;
 }
 
 export type UserAction = {
