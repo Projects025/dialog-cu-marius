@@ -4,8 +4,11 @@ import { useState, useEffect, useRef } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Send, Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 export type Message = {
   id: number;
@@ -14,20 +17,31 @@ export type Message = {
   content: any;
 };
 
+export type UserData = {
+  birthDate: Date;
+  gender: 'Masculin' | 'Feminin';
+  isSmoker: boolean;
+  desiredSum: number;
+  insuranceDuration: number;
+  occupation: string;
+  healthStatus: boolean;
+}
+
 export type UserAction = {
-  type: 'input' | 'buttons';
-  options?: string[];
+  type: 'input' | 'buttons' | 'date';
+  options?: any;
 }
 
 interface ChatViewProps {
   conversation: Message[];
   userAction: UserAction | null;
-  onResponse: (response: string) => void;
+  onResponse: (response: any) => void;
   isWaitingForResponse: boolean;
 }
 
 const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }: ChatViewProps) => {
   const [inputValue, setInputValue] = useState("");
+  const [date, setDate] = useState<Date | undefined>();
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -47,8 +61,15 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
     }
   };
 
+  const handleDateSelect = (selectedDate: Date | undefined) => {
+    if (selectedDate) {
+      setDate(selectedDate);
+      onResponse(selectedDate);
+    }
+  }
+
   const renderUserActions = () => {
-    if (!userAction) return null;
+    if (!userAction || !isWaitingForResponse) return null;
 
     switch (userAction.type) {
       case "buttons":
@@ -60,7 +81,6 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
                 onClick={() => onResponse(option)}
                 variant="outline"
                 className="bg-white hover:bg-gray-100 text-primary-foreground border-gray-200 shadow-sm"
-                disabled={!isWaitingForResponse}
               >
                 {option}
               </Button>
@@ -71,20 +91,47 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
         return (
             <div className="flex w-full max-w-sm items-center space-x-2 mt-2">
               <Input
-                type="number"
-                placeholder="Venit lunar net"
+                type={userAction.options?.type || 'text'}
+                placeholder={userAction.options?.placeholder || ''}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
                 className="bg-white"
-                disabled={!isWaitingForResponse}
               />
-              <Button type="submit" onClick={handleSend} disabled={!isWaitingForResponse}>
+              <Button type="submit" onClick={handleSend}>
                 <Send className="h-4 w-4" />
                 <span className="sr-only">Trimite</span>
               </Button>
             </div>
         );
+      case "date":
+        return (
+           <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-[280px] justify-start text-left font-normal bg-white",
+                  !date && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {date ? format(date, "PPP") : <span>Alege o dată</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={handleDateSelect}
+                initialFocus
+                captionLayout="dropdown-buttons"
+                fromYear={1930}
+                toYear={new Date().getFullYear() - 18}
+              />
+            </PopoverContent>
+          </Popover>
+        )
       default:
         return null;
     }
@@ -120,7 +167,7 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
             </div>
           </div>
         ))}
-        {isWaitingForResponse && conversation.length > 0 && (
+        {isWaitingForResponse && conversation.length > 0 && userAction === null && (
           <div className="flex items-end gap-3 w-full justify-start">
              <Avatar className="h-8 w-8 hidden sm:flex">
                 <AvatarFallback className="bg-primary text-primary-foreground">
@@ -138,7 +185,7 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
         )}
         <div ref={endOfMessagesRef} />
       </div>
-      <div id="user-actions" className="py-4 flex justify-center items-center">
+      <div id="user-actions" className="py-4 flex justify-center items-center min-h-[60px]">
         {renderUserActions()}
       </div>
     </div>
