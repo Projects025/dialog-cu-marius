@@ -19,7 +19,7 @@ const RiskCard = ({ icon, title, description, className, ...props }: RiskCardPro
   return (
     <Card
       className={cn(
-        "text-left bg-white/50 backdrop-blur-sm border-white/30 cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-2",
+        "text-left bg-white/50 backdrop-blur-sm border-white/30 transition-all duration-300 hover:shadow-xl hover:-translate-y-2",
         className
       )}
       {...props}

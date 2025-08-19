@@ -273,7 +273,7 @@ export default function Home() {
     addMessage({
         author: "Marius",
         type: "text",
-        content: "Bun venit! Sunt Marius, asistentul tău virtual. Te voi ajuta să înțelegi nevoia reală de protecție financiară a familiei tale.",
+        content: "Salut! Sunt Marius, asistentul tău financiar. Pentru a face o analiză corectă, vom parcurge câțiva pași simpli.",
     });
     setTimeout(() => {
         setCurrentStep(1);
@@ -282,11 +282,7 @@ export default function Home() {
   }, [addMessage, conversationFlow]);
 
 
-  const handleRiskSelect = (riskTitle: string) => {
-     if (riskTitle !== 'Deces') {
-        alert("Momentan, doar fluxul pentru riscul de 'Deces' este complet funcțional. Te rog să selectezi acest card pentru a continua.");
-        return;
-    }
+  const handleStart = () => {
     setIsFadingOut(true);
     setTimeout(() => {
       setView("chat");
@@ -313,7 +309,7 @@ export default function Home() {
   return (
     <div className="container mx-auto min-h-screen px-4 py-8 md:py-12 flex flex-col items-center justify-center">
       {view === "landing" ? (
-        <LandingView onRiskSelect={handleRiskSelect} isFadingOut={isFadingOut} />
+        <LandingView onStart={handleStart} isFadingOut={isFadingOut} />
       ) : (
         <ChatView
           conversation={conversation}
