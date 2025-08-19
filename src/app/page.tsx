@@ -7,6 +7,8 @@ import type { Message, UserAction, UserData, FinancialData } from "@/components/
 import { calculatePremium, calculateDeficit } from "@/lib/calculation";
 import { format } from "date-fns";
 
+export type Reaction = 'Este o sumă mare' | 'Rezonabil' | 'Mă așteptam' | null;
+
 export default function Home() {
   const [view, setView] = useState<"landing" | "chat">("landing");
   const [isFadingOut, setIsFadingOut] = useState(false);
@@ -16,6 +18,7 @@ export default function Home() {
   const [currentUserAction, setCurrentUserAction] = useState<UserAction | null>(null);
   const [userData, setUserData] = useState<Partial<UserData>>({});
   const [financialData, setFinancialData] = useState<Partial<FinancialData>>({});
+  const [lastReaction, setLastReaction] = useState<Reaction>(null);
 
   const conversationIdRef = useRef(0);
 
@@ -35,21 +38,6 @@ export default function Home() {
     setIsWaitingForResponse(type !== null);
   };
   
-  const performFinalCalculation = useCallback((deficit: number, protectionPeriod: number) => {
-      const finalUserData = { ...userData, desiredSum: deficit } as UserData;
-      const result = calculatePremium(finalUserData);
-      
-      setTimeout(() => {
-        addMessage({
-          author: "Marius",
-          type: "text",
-          content: `Pentru a oferi familiei tale protecția de ${deficit.toLocaleString('ro-RO')} €, pe o perioadă de ${protectionPeriod} ani, costul estimat al asigurării tale de viață ar fi de aproximativ ${result.monthlyPremium.toFixed(2)} € pe lună.`,
-        });
-        setCurrentStep(13);
-        conversationFlow(13); 
-      }, 800);
-    },[userData, addMessage]);
-
   const conversationFlow = useCallback(
     async (step: number, response?: any) => {
       setIsWaitingForResponse(true);
@@ -72,7 +60,7 @@ export default function Home() {
             addMessage({
                 author: "Marius",
                 type: "text",
-                content: "Mulțumesc. Ești fumător sau ai consumat produse cu tutun/nicotină în ultimele 12 luni?",
+                content: "Ești fumător sau ai consumat produse cu tutun/nicotină în ultimele 12 luni?",
             });
             updateUserActions('buttons', ["Da", "Nu"]);
         });
@@ -94,49 +82,15 @@ export default function Home() {
             addMessage({
                 author: "Marius",
                 type: "text",
-                content: "Mulțumesc pentru informații. Pe baza acestor date, putem estima un cost. Dar înainte de a vorbi despre prețuri, experiența îmi arată că cel mai important pas este să înțelegem exact ce anume trebuie să protejăm.",
+                content: "Mulțumesc. Acum, pentru a calcula exact plasa de siguranță de care are nevoie familia ta, vom parcurge câțiva pași simpli. Pentru început, pentru ce perioadă (în ani) ai dori să aibă completă siguranță financiară?",
             });
-            setTimeout(() => {
-                addMessage({
-                author: "Marius",
-                type: "text",
-                content: "Ai fi interesat să vezi gradul real de expunere financiară a familiei tale în cazul unui eveniment neprevăzut?",
-                });
-                updateUserActions('buttons', ["Da, sunt interesat", "Nu, vreau doar o estimare rapidă"]);
-            }, 1200);
+            updateUserActions('buttons', ['3 ani', '4 ani', '5 ani']);
         });
-      } else if (step === 5) { // Needs analysis or quick estimate
+      } else if (step === 5) { // Ask for monthly expenses
         run(() => {
             addMessage({ author: "user", type: "response", content: response });
-            if (response === 'Da, sunt interesat') {
-                addMessage({
-                author: "Marius",
-                type: "text",
-                content: "Excelent. Hai să calculăm împreună. Pentru ce perioadă (în ani) ai dori ca familia ta să aibă completă siguranță financiară, fără grija banilor?",
-                });
-                updateUserActions('input', { placeholder: 'Ex: 20', type: 'number' });
-            } else {
-                const quickUserData = { ...userData, desiredSum: 100000 } as UserData;
-                const result = calculatePremium(quickUserData);
-                addMessage({
-                author: "Marius",
-                type: "text",
-                content: `Am înțeles. Pentru o sumă asigurată de 100.000 € pe 20 de ani, costul estimat ar fi de aproximativ ${result.monthlyPremium.toFixed(2)} € pe lună.`,
-                });
-                setTimeout(() => {
-                    addMessage({
-                        author: "Marius",
-                        type: "text",
-                        content: "Reține, aceasta este o estimare generică. O analiză a nevoilor ar oferi o imagine mult mai clară.",
-                    });
-                }, 800);
-                setTimeout(() => conversationFlow(13), 2000); 
-            }
-        });
-      } else if (step === 6) { // Ask for monthly expenses
-        run(() => {
-            addMessage({ author: "user", type: "response", content: `${response} ani` });
-            setFinancialData(prev => ({...prev, protectionPeriod: Number(response)}));
+            const years = parseInt(response.split(' ')[0], 10);
+            setFinancialData(prev => ({...prev, protectionPeriod: years}));
             addMessage({
                 author: "Marius",
                 type: "text",
@@ -144,7 +98,7 @@ export default function Home() {
             });
             updateUserActions('input', { placeholder: 'Ex: 1500', type: 'number' });
         });
-      } else if (step === 7) { // Ask about debts
+      } else if (step === 6) { // Ask about debts
         run(() => {
             addMessage({ author: "user", type: "response", content: `€ ${response}` });
             setFinancialData(prev => ({...prev, monthlyExpenses: Number(response)}));
@@ -155,7 +109,7 @@ export default function Home() {
             });
             updateUserActions('input', { placeholder: 'Ex: 50000 (sau 0)', type: 'number' });
         });
-      } else if (step === 8) { // Ask about existing insurance
+      } else if (step === 7) { // Ask about existing insurance
         run(() => {
             addMessage({ author: "user", type: "response", content: `€ ${response}` });
             setFinancialData(prev => ({...prev, totalDebts: Number(response)}));
@@ -166,7 +120,7 @@ export default function Home() {
             });
             updateUserActions('input', { placeholder: 'Ex: 10000 (sau 0)', type: 'number' });
         });
-      } else if (step === 9) { // Ask about savings
+      } else if (step === 8) { // Ask about savings
         run(() => {
             addMessage({ author: "user", type: "response", content: `€ ${response}` });
             setFinancialData(prev => ({...prev, existingInsurance: Number(response)}));
@@ -177,7 +131,7 @@ export default function Home() {
             });
             updateUserActions('input', { placeholder: 'Ex: 5000 (sau 0)', type: 'number' });
         });
-      } else if (step === 10) { // Calculate and show deficit
+      } else if (step === 9) { // Calculate and show deficit
         run(() => {
             addMessage({ author: "user", type: "response", content: `€ ${response}` });
             const finalFinancialData = {...financialData, savings: Number(response)} as FinancialData;
@@ -198,69 +152,87 @@ export default function Home() {
                     type: "text",
                     content: `Cum ți se pare această sumă, știind că ea reprezintă liniștea financiară a familiei tale?`
                 });
-                updateUserActions('input', { placeholder: 'Scrie un răspuns...', type: 'text' });
+                updateUserActions('buttons', ['Este o sumă mare', 'Rezonabil', 'Mă așteptam']);
             }, 1200);
         });
-      } else if (step === 11) { // Emotional impact sequence
-        if(typeof response === 'string' && response.length > 0) {
-            addMessage({ author: "user", type: "response", content: response });
-        }
+      } else if (step === 10) { // Emotional impact sequence
+        addMessage({ author: "user", type: "response", content: response });
+        setLastReaction(response as Reaction);
         
-        await new Promise(resolve => setTimeout(resolve, 800));
-        addMessage({
-            author: "Marius",
-            type: "text",
-            content: "Înțeleg perfect. Este o sumă care te pune pe gânduri. Fără o planificare corectă, dacă acest deficit ar deveni realitate, opțiunile partenerului de viață sunt adesea dureroase."
-        });
-        
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        addMessage({
-            author: "Marius",
-            type: "text",
-            content: "Privește, te rog, câteva dintre realitățile cu care s-ar putea confrunta..."
-        });
-        
-        const realities = [
-            "...să își ia un al doilea job, sacrificând timpul prețios cu copiii.",
-            "...să vândă casa sau bunuri cu valoare sentimentală.",
-            "...să renunțe la planurile pentru educația copiilor.",
-            "...să ceară ajutor familiei sau prietenilor."
-        ];
-        
-        for (const reality of realities) {
+        const showRealities = async () => {
+            await new Promise(resolve => setTimeout(resolve, 800));
+            addMessage({
+                author: "Marius",
+                type: "text",
+                content: "Înțeleg perfect. Este o sumă care te pune pe gânduri. Fără o planificare corectă, dacă acest deficit ar deveni realitate, opțiunile partenerului de viață sunt adesea dureroase."
+            });
+            
             await new Promise(resolve => setTimeout(resolve, 1500));
-            addMessage({ author: "Marius", type: 'text', content: reality }, 'dramatic');
+            addMessage({
+                author: "Marius",
+                type: "text",
+                content: "Privește, te rog, câteva dintre realitățile cu care s-ar putea confrunta..."
+            });
+            
+            const realities = [
+                "...să își ia un al doilea job, sacrificând timpul prețios cu copiii.",
+                "...să vândă casa sau bunuri cu valoare sentimentală.",
+                "...să renunțe la planurile pentru educația copiilor.",
+                "...să ceară ajutor familiei sau prietenilor."
+            ];
+            
+            for (const reality of realities) {
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                addMessage({ author: "Marius", type: 'text', content: reality }, 'dramatic');
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            setCurrentStep(11);
+            conversationFlow(11);
         }
-        
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        // Transition directly to the next logical step
-        setCurrentStep(12);
-        conversationFlow(12);
-        
-      } else if (step === 12) { // The solution and final calculation
+        showRealities();
+
+      } else if (step === 11) { // The solution and final calculation
           run(() => {
-              if (response === "Este o soluție la acest risc?") {
-                addMessage({ author: "user", type: "response", content: response });
-              }
               addMessage({
                   author: "Marius",
                   type: "text",
                   content: "Este un scenariu dificil, dar vestea bună este că există o soluție directă și accesibilă pentru a elimina complet acest risc. O asigurare de viață corect dimensionată acoperă exact acest deficit."
               });
+              
               const finalUserData = { ...userData } as UserData;
-              const finalFinancialData = { ...financialData } as FinancialData;
-              performFinalCalculation(finalUserData.desiredSum!, finalFinancialData.protectionPeriod!);
+              const result = calculatePremium(finalUserData);
+              const deficit = finalUserData.desiredSum || 0;
+              const protectionPeriod = (financialData as FinancialData).protectionPeriod || 0;
+
+              setTimeout(() => {
+                addMessage({
+                  author: "Marius",
+                  type: "text",
+                  content: `Pentru a oferi familiei tale protecția de ${deficit.toLocaleString('ro-RO')} €, pe o perioadă de ${protectionPeriod} ani, costul estimat al asigurării tale de viață ar fi de aproximativ ${result.monthlyPremium.toFixed(2)} € pe lună.`,
+                });
+                setCurrentStep(12);
+                conversationFlow(12, { reaction: lastReaction, premium: result.monthlyPremium }); 
+              }, 800);
           });
-      } else if (step === 13) { // Ask about consultant
+      } else if (step === 12) { // Ask about consultant (adaptive)
         run(() => {
+            const { reaction, premium } = response;
+            let message;
+            if (reaction === 'Este o sumă mare' && premium < 250) {
+                 message = "Înțeleg perfect reacția, orice sumă legată de un risc pare mare la început. Însă, vestea bună este că soluția pentru a proteja complet viitorul familiei tale este mai accesibilă decât pare. Vrei să explorăm opțiunile în detaliu cu un consultant?";
+            } else {
+                 message = "Mă bucur că vezi lucrurile în perspectivă. Este, într-adevăr, o investiție calculată în liniștea celor dragi. Acum că știi atât nevoia reală, cât și costul protecției, vrei să discuți cu un consultant pentru a personaliza o ofertă?";
+            }
+            
             addMessage({
                 author: "Marius",
                 type: "text",
-                content: "Acum că știi atât nevoia reală, cât și costul estimat al protecției, vrei să discuți cu un consultant pentru a explora o ofertă personalizată, fără nicio obligație?",
+                content: message,
             });
             updateUserActions('buttons', ['Da, vreau detalii', 'Nu acum']);
         });
-      } else if (step === 14) { // Handle consultant response
+      } else if (step === 13) { // Handle consultant response
         run(() => {
             addMessage({ author: "user", type: "response", content: response });
             if (response === 'Da, vreau detalii') {
@@ -280,7 +252,7 @@ export default function Home() {
                 setIsWaitingForResponse(false);
             }
         });
-      } else if (step === 15) { // Final message
+      } else if (step === 14) { // Final message
         run(() => {
             addMessage({ author: "user", type: "response", content: response });
             setUserData(prev => ({...prev, phone: response}));
@@ -294,7 +266,7 @@ export default function Home() {
         });
       }
     },
-    [addMessage, userData, financialData, performFinalCalculation]
+    [addMessage, userData, financialData, lastReaction]
   );
   
   const startConversation = useCallback(() => {
@@ -325,32 +297,8 @@ export default function Home() {
     updateUserActions(null);
     setIsWaitingForResponse(false);
     
-    let nextStep = currentStep + 1;
+    const nextStep = currentStep + 1;
     
-    // Special handling for the button after dramatic realities, which is now gone
-    // We now transition automatically in step 11
-    if (currentStep === 11) {
-        // The flow continues automatically inside step 11 now
-        return;
-    }
-
-    if (currentStep === 4 && response === "Nu, vreau doar o estimare rapidă") {
-      setCurrentStep(5); 
-      conversationFlow(5, response);
-      return; 
-    }
-    
-    if (currentStep === 5 && !financialData.protectionPeriod && userData.desiredSum === 100000) {
-       // This handles the "quick estimate" path
-       setCurrentStep(13);
-       conversationFlow(13)
-       return;
-    }
-    
-    // The button that triggered step 12 is now removed.
-    // The logic flows from 11 to 12 automatically.
-    // So we can remove this special check.
-
     setCurrentStep(nextStep);
     conversationFlow(nextStep, response);
   };

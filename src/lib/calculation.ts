@@ -4,16 +4,16 @@ import type { UserData, FinancialData } from '@/components/conversation/chat-vie
 // Matrice de risc actualizată (valori anuale per 1000 EUR asigurați)
 const baseRiskMatrix = {
     male: [
-        { maxAge: 29, rate: 1.2 },
-        { maxAge: 39, rate: 2.0 },
-        { maxAge: 49, rate: 4.5 },
-        { maxAge: 59, rate: 9.0 },
+        { maxAge: 29, rate: 3.5 },
+        { maxAge: 39, rate: 5.0 },
+        { maxAge: 49, rate: 9.5 },
+        { maxAge: 59, rate: 20.0 },
     ],
     female: [
-        { maxAge: 29, rate: 0.9 },
-        { maxAge: 39, rate: 1.5 },
-        { maxAge: 49, rate: 3.5 },
-        { maxAge: 59, rate: 7.0 },
+        { maxAge: 29, rate: 2.8 },
+        { maxAge: 39, rate: 4.0 },
+        { maxAge: 49, rate: 7.5 },
+        { maxAge: 59, rate: 15.0 },
     ]
 };
 
@@ -44,11 +44,14 @@ export const calculatePremium = (data: UserData) => {
 
     // 4. Formula Finală
     const annualPremium = baseRate * smokerMultiplier * sumFactor;
-    const monthlyPremium = annualPremium / 12;
+    const monthlyPremiumCalculated = annualPremium / 12;
+
+    // Regulă de Business: Prima minimă este 100 EUR
+    const finalMonthlyPremium = Math.max(100, monthlyPremiumCalculated);
 
     return {
         annualPremium,
-        monthlyPremium
+        monthlyPremium: finalMonthlyPremium
     };
 };
 
