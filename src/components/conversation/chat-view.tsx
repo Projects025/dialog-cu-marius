@@ -243,11 +243,11 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
             </div>
             )}
             <div ref={endOfMessagesRef} />
-            <div className="h-32 md:h-0 flex-shrink-0"></div>
+            <div className="h-32 md:h-12 flex-shrink-0"></div>
         </div>
       
-        <div id="user-actions-container" className="flex-shrink-0 p-4 bg-background/30 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none fixed bottom-0 left-0 right-0 md:relative md:max-w-md md:ml-auto md:bg-none md:backdrop-blur-none">
-            <div className="w-full max-w-md mx-auto md:w-auto md:max-w-sm md:ml-auto flex flex-col justify-center items-center">
+        <div id="user-actions-container" className="flex-shrink-0 p-4 bg-background/30 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none fixed bottom-0 left-0 right-0 md:relative md:bg-none md:backdrop-blur-none">
+            <div className="w-full max-w-md mx-auto md:w-full md:max-w-sm md:mr-0 md:ml-auto flex flex-col justify-center items-center">
              {renderUserActions()}
             </div>
         </div>
