@@ -309,7 +309,7 @@ export default function Home() {
   return (
     <div className="container mx-auto h-[100svh] p-0 flex flex-col items-center justify-center">
       {view === "landing" ? (
-        <div className="w-full h-full flex flex-col items-center justify-center p-4">
+        <div className="w-full min-h-screen flex flex-col items-center justify-center p-4 py-12">
             <LandingView onStart={handleStart} isFadingOut={isFadingOut} />
         </div>
       ) : (

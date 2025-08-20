@@ -37,26 +37,26 @@ const LandingView = ({ onStart, isFadingOut }: LandingViewProps) => {
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center text-center w-full max-w-4xl mx-auto p-4",
+        "flex w-full max-w-4xl flex-col items-center justify-center p-4 text-center",
         "transition-opacity duration-500",
         isFadingOut ? "opacity-0" : "opacity-100 animate-in fade-in-50"
       )}
     >
       <div className="space-y-4 md:space-y-6">
-        <h1 className="text-3xl md:text-5xl font-bold text-foreground max-w-3xl mx-auto">
+        <h1 className="text-3xl font-bold text-foreground md:text-5xl">
           Viața poate aduce provocări financiare neașteptate.
         </h1>
       </div>
       
-      <div className="my-8 md:my-12 w-full">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 w-full">
+      <div className="my-8 w-full md:my-12">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-4">
           {risks.map((risk, index) => (
             <RiskCard
               key={risk.title}
               icon={<risk.icon className="h-8 w-8 text-primary" />}
               title={risk.title}
               description={risk.description}
-              className="animate-in fade-in-0 slide-in-from-bottom-10 duration-500 w-full"
+              className="w-full animate-in fade-in-0 slide-in-from-bottom-10 duration-500"
               style={{ animationDelay: `${index * 100}ms` }}
             />
           ))}
@@ -66,7 +66,7 @@ const LandingView = ({ onStart, isFadingOut }: LandingViewProps) => {
       <Button 
         onClick={onStart} 
         size="lg" 
-        className="w-full md:w-auto bg-primary/90 hover:bg-primary text-lg font-semibold text-primary-foreground shadow-lg transition-all hover:shadow-xl hover:-translate-y-1 animate-in fade-in-0 slide-in-from-bottom-10 duration-500"
+        className="w-full animate-in fade-in-0 slide-in-from-bottom-10 duration-500 hover:-translate-y-1 hover:shadow-xl md:w-auto bg-primary/90 text-lg font-semibold text-primary-foreground shadow-lg transition-all hover:bg-primary"
         style={{ animationDelay: '500ms' }}
       >
         Află cât costă siguranța familiei tale
