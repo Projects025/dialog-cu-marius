@@ -37,7 +37,7 @@ const LandingView = ({ onStart, isFadingOut }: LandingViewProps) => {
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center text-center w-full max-w-6xl mx-auto space-y-8 md:space-y-12 p-4 md:p-0",
+        "flex flex-col items-center justify-center text-center w-full max-w-4xl mx-auto p-4",
         "transition-opacity duration-500",
         isFadingOut ? "opacity-0" : "opacity-100 animate-in fade-in-50"
       )}
@@ -47,18 +47,22 @@ const LandingView = ({ onStart, isFadingOut }: LandingViewProps) => {
           Viața poate aduce provocări financiare neașteptate.
         </h1>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 w-full">
-        {risks.map((risk, index) => (
-          <RiskCard
-            key={risk.title}
-            icon={<risk.icon className="h-8 w-8 text-primary" />}
-            title={risk.title}
-            description={risk.description}
-            className="animate-in fade-in-0 slide-in-from-bottom-10 duration-500 w-full"
-            style={{ animationDelay: `${index * 100}ms` }}
-          />
-        ))}
+      
+      <div className="my-8 md:my-12 w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 w-full">
+          {risks.map((risk, index) => (
+            <RiskCard
+              key={risk.title}
+              icon={<risk.icon className="h-8 w-8 text-primary" />}
+              title={risk.title}
+              description={risk.description}
+              className="animate-in fade-in-0 slide-in-from-bottom-10 duration-500 w-full"
+              style={{ animationDelay: `${index * 100}ms` }}
+            />
+          ))}
+        </div>
       </div>
+
       <Button 
         onClick={onStart} 
         size="lg" 
