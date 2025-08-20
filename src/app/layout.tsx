@@ -22,7 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ro" className="h-full">
+    <html lang="ro" className="h-[100svh]">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
@@ -37,12 +37,12 @@ export default function RootLayout({
       </head>
       <body
         className={cn(
-          "relative min-h-screen bg-gradient-to-b from-[#FFDDC1] to-[#FFC3A0] font-sans antialiased",
+          "relative h-full bg-gradient-to-b from-[#FFDDC1] to-[#FFC3A0] font-sans antialiased",
           poppins.variable
         )}
       >
         <BackgroundBlobs />
-        <main className="relative z-10">{children}</main>
+        <main className="relative z-10 h-full">{children}</main>
         <Toaster />
       </body>
     </html>

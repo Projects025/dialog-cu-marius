@@ -307,9 +307,11 @@ export default function Home() {
 
 
   return (
-    <div className="container mx-auto min-h-screen px-4 py-8 md:py-12 flex flex-col items-center justify-center">
+    <div className="container mx-auto h-[100svh] p-0 flex flex-col items-center justify-center">
       {view === "landing" ? (
-        <LandingView onStart={handleStart} isFadingOut={isFadingOut} />
+        <div className="w-full h-full flex flex-col items-center justify-center p-4">
+            <LandingView onStart={handleStart} isFadingOut={isFadingOut} />
+        </div>
       ) : (
         <ChatView
           conversation={conversation}

@@ -88,12 +88,12 @@ const DateOfBirthPicker = ({ onDateSelect }: { onDateSelect: (date: Date) => voi
     };
 
     return (
-        <div className="flex flex-col gap-4 p-4 rounded-lg bg-white/50 backdrop-blur-sm border border-white/30 animate-in fade-in-50 w-full">
+        <div className="flex flex-col gap-4 p-4 rounded-lg bg-transparent w-full">
              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="flex flex-col gap-1.5">
                     <label htmlFor="day" className="text-sm font-medium text-foreground/80">Ziua</label>
                     <Select onValueChange={setDay} value={day}>
-                        <SelectTrigger id="day"><SelectValue placeholder="Zi" /></SelectTrigger>
+                        <SelectTrigger id="day" className="bg-white/80"><SelectValue placeholder="Zi" /></SelectTrigger>
                         <SelectContent>
                             {days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
                         </SelectContent>
@@ -102,7 +102,7 @@ const DateOfBirthPicker = ({ onDateSelect }: { onDateSelect: (date: Date) => voi
                  <div className="flex flex-col gap-1.5">
                     <label htmlFor="month" className="text-sm font-medium text-foreground/80">Luna</label>
                     <Select onValueChange={setMonth} value={month}>
-                        <SelectTrigger id="month"><SelectValue placeholder="Lună" /></SelectTrigger>
+                        <SelectTrigger id="month" className="bg-white/80"><SelectValue placeholder="Lună" /></SelectTrigger>
                         <SelectContent>
                             {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
                         </SelectContent>
@@ -111,7 +111,7 @@ const DateOfBirthPicker = ({ onDateSelect }: { onDateSelect: (date: Date) => voi
                  <div className="flex flex-col gap-1.5">
                     <label htmlFor="year" className="text-sm font-medium text-foreground/80">Anul</label>
                     <Select onValueChange={setYear} value={year}>
-                        <SelectTrigger id="year"><SelectValue placeholder="An" /></SelectTrigger>
+                        <SelectTrigger id="year" className="bg-white/80"><SelectValue placeholder="An" /></SelectTrigger>
                         <SelectContent>
                             {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
                         </SelectContent>
@@ -119,7 +119,7 @@ const DateOfBirthPicker = ({ onDateSelect }: { onDateSelect: (date: Date) => voi
                 </div>
             </div>
             {error && <p className="text-sm text-red-600">{error}</p>}
-            <Button onClick={handleConfirm} className="w-full">Confirmă</Button>
+            <Button onClick={handleConfirm} className="w-full h-12 mt-2">Confirmă</Button>
         </div>
     );
 };
@@ -158,7 +158,7 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
                 key={index}
                 onClick={() => onResponse(option)}
                 variant="outline"
-                className="bg-white/50 backdrop-blur-sm border-white/30 text-foreground shadow-md justify-start p-4 h-auto hover:bg-white/80"
+                className="bg-white/50 backdrop-blur-sm border-white/30 text-foreground shadow-md justify-center p-4 min-h-[52px] h-auto text-base hover:bg-white/80"
               >
                 {option}
               </Button>
@@ -174,11 +174,11 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="bg-white"
+                className="bg-white h-12 text-base"
                 autoFocus
               />
-              <Button type="submit" onClick={handleSend} disabled={!inputValue.trim()}>
-                <Send className="h-4 w-4" />
+              <Button type="submit" onClick={handleSend} disabled={!inputValue.trim()} size="icon" className="h-12 w-12">
+                <Send className="h-5 w-5" />
                 <span className="sr-only">Trimite</span>
               </Button>
             </div>
@@ -195,8 +195,7 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
   return (
     <>
     <style>{styles}</style>
-    <div id="chat-container" className="w-full max-w-5xl mx-auto flex flex-col h-[calc(100vh-8rem)] bg-black/5 rounded-2xl shadow-2xl overflow-hidden data-[state=open]:animate-in data-[state=open]:fade-in-50" data-state="open">
-        {/* Zona de Dialog */}
+    <div id="chat-container" className="w-full h-full flex flex-col bg-black/5 rounded-none md:rounded-2xl shadow-none md:shadow-2xl overflow-hidden data-[state=open]:animate-in data-[state=open]:fade-in-50" data-state="open">
         <div id="dialog-flow" className="flex-grow space-y-6 overflow-y-auto p-4 md:p-6 no-scrollbar">
             {conversation.map((message) => (
             <div
@@ -243,10 +242,11 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
             </div>
             )}
             <div ref={endOfMessagesRef} />
+            {/* Spacer to push content above the action area on mobile */}
+            <div className="h-32 md:hidden"></div>
         </div>
       
-        {/* Zona de Acțiune */}
-        <div id="user-actions-container" className="flex-shrink-0 p-4 bg-transparent">
+        <div id="user-actions-container" className="flex-shrink-0 p-4 bg-background/30 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none fixed bottom-0 left-0 right-0 md:relative">
             <div className="w-full md:w-auto md:max-w-sm ml-auto flex flex-col justify-center items-center">
              {renderUserActions()}
             </div>
