@@ -127,12 +127,44 @@ const DateOfBirthPicker = ({ onDateSelect }: { onDateSelect: (date: Date) => voi
 const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }: ChatViewProps) => {
   const [inputValue, setInputValue] = useState("");
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
+  const actionsContainerRef = useRef<HTMLDivElement>(null);
+  const [spacerHeight, setSpacerHeight] = useState(0);
 
   useEffect(() => {
     setTimeout(() => {
       endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 100);
   }, [conversation]);
+  
+  useEffect(() => {
+    const calculateHeight = () => {
+      if (actionsContainerRef.current) {
+        // Check if we are on a mobile view by seeing if the element is fixed
+        const style = window.getComputedStyle(actionsContainerRef.current);
+        if (style.position === 'fixed') {
+          setSpacerHeight(actionsContainerRef.current.offsetHeight);
+        } else {
+          setSpacerHeight(0);
+        }
+      }
+    };
+    
+    calculateHeight();
+    const resizeObserver = new ResizeObserver(calculateHeight);
+    if(actionsContainerRef.current) {
+        resizeObserver.observe(actionsContainerRef.current);
+    }
+    
+    window.addEventListener('resize', calculateHeight);
+
+    return () => {
+      if(actionsContainerRef.current) {
+          resizeObserver.unobserve(actionsContainerRef.current);
+      }
+      window.removeEventListener('resize', calculateHeight);
+    };
+  }, [userAction]);
+
 
   const handleSend = () => {
     if (inputValue.trim()) {
@@ -197,7 +229,7 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
     <>
     <style>{styles}</style>
     <div id="chat-container" className="w-full h-full flex flex-col bg-black/5 rounded-none md:rounded-2xl shadow-none md:shadow-2xl overflow-hidden">
-        <div id="dialog-flow" className="flex-grow space-y-6 overflow-y-auto p-4 md:p-6 no-scrollbar pb-32 md:pb-6">
+        <div id="dialog-flow" className="flex-grow space-y-6 overflow-y-auto p-4 md:p-6 no-scrollbar">
             {conversation.map((message) => (
             <div
                 key={message.id}
@@ -243,9 +275,10 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
             </div>
             )}
             <div ref={endOfMessagesRef} />
+            <div style={{ height: `${spacerHeight}px` }} />
         </div>
       
-        <div id="user-actions-container" className="flex-shrink-0 p-4 bg-background/30 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none fixed bottom-0 left-0 right-0 md:relative md:bg-none md:backdrop-blur-none">
+        <div ref={actionsContainerRef} id="user-actions-container" className="flex-shrink-0 p-4 bg-background/30 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none fixed bottom-0 left-0 right-0 md:relative md:bg-none md:backdrop-blur-none">
             <div className="w-full max-w-md mx-auto md:w-full md:max-w-sm md:ml-auto flex flex-col justify-center items-center">
              {renderUserActions()}
             </div>
