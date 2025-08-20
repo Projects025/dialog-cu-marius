@@ -37,7 +37,7 @@ const LandingView = ({ onStart, isFadingOut }: LandingViewProps) => {
   return (
     <div
       className={cn(
-        "flex w-full max-w-4xl flex-col items-center justify-center p-4 text-center",
+        "flex w-full max-w-4xl flex-col items-center justify-center p-6 text-center space-y-12 py-20",
         "transition-opacity duration-500",
         isFadingOut ? "opacity-0" : "opacity-100 animate-in fade-in-50"
       )}
@@ -48,8 +48,7 @@ const LandingView = ({ onStart, isFadingOut }: LandingViewProps) => {
         </h1>
       </div>
       
-      <div className="my-8 w-full md:my-12">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-4">
+      <div className="w-full space-y-6 md:grid md:grid-cols-2 md:gap-6 md:space-y-0">
           {risks.map((risk, index) => (
             <RiskCard
               key={risk.title}
@@ -60,7 +59,6 @@ const LandingView = ({ onStart, isFadingOut }: LandingViewProps) => {
               style={{ animationDelay: `${index * 100}ms` }}
             />
           ))}
-        </div>
       </div>
 
       <Button 
