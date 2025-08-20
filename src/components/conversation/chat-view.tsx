@@ -197,7 +197,7 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
     <>
     <style>{styles}</style>
     <div id="chat-container" className="w-full h-full flex flex-col bg-black/5 rounded-none md:rounded-2xl shadow-none md:shadow-2xl overflow-hidden">
-        <div id="dialog-flow" className="flex-grow space-y-6 overflow-y-auto p-4 md:p-6 no-scrollbar">
+        <div id="dialog-flow" className="flex-grow space-y-6 overflow-y-auto p-4 md:p-6 no-scrollbar pb-32 md:pb-6">
             {conversation.map((message) => (
             <div
                 key={message.id}
@@ -243,11 +243,10 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
             </div>
             )}
             <div ref={endOfMessagesRef} />
-            <div className="h-32 md:h-12 flex-shrink-0"></div>
         </div>
       
         <div id="user-actions-container" className="flex-shrink-0 p-4 bg-background/30 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none fixed bottom-0 left-0 right-0 md:relative md:bg-none md:backdrop-blur-none">
-            <div className="w-full max-w-md mx-auto md:w-full md:max-w-sm md:mr-0 md:ml-auto flex flex-col justify-center items-center">
+            <div className="w-full max-w-md mx-auto md:w-full md:max-w-sm md:ml-auto flex flex-col justify-center items-center">
              {renderUserActions()}
             </div>
         </div>
