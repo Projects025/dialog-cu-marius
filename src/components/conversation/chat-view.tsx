@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// --- CSS for hiding scrollbar ---
 const styles = `
 .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -76,7 +75,7 @@ const DateOfBirthPicker = ({ onDateSelect }: { onDateSelect: (date: Date) => voi
     const handleConfirm = () => {
         if (day && month && year) {
             const selectedDate = new Date(parseInt(year), parseInt(month), parseInt(day));
-            if (selectedDate.getDate() !== parseInt(day)) {
+            if (selectedDate.getDate() !== parseInt(day) || selectedDate.getMonth() !== parseInt(month)) {
                 setError("Data selectată nu este validă.");
                 return;
             }
@@ -89,7 +88,7 @@ const DateOfBirthPicker = ({ onDateSelect }: { onDateSelect: (date: Date) => voi
 
     return (
         <div className="flex flex-col gap-4 p-4 rounded-lg bg-transparent w-full">
-             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+             <div className="grid grid-cols-3 gap-3">
                 <div className="flex flex-col gap-1.5">
                     <label htmlFor="day" className="text-sm font-medium text-foreground/80">Ziua</label>
                     <Select onValueChange={setDay} value={day}>
@@ -130,7 +129,9 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
+    setTimeout(() => {
+      endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
   }, [conversation]);
 
   const handleSend = () => {
@@ -158,7 +159,7 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
                 key={index}
                 onClick={() => onResponse(option)}
                 variant="outline"
-                className="bg-white/50 backdrop-blur-sm border-white/30 text-foreground shadow-md justify-center p-4 min-h-[52px] h-auto text-base hover:bg-white/80"
+                className="bg-white/50 backdrop-blur-sm border-white/30 text-foreground shadow-md justify-center py-3 min-h-[52px] h-auto text-base hover:bg-white/80"
               >
                 {option}
               </Button>
@@ -177,7 +178,7 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
                 className="bg-white h-12 text-base"
                 autoFocus
               />
-              <Button type="submit" onClick={handleSend} disabled={!inputValue.trim()} size="icon" className="h-12 w-12">
+              <Button type="submit" onClick={handleSend} disabled={!inputValue.trim()} size="icon" className="h-12 w-12 flex-shrink-0">
                 <Send className="h-5 w-5" />
                 <span className="sr-only">Trimite</span>
               </Button>
@@ -195,7 +196,7 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
   return (
     <>
     <style>{styles}</style>
-    <div id="chat-container" className="w-full h-full flex flex-col bg-black/5 rounded-none md:rounded-2xl shadow-none md:shadow-2xl overflow-hidden data-[state=open]:animate-in data-[state=open]:fade-in-50" data-state="open">
+    <div id="chat-container" className="w-full h-full flex flex-col bg-black/5 rounded-none md:rounded-2xl shadow-none md:shadow-2xl overflow-hidden">
         <div id="dialog-flow" className="flex-grow space-y-6 overflow-y-auto p-4 md:p-6 no-scrollbar">
             {conversation.map((message) => (
             <div
@@ -206,17 +207,17 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
                 )}
             >
                 {message.author === "Marius" && (
-                <Avatar className="h-8 w-8 hidden sm:flex self-start">
-                    <AvatarFallback className="bg-primary text-primary-foreground">
+                <Avatar className="h-8 w-8 hidden sm:flex self-start flex-shrink-0">
+                    <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
                     M
                     </AvatarFallback>
                 </Avatar>
                 )}
                 <div
                 className={cn(
-                    "max-w-md md:max-w-lg rounded-2xl px-4 py-3 shadow-md",
+                    "max-w-md md:max-w-lg rounded-2xl px-4 py-3 shadow-md text-base md:text-sm",
                     message.author === "Marius"
-                    ? "bg-white/80 backdrop-blur-sm text-gray-800 rounded-bl-none"
+                    ? "bg-white/80 backdrop-blur-sm text-foreground rounded-bl-none"
                     : "bg-primary text-primary-foreground rounded-br-none",
                     message.style === 'dramatic' && "bg-gray-800/80 text-white italic border border-destructive/50"
                 )}
@@ -226,9 +227,9 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
             </div>
             ))}
             {isWaitingForResponse && conversation.length > 0 && userAction === null && (
-            <div className="flex items-end gap-3 w-full justify-start">
-                <Avatar className="h-8 w-8 hidden sm:flex self-start">
-                    <AvatarFallback className="bg-primary text-primary-foreground">
+            <div className="flex items-end gap-3 w-full justify-start animate-in fade-in slide-in-from-bottom-5 duration-500">
+                <Avatar className="h-8 w-8 hidden sm:flex self-start flex-shrink-0">
+                    <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
                     M
                     </AvatarFallback>
                 </Avatar>
@@ -242,12 +243,11 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
             </div>
             )}
             <div ref={endOfMessagesRef} />
-            {/* Spacer to push content above the action area on mobile */}
-            <div className="h-32 md:hidden"></div>
+            <div className="h-32 md:h-0 flex-shrink-0"></div>
         </div>
       
-        <div id="user-actions-container" className="flex-shrink-0 p-4 bg-background/30 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none fixed bottom-0 left-0 right-0 md:relative">
-            <div className="w-full md:w-auto md:max-w-sm ml-auto flex flex-col justify-center items-center">
+        <div id="user-actions-container" className="flex-shrink-0 p-4 bg-background/30 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none fixed bottom-0 left-0 right-0 md:relative md:max-w-md md:ml-auto md:bg-none md:backdrop-blur-none">
+            <div className="w-full max-w-md mx-auto md:w-auto md:max-w-sm md:ml-auto flex flex-col justify-center items-center">
              {renderUserActions()}
             </div>
         </div>

@@ -22,7 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ro" className="h-[100svh]">
+    <html lang="ro" className="h-full max-h-[-webkit-fill-available] bg-background">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
@@ -37,7 +37,7 @@ export default function RootLayout({
       </head>
       <body
         className={cn(
-          "relative h-full bg-gradient-to-b from-[#FFDDC1] to-[#FFC3A0] font-sans antialiased",
+          "relative h-full max-h-[-webkit-fill-available] bg-gradient-to-b from-[#FFDDC1] to-[#FFC3A0] font-sans antialiased",
           poppins.variable
         )}
       >

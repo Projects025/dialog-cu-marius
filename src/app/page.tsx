@@ -307,11 +307,9 @@ export default function Home() {
 
 
   return (
-    <div className="container mx-auto h-[100svh] p-0 flex flex-col">
+    <div className="container mx-auto h-full max-h-[-webkit-fill-available] p-0 flex flex-col">
       {view === "landing" ? (
-        <div className="w-full">
-            <LandingView onStart={handleStart} isFadingOut={isFadingOut} />
-        </div>
+        <LandingView onStart={handleStart} isFadingOut={isFadingOut} />
       ) : (
         <ChatView
           conversation={conversation}
