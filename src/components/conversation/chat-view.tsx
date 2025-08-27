@@ -38,15 +38,8 @@ export type UserData = {
   phone?: string;
 }
 
-export type FinancialData = {
-    protectionPeriod: number;
-    monthlyExpenses: number;
-    specificEventCosts: number;
-    futureProjects: number;
-    existingInsurance: number;
-    savings: number;
-    targetAmount: number;
-}
+export type { FinancialData } from '@/lib/calculation';
+
 
 export type UserAction = {
   type: 'input' | 'buttons' | 'date' | 'checkbox' | 'form';
@@ -76,12 +69,12 @@ const DateOfBirthPicker = ({ onDateSelect }: { onDateSelect: (date: Date) => voi
         { value: "10", label: "Noiembrie" }, { value: "11", label: "Decembrie" },
     ];
     const currentYear = new Date().getFullYear();
-    const years = Array.from({ length: 53 }, (_, i) => (currentYear - 18 - i).toString());
+    const years = Array.from({ length: 70 }, (_, i) => (currentYear - 18 - i).toString());
 
     const handleConfirm = () => {
         if (day && month && year) {
             const selectedDate = new Date(parseInt(year), parseInt(month), parseInt(day));
-            if (selectedDate.getDate() !== parseInt(day) || selectedDate.getMonth() !== parseInt(month)) {
+            if (selectedDate.getDate() !== parseInt(day) || selectedDate.getMonth() !== parseInt(month) || selectedDate.getFullYear() !== parseInt(year)) {
                 setError("Data selectată nu este validă.");
                 return;
             }
@@ -222,42 +215,29 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
   const spacerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // This function calculates the height of the actions container and sets the spacer's height.
-    const calculateHeight = () => {
+    const calculateHeightAndScroll = () => {
       if (actionsContainerRef.current && spacerRef.current) {
-        spacerRef.current.style.height = `${actionsContainerRef.current.offsetHeight}px`;
-        // Scroll to bottom after height calculation to ensure visibility
-        setTimeout(() => {
-          endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
-        }, 100);
+        const height = actionsContainerRef.current.offsetHeight;
+        spacerRef.current.style.height = `${height}px`;
       }
+      setTimeout(() => {
+        endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
     };
 
-    calculateHeight(); // Initial calculation
-    // Use ResizeObserver to automatically recalculate when the action container's size changes.
-    const resizeObserver = new ResizeObserver(calculateHeight);
-    if(actionsContainerRef.current) {
+    calculateHeightAndScroll();
+    const resizeObserver = new ResizeObserver(calculateHeightAndScroll);
+    if (actionsContainerRef.current) {
         resizeObserver.observe(actionsContainerRef.current);
     }
-    
-    // Fallback recalculation on userAction change, as content changes might not trigger resize.
-    setTimeout(calculateHeight, 100); 
-    
-    return () => {
-      // Cleanup observer on component unmount
-      if(actionsContainerRef.current) {
-          // eslint-disable-next-line react-hooks/exhaustive-deps
-          resizeObserver.unobserve(actionsContainerRef.current);
-      }
-    };
-  }, [userAction]);
 
-  useEffect(() => {
-    // Scrolls to the end of the conversation when new messages are added.
-    setTimeout(() => {
-      endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 100);
-  }, [conversation]);
+    return () => {
+        if (actionsContainerRef.current) {
+             // eslint-disable-next-line react-hooks/exhaustive-deps
+            resizeObserver.unobserve(actionsContainerRef.current);
+        }
+    };
+  }, [userAction, conversation]);
 
 
   const handleSend = () => {
@@ -376,14 +356,13 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
                 </div>
             </div>
             )}
-            {/* The invisible spacer that pushes the content up */}
             <div ref={spacerRef} className="flex-shrink-0 transition-height duration-300" />
             <div ref={endOfMessagesRef} />
         </div>
       
-        <div ref={actionsContainerRef} id="user-actions-container" className="flex-shrink-0 p-4 bg-background/50 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none fixed bottom-0 left-0 right-0 md:relative md:bg-none">
-            <div className="w-full max-w-full mx-auto md:w-full md:max-w-lg md:ml-auto flex flex-col justify-center items-center">
-             {renderUserActions()}
+        <div ref={actionsContainerRef} id="user-actions-container" className="flex-shrink-0 p-4 bg-background/50 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none fixed bottom-0 left-0 right-0 md:relative">
+             <div className="w-full max-w-full mx-auto md:w-full md:max-w-lg md:ml-auto flex flex-col justify-center items-center">
+                 {renderUserActions()}
             </div>
         </div>
     </div>
