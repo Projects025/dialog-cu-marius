@@ -65,9 +65,8 @@ export const calculatePremium = (data: UserData) => {
     }
     const age = differenceInYears(new Date(), data.birthDate);
     const baseRate = getBaseRate(age, data.gender);
-    const smokerMultiplier = data.isSmoker ? 2.0 : 1.0;
     const sumFactor = data.desiredSum / 1000;
-    const annualPremium = baseRate * smokerMultiplier * sumFactor;
+    const annualPremium = baseRate * sumFactor;
     const monthlyPremiumCalculated = annualPremium / 12;
 
     // Prima minimă este 100 EUR

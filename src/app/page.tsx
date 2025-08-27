@@ -99,16 +99,9 @@ const conversationFlows: AllConversationFlows = {
             nextStep: () => 'ask_dob'
         },
         ask_dob: {
-            message: () => "Este un scenariu dificil, dar există soluții. Pentru a-ți oferi o estimare de cost, mai am nevoie de data nașterii și să-mi confirmi dacă ești fumător.",
+            message: () => "Este un scenariu dificil, dar există soluții. Pentru a-ți oferi o estimare de cost, mai am nevoie de data nașterii.",
             actionType: 'date',
             handler: (response, data) => { data.birthDate = response as Date; },
-            nextStep: () => 'ask_smoker'
-        },
-        ask_smoker: {
-            message: () => "Ești fumător?",
-            actionType: 'buttons',
-            options: ["Da", "Nu"],
-            handler: (response, data) => { data.isSmoker = response === 'Da'; },
             nextStep: () => 'calculate_premium'
         },
         calculate_premium: {
@@ -116,7 +109,7 @@ const conversationFlows: AllConversationFlows = {
             actionType: 'calculation',
             handler: (_, data) => {
                 const userDataForPremium: UserData = {
-                    birthDate: data.birthDate, isSmoker: data.isSmoker, desiredSum: data.deficit, gender: 'Masculin'
+                    birthDate: data.birthDate, isSmoker: false, desiredSum: data.deficit, gender: 'Masculin'
                 };
                 data.monthlyPremium = calculatePremium(userDataForPremium).monthlyPremium;
             },
@@ -179,16 +172,9 @@ const conversationFlows: AllConversationFlows = {
              nextStep: () => 'ask_dob'
         },
         ask_dob: {
-            message: () => "Pentru a-ți oferi o estimare de cost, mai am nevoie de data nașterii și să-mi confirmi dacă ești fumător.",
+            message: () => "Pentru a-ți oferi o estimare de cost, mai am nevoie de data nașterii.",
             actionType: 'date',
             handler: (response, data) => { data.birthDate = response as Date; },
-            nextStep: () => 'ask_smoker'
-        },
-        ask_smoker: {
-            message: () => "Ești fumător?",
-            actionType: 'buttons',
-            options: ["Da", "Nu"],
-            handler: (response, data) => { data.isSmoker = response === 'Da'; },
             nextStep: () => 'calculate_premium'
         },
         calculate_premium: {
@@ -196,7 +182,7 @@ const conversationFlows: AllConversationFlows = {
             actionType: 'calculation',
             handler: (_, data) => {
                 const userDataForPremium: UserData = {
-                    birthDate: data.birthDate, isSmoker: data.isSmoker, desiredSum: data.deficit, gender: 'Masculin'
+                    birthDate: data.birthDate, isSmoker: false, desiredSum: data.deficit, gender: 'Masculin'
                 };
                 data.monthlyPremium = calculatePremium(userDataForPremium).monthlyPremium;
             },
