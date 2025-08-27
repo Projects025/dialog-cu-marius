@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 const risks = [
   {
     icon: Users,
-    title: "Deces",
+    title: "Protecție în caz de deces",
     description: "Protejează-ți familia în cazul unui eveniment nefericit.",
   },
   {
@@ -37,7 +37,7 @@ const LandingView = ({ onStart, isFadingOut }: LandingViewProps) => {
   return (
     <div
       className={cn(
-        "flex w-full flex-col items-center justify-center p-6 text-center space-y-12 py-20",
+        "flex w-full flex-col items-center justify-start p-6 text-center space-y-12 py-20",
         "transition-opacity duration-500",
         isFadingOut ? "opacity-0" : "opacity-100 animate-in fade-in-50"
       )}
@@ -67,7 +67,7 @@ const LandingView = ({ onStart, isFadingOut }: LandingViewProps) => {
         className="w-full md:w-auto animate-in fade-in-0 slide-in-from-bottom-10 duration-500 hover:-translate-y-1 hover:shadow-xl bg-primary/90 text-lg font-semibold text-primary-foreground shadow-lg transition-all hover:bg-primary"
         style={{ animationDelay: '500ms' }}
       >
-        Află cât costă siguranța familiei tale
+        Descoperă gradul tău de protecție financiară
       </Button>
     </div>
   );

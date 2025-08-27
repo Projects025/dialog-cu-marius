@@ -5,8 +5,10 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Send } from "lucide-react";
+import { Send, CheckSquare, Square } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Checkbox } from "../ui/checkbox";
+import { Label } from "../ui/label";
 
 const styles = `
 .no-scrollbar::-webkit-scrollbar {
@@ -31,19 +33,21 @@ export type UserData = {
   gender: 'Masculin' | 'Feminin';
   isSmoker: boolean;
   desiredSum: number;
+  name?: string;
+  email?: string;
   phone?: string;
 }
 
 export type FinancialData = {
     protectionPeriod: number;
     monthlyExpenses: number;
-    totalDebts: number;
+    futureProjects: number;
     existingInsurance: number;
     savings: number;
 }
 
 export type UserAction = {
-  type: 'input' | 'buttons' | 'date';
+  type: 'input' | 'buttons' | 'date' | 'checkbox' | 'form';
   options?: any;
 }
 
@@ -123,47 +127,126 @@ const DateOfBirthPicker = ({ onDateSelect }: { onDateSelect: (date: Date) => voi
     );
 };
 
+const CheckboxSelector = ({ options, buttonText, onConfirm }: { options: string[], buttonText: string, onConfirm: (selected: string[]) => void }) => {
+    const [selected, setSelected] = useState<string[]>([]);
+    
+    const toggleOption = (option: string) => {
+        setSelected(prev => 
+            prev.includes(option) ? prev.filter(item => item !== option) : [...prev, option]
+        );
+    };
+
+    return (
+        <div className="flex flex-col gap-3 w-full animate-in fade-in-50">
+            {options.map((option: string, index: number) => (
+                <div
+                    key={index}
+                    onClick={() => toggleOption(option)}
+                    className="flex items-center space-x-3 p-3 rounded-md cursor-pointer bg-white/50 backdrop-blur-sm border-white/30 text-foreground shadow-md hover:bg-white/80"
+                >
+                    {selected.includes(option) ? <CheckSquare className="h-5 w-5 text-primary" /> : <Square className="h-5 w-5 text-foreground/50" />}
+                    <span className="text-base font-medium">{option}</span>
+                </div>
+            ))}
+             <Button 
+                onClick={() => onConfirm(selected)} 
+                disabled={selected.length === 0}
+                className="w-full h-12 mt-2"
+            >
+                {buttonText}
+            </Button>
+        </div>
+    );
+};
+
+
+const ContactForm = ({ options, onResponse }: { options: any, onResponse: (data: any) => void }) => {
+    const [formData, setFormData] = useState<{[key: string]: string}>({});
+    const [gdprChecked, setGdprChecked] = useState(false);
+    const [errors, setErrors] = useState<{[key: string]: string}>({});
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    };
+
+    const validate = () => {
+        const newErrors: {[key: string]: string} = {};
+        options.fields.forEach((field: any) => {
+            if (field.required && !formData[field.name]) {
+                newErrors[field.name] = 'Acest câmp este obligatoriu.';
+            }
+        });
+        if (!gdprChecked) {
+            newErrors.gdpr = 'Acordul este necesar.';
+        }
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleSubmit = () => {
+        if (validate()) {
+            onResponse(formData);
+        }
+    };
+
+    return (
+        <div className="flex flex-col gap-4 w-full animate-in fade-in-50">
+            {options.fields.map((field: any) => (
+                <div key={field.name}>
+                    <Input
+                        name={field.name}
+                        type={field.type}
+                        placeholder={field.placeholder}
+                        onChange={handleInputChange}
+                        className="bg-white h-12 text-base"
+                    />
+                    {errors[field.name] && <p className="text-sm text-red-600 mt-1">{errors[field.name]}</p>}
+                </div>
+            ))}
+            <div className="flex items-center space-x-2">
+                <Checkbox id="gdpr" checked={gdprChecked} onCheckedChange={(checked) => setGdprChecked(checked as boolean)} />
+                <Label htmlFor="gdpr" className="text-sm font-medium leading-none text-foreground/80 cursor-pointer">{options.gdpr}</Label>
+            </div>
+            {errors.gdpr && <p className="text-sm text-red-600">{errors.gdpr}</p>}
+            <Button onClick={handleSubmit} className="w-full h-12 mt-2">{options.buttonText}</Button>
+        </div>
+    )
+}
 
 const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }: ChatViewProps) => {
   const [inputValue, setInputValue] = useState("");
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
   const actionsContainerRef = useRef<HTMLDivElement>(null);
-  const [spacerHeight, setSpacerHeight] = useState(0);
+  const spacerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const calculateHeight = () => {
+      if (actionsContainerRef.current && spacerRef.current) {
+        spacerRef.current.style.height = `${actionsContainerRef.current.offsetHeight}px`;
+      }
+    };
+
+    calculateHeight(); // Initial calculation
+    const resizeObserver = new ResizeObserver(calculateHeight);
+    if(actionsContainerRef.current) {
+        resizeObserver.observe(actionsContainerRef.current);
+    }
+    
+    // Recalculate on userAction change as content changes
+    setTimeout(calculateHeight, 100);
+    
+    return () => {
+      if(actionsContainerRef.current) {
+          resizeObserver.unobserve(actionsContainerRef.current);
+      }
+    };
+  }, [userAction]);
 
   useEffect(() => {
     setTimeout(() => {
       endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 100);
   }, [conversation]);
-  
-  useEffect(() => {
-    const calculateHeight = () => {
-      if (actionsContainerRef.current) {
-        // Check if we are on a mobile view by seeing if the element is fixed
-        const style = window.getComputedStyle(actionsContainerRef.current);
-        if (style.position === 'fixed') {
-          setSpacerHeight(actionsContainerRef.current.offsetHeight);
-        } else {
-          setSpacerHeight(0);
-        }
-      }
-    };
-    
-    calculateHeight();
-    const resizeObserver = new ResizeObserver(calculateHeight);
-    if(actionsContainerRef.current) {
-        resizeObserver.observe(actionsContainerRef.current);
-    }
-    
-    window.addEventListener('resize', calculateHeight);
-
-    return () => {
-      if(actionsContainerRef.current) {
-          resizeObserver.unobserve(actionsContainerRef.current);
-      }
-      window.removeEventListener('resize', calculateHeight);
-    };
-  }, [userAction]);
 
 
   const handleSend = () => {
@@ -220,6 +303,14 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
         return (
           <DateOfBirthPicker onDateSelect={onResponse} />
         )
+      case "checkbox":
+        return (
+            <CheckboxSelector options={userAction.options.options} buttonText={userAction.options.buttonText} onConfirm={onResponse} />
+        );
+      case "form":
+        return (
+            <ContactForm options={userAction.options} onResponse={onResponse} />
+        )
       default:
         return null;
     }
@@ -247,7 +338,7 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
                 )}
                 <div
                 className={cn(
-                    "max-w-md md:max-w-lg rounded-2xl px-4 py-3 shadow-md text-base md:text-sm",
+                    "max-w-md md:max-w-lg rounded-2xl px-4 py-3 shadow-md text-base text-foreground",
                     message.author === "Marius"
                     ? "bg-white/80 backdrop-blur-sm text-foreground rounded-bl-none"
                     : "bg-primary text-primary-foreground rounded-br-none",
@@ -275,11 +366,11 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
             </div>
             )}
             <div ref={endOfMessagesRef} />
-            <div style={{ height: `${spacerHeight}px` }} />
+            <div ref={spacerRef} className="flex-shrink-0" />
         </div>
       
-        <div ref={actionsContainerRef} id="user-actions-container" className="flex-shrink-0 p-4 bg-background/30 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none fixed bottom-0 left-0 right-0 md:relative md:bg-none md:backdrop-blur-none">
-            <div className="w-full max-w-md mx-auto md:w-full md:max-w-sm md:ml-auto flex flex-col justify-center items-center">
+        <div ref={actionsContainerRef} id="user-actions-container" className="flex-shrink-0 p-4 bg-background/50 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none fixed bottom-0 left-0 right-0 md:relative md:bg-none md:backdrop-blur-none">
+            <div className="w-full max-w-full mx-auto md:w-full md:max-w-sm md:ml-auto flex flex-col justify-center items-center">
              {renderUserActions()}
             </div>
         </div>

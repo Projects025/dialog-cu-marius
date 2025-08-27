@@ -60,12 +60,12 @@ export const calculateDeficit = (data: FinancialData): number => {
     const { 
         protectionPeriod = 0,
         monthlyExpenses = 0,
-        totalDebts = 0,
+        futureProjects = 0,
         existingInsurance = 0,
         savings = 0
     } = data;
 
-    const totalNeeds = (monthlyExpenses * protectionPeriod * 12) + totalDebts;
+    const totalNeeds = (monthlyExpenses * protectionPeriod * 12) + futureProjects;
     const existingResources = existingInsurance + savings;
     
     const deficit = totalNeeds - existingResources;
