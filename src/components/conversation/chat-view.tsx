@@ -41,9 +41,11 @@ export type UserData = {
 export type FinancialData = {
     protectionPeriod: number;
     monthlyExpenses: number;
+    specificEventCosts: number;
     futureProjects: number;
     existingInsurance: number;
     savings: number;
+    targetAmount: number;
 }
 
 export type UserAction = {
@@ -220,29 +222,38 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
   const spacerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // This function calculates the height of the actions container and sets the spacer's height.
     const calculateHeight = () => {
       if (actionsContainerRef.current && spacerRef.current) {
         spacerRef.current.style.height = `${actionsContainerRef.current.offsetHeight}px`;
+        // Scroll to bottom after height calculation to ensure visibility
+        setTimeout(() => {
+          endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
+        }, 100);
       }
     };
 
     calculateHeight(); // Initial calculation
+    // Use ResizeObserver to automatically recalculate when the action container's size changes.
     const resizeObserver = new ResizeObserver(calculateHeight);
     if(actionsContainerRef.current) {
         resizeObserver.observe(actionsContainerRef.current);
     }
     
-    // Recalculate on userAction change as content changes
-    setTimeout(calculateHeight, 100);
+    // Fallback recalculation on userAction change, as content changes might not trigger resize.
+    setTimeout(calculateHeight, 100); 
     
     return () => {
+      // Cleanup observer on component unmount
       if(actionsContainerRef.current) {
+          // eslint-disable-next-line react-hooks/exhaustive-deps
           resizeObserver.unobserve(actionsContainerRef.current);
       }
     };
   }, [userAction]);
 
   useEffect(() => {
+    // Scrolls to the end of the conversation when new messages are added.
     setTimeout(() => {
       endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 100);
@@ -365,12 +376,13 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
                 </div>
             </div>
             )}
+            {/* The invisible spacer that pushes the content up */}
+            <div ref={spacerRef} className="flex-shrink-0 transition-height duration-300" />
             <div ref={endOfMessagesRef} />
-            <div ref={spacerRef} className="flex-shrink-0" />
         </div>
       
-        <div ref={actionsContainerRef} id="user-actions-container" className="flex-shrink-0 p-4 bg-background/50 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none fixed bottom-0 left-0 right-0 md:relative md:bg-none md:backdrop-blur-none">
-            <div className="w-full max-w-full mx-auto md:w-full md:max-w-sm md:ml-auto flex flex-col justify-center items-center">
+        <div ref={actionsContainerRef} id="user-actions-container" className="flex-shrink-0 p-4 bg-background/50 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none fixed bottom-0 left-0 right-0 md:relative md:bg-none">
+            <div className="w-full max-w-full mx-auto md:w-full md:max-w-lg md:ml-auto flex flex-col justify-center items-center">
              {renderUserActions()}
             </div>
         </div>

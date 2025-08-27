@@ -55,17 +55,17 @@ export const calculatePremium = (data: UserData) => {
     };
 };
 
-
 export const calculateDeficit = (data: FinancialData): number => {
     const { 
         protectionPeriod = 0,
         monthlyExpenses = 0,
+        specificEventCosts = 0,
         futureProjects = 0,
         existingInsurance = 0,
         savings = 0
     } = data;
 
-    const totalNeeds = (monthlyExpenses * protectionPeriod * 12) + futureProjects;
+    const totalNeeds = (monthlyExpenses * protectionPeriod * 12) + specificEventCosts + futureProjects;
     const existingResources = existingInsurance + savings;
     
     const deficit = totalNeeds - existingResources;
@@ -73,4 +73,26 @@ export const calculateDeficit = (data: FinancialData): number => {
     // Deficitul nu poate fi negativ.
     return Math.max(0, deficit);
 };
-    
+
+export const calculateSavings = (data: Partial<FinancialData>): { monthlyContribution: number, targetAmount: number, years: number } => {
+    const {
+        targetAmount = 0,
+        protectionPeriod = 0, // Reusing this field for years
+        savings = 0
+    } = data;
+
+    const remainingAmount = targetAmount - savings;
+    const totalMonths = protectionPeriod * 12;
+
+    if (totalMonths <= 0) {
+        return { monthlyContribution: 0, targetAmount, years: protectionPeriod };
+    }
+
+    const monthlyContribution = remainingAmount / totalMonths;
+
+    return {
+        monthlyContribution: Math.max(0, monthlyContribution),
+        targetAmount,
+        years: protectionPeriod,
+    };
+};
