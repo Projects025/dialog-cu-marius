@@ -1,32 +1,7 @@
 "use client";
 
-import RiskCard from "./risk-card";
 import { Button } from "@/components/ui/button";
-import { Users, PiggyBank, Accessibility, HeartPulse } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const risks = [
-  {
-    icon: Users,
-    title: "Protecție în caz de deces",
-    description: "Protejează-ți familia în cazul unui eveniment nefericit.",
-  },
-  {
-    icon: PiggyBank,
-    title: "Pensionare",
-    description: "Asigură-ți un viitor liniștit și independent financiar.",
-  },
-  {
-    icon: Accessibility,
-    title: "Invaliditate",
-    description: "Menține-ți stabilitatea financiară dacă nu mai poți munci.",
-  },
-  {
-    icon: HeartPulse,
-    title: "Boli Grave",
-    description: "Fii pregătit pentru costurile medicale neașteptate.",
-  },
-];
 
 interface LandingViewProps {
   onStart: () => void;
@@ -37,37 +12,37 @@ const LandingView = ({ onStart, isFadingOut }: LandingViewProps) => {
   return (
     <div
       className={cn(
-        "flex w-full flex-col items-center justify-start p-6 text-center space-y-12 py-20",
-        "transition-opacity duration-500",
-        isFadingOut ? "opacity-0" : "opacity-100 animate-in fade-in-50"
+        "min-h-screen w-full flex flex-col justify-center items-center text-center p-6 md:p-8 transition-opacity duration-500",
+        isFadingOut ? "opacity-0" : "opacity-100"
       )}
     >
-      <div className="space-y-4 md:space-y-6">
-        <h1 className="text-3xl font-bold text-foreground md:text-5xl">
-          Viața poate aduce provocări financiare neașteptate.
+      <div
+        className={cn(
+          "space-y-6 transition-all duration-500",
+          isFadingOut ? "transform-none" : "animate-in fade-in-0 slide-in-from-bottom-10"
+        )}
+      >
+        <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-foreground">
+          Liniștea ta financiară, simplificată.
         </h1>
-      </div>
-      
-      <div className="w-full space-y-6 md:grid md:grid-cols-2 md:gap-6 md:space-y-0">
-          {risks.map((risk, index) => (
-            <RiskCard
-              key={risk.title}
-              icon={<risk.icon className="h-8 w-8 text-primary" />}
-              title={risk.title}
-              description={risk.description}
-              className="w-full animate-in fade-in-0 slide-in-from-bottom-10 duration-500"
-              style={{ animationDelay: `${index * 100}ms` }}
-            />
-          ))}
+        <p
+          className="max-w-xl mx-auto text-base md:text-lg text-foreground/70"
+          style={{ animationDelay: '150ms' }}
+        >
+          Descoperă în câteva minute cum îți poți proteja viitorul și pe al celor dragi. Fără jargon, fără obligații.
+        </p>
       </div>
 
       <Button 
         onClick={onStart} 
         size="lg" 
-        className="w-full md:w-auto animate-in fade-in-0 slide-in-from-bottom-10 duration-500 hover:-translate-y-1 hover:shadow-xl bg-primary/90 text-lg font-semibold text-primary-foreground shadow-lg transition-all hover:bg-primary"
-        style={{ animationDelay: '500ms' }}
+        className={cn(
+            "mt-10 w-full max-w-xs md:w-auto text-base font-semibold bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-transform hover:scale-105",
+            isFadingOut ? "transform-none" : "animate-in fade-in-0 slide-in-from-bottom-10"
+        )}
+        style={{ animationDelay: '300ms' }}
       >
-        Descoperă gradul tău de protecție financiară
+        Începe Analiza Gratuită
       </Button>
     </div>
   );

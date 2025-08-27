@@ -481,6 +481,7 @@ export default function Home() {
         setIsFadingOut(true);
         setTimeout(() => {
             setView("chat");
+            setIsFadingOut(false); // Reset for potential future use
         }, 500);
     };
 

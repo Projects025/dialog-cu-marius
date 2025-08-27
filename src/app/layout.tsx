@@ -3,7 +3,6 @@ import { Poppins } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from "@/lib/utils";
-import BackgroundBlobs from "@/components/conversation/background-blobs";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -22,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ro" className="h-full max-h-[-webkit-fill-available] bg-background">
+    <html lang="ro" className="h-full max-h-[-webkit-fill-available]">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
@@ -37,11 +36,10 @@ export default function RootLayout({
       </head>
       <body
         className={cn(
-          "relative h-full max-h-[-webkit-fill-available] bg-gradient-to-b from-[#FFDDC1] to-[#FFC3A0] font-sans antialiased",
+          "relative h-full max-h-[-webkit-fill-available] font-sans antialiased dot-background",
           poppins.variable
         )}
       >
-        <BackgroundBlobs />
         <main className="relative z-10 h-full">{children}</main>
         <Toaster />
       </body>

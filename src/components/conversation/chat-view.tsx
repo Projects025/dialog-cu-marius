@@ -91,7 +91,7 @@ const DateOfBirthPicker = ({ onDateSelect }: { onDateSelect: (date: Date) => voi
                 <div className="flex flex-col gap-1.5">
                     <label htmlFor="day" className="text-sm font-medium text-foreground/80">Ziua</label>
                     <Select onValueChange={setDay} value={day}>
-                        <SelectTrigger id="day" className="bg-white/80"><SelectValue placeholder="Zi" /></SelectTrigger>
+                        <SelectTrigger id="day" className="bg-background"><SelectValue placeholder="Zi" /></SelectTrigger>
                         <SelectContent>
                             {days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
                         </SelectContent>
@@ -100,7 +100,7 @@ const DateOfBirthPicker = ({ onDateSelect }: { onDateSelect: (date: Date) => voi
                  <div className="flex flex-col gap-1.5">
                     <label htmlFor="month" className="text-sm font-medium text-foreground/80">Luna</label>
                     <Select onValueChange={setMonth} value={month}>
-                        <SelectTrigger id="month" className="bg-white/80"><SelectValue placeholder="Lună" /></SelectTrigger>
+                        <SelectTrigger id="month" className="bg-background"><SelectValue placeholder="Lună" /></SelectTrigger>
                         <SelectContent>
                             {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
                         </SelectContent>
@@ -109,7 +109,7 @@ const DateOfBirthPicker = ({ onDateSelect }: { onDateSelect: (date: Date) => voi
                  <div className="flex flex-col gap-1.5">
                     <label htmlFor="year" className="text-sm font-medium text-foreground/80">Anul</label>
                     <Select onValueChange={setYear} value={year}>
-                        <SelectTrigger id="year" className="bg-white/80"><SelectValue placeholder="An" /></SelectTrigger>
+                        <SelectTrigger id="year" className="bg-background"><SelectValue placeholder="An" /></SelectTrigger>
                         <SelectContent>
                             {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
                         </SelectContent>
@@ -137,7 +137,7 @@ const CheckboxSelector = ({ options, buttonText, onConfirm }: { options: string[
                 <div
                     key={index}
                     onClick={() => toggleOption(option)}
-                    className="flex items-center space-x-3 p-3 rounded-md cursor-pointer bg-white/50 backdrop-blur-sm border-white/30 text-foreground shadow-md hover:bg-white/80"
+                    className="flex items-center space-x-3 p-3 rounded-md cursor-pointer bg-background/50 border border-border text-foreground shadow-md hover:bg-accent"
                 >
                     {selected.includes(option) ? <CheckSquare className="h-5 w-5 text-primary" /> : <Square className="h-5 w-5 text-foreground/50" />}
                     <span className="text-base font-medium">{option}</span>
@@ -193,7 +193,7 @@ const ContactForm = ({ options, onResponse }: { options: any, onResponse: (data:
                         type={field.type}
                         placeholder={field.placeholder}
                         onChange={handleInputChange}
-                        className="bg-white h-12 text-base"
+                        className="bg-background h-12 text-base"
                     />
                     {errors[field.name] && <p className="text-sm text-red-600 mt-1">{errors[field.name]}</p>}
                 </div>
@@ -265,7 +265,7 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
                 key={index}
                 onClick={() => onResponse(option)}
                 variant="outline"
-                className="bg-white/50 backdrop-blur-sm border-white/30 text-foreground shadow-md justify-center py-3 min-h-[52px] h-auto text-base hover:bg-white/80"
+                className="bg-background/80 backdrop-blur-sm border-border text-foreground shadow-md justify-center py-3 min-h-[52px] h-auto text-base hover:bg-accent"
               >
                 {option}
               </Button>
@@ -281,7 +281,7 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="bg-white h-12 text-base"
+                className="bg-background h-12 text-base"
                 autoFocus
               />
               <Button type="submit" onClick={handleSend} disabled={!inputValue.trim()} size="icon" className="h-12 w-12 flex-shrink-0">
@@ -310,7 +310,7 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
   return (
     <>
     <style>{styles}</style>
-    <div id="chat-container" className="w-full h-full flex flex-col bg-black/5 rounded-none md:rounded-2xl shadow-none md:shadow-2xl overflow-hidden">
+    <div id="chat-container" className="w-full h-full flex flex-col rounded-none md:rounded-2xl shadow-none md:shadow-2xl overflow-hidden animate-in fade-in-50">
         <div id="dialog-flow" className="flex-grow space-y-6 overflow-y-auto p-4 md:p-6 no-scrollbar">
             {conversation.map((message) => (
             <div
@@ -329,11 +329,11 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
                 )}
                 <div
                 className={cn(
-                    "max-w-md md:max-w-lg rounded-2xl px-4 py-3 shadow-md text-base text-foreground",
+                    "max-w-md md:max-w-lg rounded-2xl px-4 py-3 shadow-md text-base",
                     message.author === "Marius"
-                    ? "bg-white/80 backdrop-blur-sm text-foreground rounded-bl-none"
+                    ? "bg-secondary text-secondary-foreground rounded-bl-none"
                     : "bg-primary text-primary-foreground rounded-br-none",
-                    message.style === 'dramatic' && "bg-gray-800/80 text-white italic border border-destructive/50"
+                    message.style === 'dramatic' && "bg-destructive/10 text-destructive-foreground italic border border-destructive/50"
                 )}
                 >
                 <p className="whitespace-pre-wrap">{message.content}</p>
@@ -347,7 +347,7 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
                     M
                     </AvatarFallback>
                 </Avatar>
-                <div className="bg-white/80 backdrop-blur-sm text-gray-800 rounded-2xl rounded-bl-none px-4 py-3 shadow-md">
+                <div className="bg-secondary text-secondary-foreground rounded-2xl rounded-bl-none px-4 py-3 shadow-md">
                     <div className="flex items-center gap-2">
                         <span className="h-2 w-2 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]"></span>
                         <span className="h-2 w-2 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]"></span>
@@ -360,7 +360,7 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
             <div ref={endOfMessagesRef} />
         </div>
       
-        <div ref={actionsContainerRef} id="user-actions-container" className="flex-shrink-0 p-4 bg-background/50 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none fixed bottom-0 left-0 right-0 md:relative">
+        <div ref={actionsContainerRef} id="user-actions-container" className="flex-shrink-0 p-4 bg-background/80 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none fixed bottom-0 left-0 right-0 md:relative">
              <div className="w-full max-w-full mx-auto md:w-full md:max-w-lg md:ml-auto flex flex-col justify-center items-center">
                  {renderUserActions()}
             </div>
