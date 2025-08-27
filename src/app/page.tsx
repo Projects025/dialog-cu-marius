@@ -277,7 +277,7 @@ export default function Home() {
       // --- FLOW B: Financial Planning ---
       else if (activeFlow === 'B') {
         if (step === 50) { // B1.1: Intro and ask for target amount
-            const priorities = response.join(', ').toLowerCase();
+            const priorities = (response && Array.isArray(response)) ? response.join(', ').toLowerCase() : userPriorities.join(', ').toLowerCase();
             run(() => {
                 addMessage({
                     author: "Marius",
@@ -375,7 +375,7 @@ export default function Home() {
         });
       }
     },
-    [addMessage, userData, financialData, lastReaction, activeFlow]
+    [addMessage, userData, financialData, lastReaction, activeFlow, userPriorities]
   );
   
   const startConversation = useCallback(() => {
