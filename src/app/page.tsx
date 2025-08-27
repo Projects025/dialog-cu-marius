@@ -61,7 +61,7 @@ export default function Home() {
         addMessage({ author: "user", type: "response", content: response.join(', ') });
         setUserPriorities(response);
 
-        if (response.includes("Protecție în caz de deces")) {
+        if (response.includes("Protecție în caz de deces") || response.includes("Protecție în caz de boală gravă")) {
             run(() => {
                 addMessage({
                     author: "Marius",
@@ -256,7 +256,7 @@ export default function Home() {
                 setIsWaitingForResponse(false);
             }
         });
-      } else if (step === 14) { // Final message
+      } else if (step === 14) { // Final message after form
         run(() => {
             addMessage({ author: "user", type: "response", content: `Nume: ${response.name}, Email: ${response.email}, Telefon: ${response.phone}`});
             setUserData(prev => ({...prev, ...response}));
