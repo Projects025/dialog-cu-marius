@@ -98,7 +98,7 @@ const conversationFlow: ConversationFlow = {
         nextStep: () => 'show_deficit_2'
     },
     show_deficit_2: {
-        message: (data) => `Am adaugat. Avem acum o a doua suma-deficit de ${data.eventCosts.toLocaleString('ro-RO')} lei. Mergem mai departe?`,
+        message: (data) => `Am adaugat. Avem acum o a doua suma-deficit de ${(data.eventCosts || 0).toLocaleString('ro-RO')} lei. Mergem mai departe?`,
         actionType: 'buttons',
         options: ['Da'],
         nextStep: () => 'ask_projects'
@@ -111,7 +111,7 @@ const conversationFlow: ConversationFlow = {
         nextStep: () => 'show_deficit_3'
     },
     show_deficit_3: {
-        message: (data) => `Am notat si proiectele, in valoare de ${data.projects.toLocaleString('ro-RO')} lei. Mai avem un singur pas.`,
+        message: (data) => `Am notat si proiectele, in valoare de ${(data.projects || 0).toLocaleString('ro-RO')} lei. Mai avem un singur pas.`,
         actionType: 'buttons',
         options: ['Continuă'],
         nextStep: () => 'ask_debts'
@@ -174,7 +174,7 @@ const conversationFlow: ConversationFlow = {
     },
     ask_dramatic_options: {
         message: () => "In acest scenariu... ce optiuni ar avea cei dragi...? Bifeaza optiunile realiste...",
-        actionType: 'checkbox',
+        actionType: 'interactive_scroll_list',
         options: {
             options: [
                 'Partenerul de viata isi ia al doilea job',
@@ -237,7 +237,7 @@ export default function Home() {
     const [isFadingOut, setIsFadingOut] = useState(false);
     const [conversation, setConversation] = useState<Message[]>([]);
     const [currentUserAction, setCurrentUserAction] = useState<UserAction | null>(null);
-    const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
+    const [isWaitingForResponse, setIsWaitingForResponse] = useState(true);
     
     const conversationIdRef = useRef(0);
     const currentStateRef = useRef<string | null>(null);
@@ -265,8 +265,8 @@ export default function Home() {
             console.error("Invalid stepId:", stepId);
             return;
         }
-
-        setIsWaitingForResponse(true);
+        
+        setIsWaitingForResponse(true); // Always waiting when a step starts
         setCurrentUserAction(null); // Clear old actions first
 
         // Delay for dramatic effect
@@ -276,19 +276,18 @@ export default function Home() {
         
         if (step.actionType === 'end') {
             setIsWaitingForResponse(false);
-            setCurrentUserAction(null);
         } else if (step.autoContinue) {
              await new Promise(resolve => setTimeout(resolve, 1200));
              const nextStepId = step.nextStep();
              renderStep(nextStepId);
         } else {
+             // For non-auto-continue steps, we show the action and wait.
             setCurrentUserAction({ type: step.actionType, options: step.options });
         }
     }, [addMessage]);
 
     const processUserResponse = useCallback((response: any) => {
-        setIsWaitingForResponse(false);
-        setCurrentUserAction(null);
+        setCurrentUserAction(null); // User has responded, clear actions
 
         if (!currentStateRef.current) {
             console.error("Cannot process response without a current state.");
@@ -321,6 +320,7 @@ export default function Home() {
 
     const startConversation = useCallback(() => {
         userDataRef.current = {}; // Reset data
+        conversationIdRef.current = 0;
         setConversation([]);
         renderStep('intro_1');
     }, [renderStep]);
@@ -338,6 +338,7 @@ export default function Home() {
             startConversation();
         }
     }, [view, startConversation, conversation.length]);
+
 
     return (
         <div className="container mx-auto h-full max-h-[-webkit-fill-available] p-0 flex flex-col">

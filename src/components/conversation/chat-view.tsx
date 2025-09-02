@@ -5,10 +5,11 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Send, CheckSquare, Square } from "lucide-react";
+import { Send, Circle, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "../ui/checkbox";
 import { Label } from "../ui/label";
+import { ScrollArea } from "../ui/scroll-area";
 
 const styles = `
 .no-scrollbar::-webkit-scrollbar {
@@ -42,7 +43,7 @@ export type { FinancialData } from '@/lib/calculation';
 
 
 export type UserAction = {
-  type: 'input' | 'buttons' | 'date' | 'checkbox' | 'form';
+  type: 'input' | 'buttons' | 'date' | 'checkbox' | 'form' | 'interactive_scroll_list';
   options?: any;
 }
 
@@ -122,34 +123,46 @@ const DateOfBirthPicker = ({ onDateSelect }: { onDateSelect: (date: Date) => voi
     );
 };
 
-const CheckboxSelector = ({ options, buttonText, onConfirm }: { options: string[], buttonText: string, onConfirm: (selected: string[]) => void }) => {
+const InteractiveScrollList = ({ options, buttonText, onConfirm }: { options: string[], buttonText: string, onConfirm: (selected: string[]) => void }) => {
     const [selected, setSelected] = useState<string[]>([]);
-    
+
     const toggleOption = (option: string) => {
-        setSelected(prev => 
+        setSelected(prev =>
             prev.includes(option) ? prev.filter(item => item !== option) : [...prev, option]
         );
     };
 
     return (
-        <div className="flex flex-col gap-3 w-full animate-in fade-in-50">
-            {options.map((option: string, index: number) => (
-                <div
-                    key={index}
-                    onClick={() => toggleOption(option)}
-                    className="flex items-center space-x-3 p-3 rounded-md cursor-pointer bg-background/50 border border-border text-foreground shadow-md hover:bg-accent"
-                >
-                    {selected.includes(option) ? <CheckSquare className="h-5 w-5 text-primary" /> : <Square className="h-5 w-5 text-foreground/50" />}
-                    <span className="text-base font-medium">{option}</span>
+        <div className="flex flex-col w-full bg-background/80 backdrop-blur-sm border border-border rounded-lg shadow-md max-h-96 animate-in fade-in-50">
+            <ScrollArea className="flex-grow p-4">
+                <div className="space-y-3">
+                    {options.map((option: string, index: number) => {
+                        const isSelected = selected.includes(option);
+                        return (
+                            <div
+                                key={index}
+                                onClick={() => toggleOption(option)}
+                                className={cn(
+                                    "flex items-center space-x-3 p-3 rounded-md cursor-pointer transition-colors duration-200",
+                                    isSelected ? "bg-primary/20 text-primary-foreground" : "hover:bg-accent/50"
+                                )}
+                            >
+                                {isSelected ? <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" /> : <Circle className="h-5 w-5 text-foreground/50 flex-shrink-0" />}
+                                <span className="text-base font-medium">{option}</span>
+                            </div>
+                        )
+                    })}
                 </div>
-            ))}
-             <Button 
-                onClick={() => onConfirm(selected)} 
-                disabled={selected.length === 0}
-                className="w-full h-12 mt-2"
-            >
-                {buttonText}
-            </Button>
+            </ScrollArea>
+            <div className="p-4 border-t border-border mt-auto">
+                <Button
+                    onClick={() => onConfirm(selected)}
+                    disabled={selected.length === 0}
+                    className="w-full h-12"
+                >
+                    {buttonText}
+                </Button>
+            </div>
         </div>
     );
 };
@@ -217,7 +230,7 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
   useEffect(() => {
     const calculateHeightAndScroll = () => {
       if (actionsContainerRef.current && spacerRef.current) {
-        const height = actionsContainerRef.current.offsetHeight;
+        const height = actionsContainerf.current.offsetHeight;
         spacerRef.current.style.height = `${height}px`;
       }
       setTimeout(() => {
@@ -294,9 +307,9 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
         return (
           <DateOfBirthPicker onDateSelect={onResponse} />
         )
-      case "checkbox":
+      case "interactive_scroll_list":
         return (
-            <CheckboxSelector options={userAction.options.options} buttonText={userAction.options.buttonText} onConfirm={onResponse} />
+            <InteractiveScrollList options={userAction.options.options} buttonText={userAction.options.buttonText} onConfirm={onResponse} />
         );
       case "form":
         return (
