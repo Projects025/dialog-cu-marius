@@ -134,8 +134,8 @@ const InteractiveScrollList = ({ options, buttonText, onConfirm }: { options: st
 
     return (
         <div className="flex flex-col w-full bg-background/80 backdrop-blur-sm border border-border rounded-lg shadow-md max-h-96 animate-in fade-in-50">
-            <ScrollArea className="flex-1 p-4 max-h-80">
-                <div className="space-y-3">
+            <div className="flex-grow overflow-y-auto no-scrollbar p-4">
+                 <div className="space-y-3">
                     {options.map((option: string, index: number) => {
                         const isSelected = selected.includes(option);
                         return (
@@ -153,8 +153,8 @@ const InteractiveScrollList = ({ options, buttonText, onConfirm }: { options: st
                         )
                     })}
                 </div>
-            </ScrollArea>
-            <div className="p-4 border-t border-border mt-auto">
+            </div>
+            <div className="p-4 border-t border-border flex-shrink-0">
                 <Button
                     onClick={() => onConfirm(selected)}
                     disabled={selected.length === 0}
