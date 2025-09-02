@@ -273,16 +273,27 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
       case "buttons":
         return (
           <div className="flex flex-col gap-3 w-full animate-in fade-in-50">
-            {userAction.options?.map((option: string, index: number) => (
-              <Button
-                key={index}
-                onClick={() => onResponse(option)}
-                variant="outline"
-                className="bg-background/80 backdrop-blur-sm border-border text-foreground shadow-md justify-center py-3 min-h-[52px] h-auto text-base hover:bg-accent"
-              >
-                {option}
-              </Button>
-            ))}
+            {userAction.options?.map((option: any, index: number) => {
+              const isComplexOption = typeof option === 'object' && option !== null;
+              const label = isComplexOption ? option.label : option;
+              const isDisabled = isComplexOption ? option.disabled : false;
+              const displayText = isDisabled ? `${label} (în curând)` : label;
+
+              return (
+                <Button
+                  key={index}
+                  onClick={() => onResponse(isComplexOption ? option : label)}
+                  variant="outline"
+                  disabled={isDisabled}
+                  className={cn(
+                    "bg-background/80 backdrop-blur-sm border-border text-foreground shadow-md justify-center py-3 min-h-[52px] h-auto text-base hover:bg-accent",
+                    isDisabled && "opacity-50 cursor-not-allowed hover:bg-transparent"
+                  )}
+                >
+                  {displayText}
+                </Button>
+              );
+            })}
           </div>
         );
       case "input":
@@ -384,3 +395,5 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
 };
 
 export default ChatView;
+
+    

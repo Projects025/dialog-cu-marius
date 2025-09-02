@@ -49,7 +49,12 @@ const conversationFlow: ConversationFlow = {
     ask_priority: {
         message: () => "Care dintre aceste subiecte ar fi de interes pentru tine la acest moment?",
         actionType: 'buttons',
-        options: ['Reducerea drastica a veniturilor la pensionare', 'Asigurarea viitorului copiilor', 'Decesul spontan', 'Bolile grave...'],
+        options: [
+            { label: 'Reducerea drastica a veniturilor la pensionare', disabled: true },
+            { label: 'Asigurarea viitorului copiilor', disabled: true },
+            { label: 'Decesul spontan', disabled: false },
+            { label: 'Bolile grave...', disabled: true }
+        ],
         nextStep: (response) => response === 'Decesul spontan' ? 'confirm_deces_analysis' : 'end_dialog_friendly'
     },
     // --- Faza 2: Analiza de Risc pentru Deces ---
@@ -295,10 +300,13 @@ export default function Home() {
         }
 
         const step = conversationFlow[currentStateRef.current];
+        
+        // Use the label for logic, if the response is an object
+        const responseValue = typeof response === 'object' && response !== null && response.label ? response.label : response;
 
         // Format and add user message to conversation
-        let userMessageContent = response;
-        if (typeof response === 'object' && response.name) {
+        let userMessageContent = responseValue;
+        if (typeof response === 'object' && response !== null && response.name) {
             userMessageContent = `Nume: ${response.name}, Email: ${response.email}, Telefon: ${response.phone}`;
         } else if (response instanceof Date) {
             userMessageContent = format(response, "dd/MM/yyyy");
@@ -309,11 +317,11 @@ export default function Home() {
         
         // Save data if handler exists
         if (step.handler) {
-            step.handler(response, userDataRef.current);
+            step.handler(responseValue, userDataRef.current);
         }
 
         // Determine and render next step
-        const nextStepId = step.nextStep(response, userDataRef.current);
+        const nextStepId = step.nextStep(responseValue, userDataRef.current);
         renderStep(nextStepId);
 
     }, [addMessage, renderStep]);
@@ -355,3 +363,5 @@ export default function Home() {
         </div>
     );
 }
+
+    
