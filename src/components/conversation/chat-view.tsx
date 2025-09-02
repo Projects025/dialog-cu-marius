@@ -134,7 +134,7 @@ const InteractiveScrollList = ({ options, buttonText, onConfirm }: { options: st
 
     return (
         <div className="flex flex-col w-full bg-background/80 backdrop-blur-sm border border-border rounded-lg shadow-md max-h-96 animate-in fade-in-50">
-            <ScrollArea className="flex-grow p-4">
+            <ScrollArea className="flex-1 p-4 max-h-80">
                 <div className="space-y-3">
                     {options.map((option: string, index: number) => {
                         const isSelected = selected.includes(option);
