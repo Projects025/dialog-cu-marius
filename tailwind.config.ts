@@ -93,10 +93,15 @@ export default {
             height: '0',
           },
         },
+        'blob-float': {
+          '0%, 100%': { transform: 'translateY(0) rotate(0deg)' },
+          '50%': { transform: 'translateY(-20px) rotate(10deg)' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'blob-float': 'blob-float 8s ease-in-out infinite',
       },
     },
   },
