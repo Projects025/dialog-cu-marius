@@ -135,26 +135,48 @@ Esti pregatit(a) sa mai facem un pas?`,
             actionType: 'input',
             options: { placeholder: 'Ex: 400000', type: 'number', defaultValue: 0 },
             handler: (response, data) => { data.debts = Number(response); },
-            nextStep: () => 'deces.ask_show_brute_deficit'
+            nextStep: () => 'deces.ask_show_brute_deficit_intro'
         },
-         ask_show_brute_deficit: {
-            message: () => `Bun... Am adaugat si aceasta ultima suma. Avem cele patru sume-deficit. Esti pregatit(a) sa vezi care este suma-deficit totala?`,
+        ask_show_brute_deficit_intro: {
+            message: () => `Bun... Avem cele patru sume-deficit.`,
             actionType: 'buttons',
-            options: ['Da'],
-            nextStep: () => 'deces.show_brute_deficit'
+            options: [],
+            autoContinue: true,
+            nextStep: () => 'deces.ask_show_brute_deficit_context_1'
+        },
+        ask_show_brute_deficit_context_1: {
+             message: () => `Esti pregatit sa vezi suma-deficit totala? <br><br>Suma de bani de care familia ta ar avea nevoie in absenta ta pentru a-i ajuta financiar.`,
+             actionType: 'buttons',
+             options: ['Da'],
+             nextStep: () => 'deces.show_brute_deficit'
         },
         show_brute_deficit: {
             message: (data) => {
                 data.bruteDeficit = calculateBruteDeficit(data);
-                return `Asadar, suma-deficit totala, adica suma de bani de care familia ar avea nevoie pentru a mentine standardul de viata, a continua proiectele si a acoperi datoriile, este de ${data.bruteDeficit.toLocaleString('ro-RO')} lei.`;
+                return `<span class="text-2xl font-bold">Suma-deficit totala: ${data.bruteDeficit.toLocaleString('ro-RO')} lei</span>`;
             },
+            actionType: 'buttons',
+            options: [],
+            autoContinue: true,
+            delay: 1500,
+            nextStep: () => 'deces.ask_insurance_intro'
+        },
+        ask_insurance_intro: {
+            message: () => "Bun! Pentru a avea o imagine clara si corecta a necesarului financiar, vom mai explora doua domenii care ajuta in astfel de situatii:",
+            actionType: 'buttons',
+            options: [],
+            autoContinue: true,
+            nextStep: () => 'deces.ask_insurance_context'
+        },
+        ask_insurance_context: {
+            message: () => `(1.) existenta unor asigurari de viata care acopera decesul din orice cauza si<br>(2.) existenta unor economii sau a unor investitii la care familia ar putea apela`,
             actionType: 'buttons',
             options: [],
             autoContinue: true,
             nextStep: () => 'deces.ask_insurance'
         },
         ask_insurance: {
-            message: () => "In cazul unui deces, familia ta ar beneficia de vreo asigurare de viata (fie ea de sine statatoare, fie atasata unui credit)? Daca da, care este suma asigurata (in lei)?",
+            message: () => "In cazul unui posibil deces, familia ta ar beneficia de vreo asigurare de viata pe numele tau? Nu ma refer la acele asigurari care sunt cesionate in favoarea bancii, ci acele asigurari care sa aiba ca beneficiar - familia ta.\n\nDaca da, care este suma de bani pe care ai tai ar incasa-o dintr-o astfel de asigurare de viata (in lei)?",
             actionType: 'input',
             options: { placeholder: 'Ex: 125000', type: 'number', defaultValue: 0 },
             handler: (response, data) => { data.existingInsurance = Number(response); },
