@@ -16,7 +16,7 @@ import { format } from "date-fns";
 
 type ConversationStep = {
     message: (data: any) => string;
-    actionType: UserAction['type'] | 'end' | 'calculation' | 'sequence';
+    actionType: UserAction['type'] | 'calculation' | 'sequence';
     options?: any;
     handler?: (response: any, data: any) => void;
     nextStep: (response?: any, data?: any) => string;
@@ -689,11 +689,7 @@ export default function Home() {
              const nextStepId = step.nextStep();
              renderStep(nextStepId);
         } else {
-            if (step.actionType === 'end') {
-                setCurrentUserAction(null);
-            } else {
-                setCurrentUserAction({ type: step.actionType, options: step.options });
-            }
+            setCurrentUserAction({ type: step.actionType, options: step.options });
         }
     }, [addMessage, typeMessage]);
 

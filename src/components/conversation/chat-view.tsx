@@ -29,7 +29,7 @@ export type Message = {
 };
 
 export type UserAction = {
-  type: 'input' | 'buttons' | 'date' | 'interactive_scroll_list' | 'form' | 'multi_choice';
+  type: 'input' | 'buttons' | 'date' | 'interactive_scroll_list' | 'form' | 'multi_choice' | 'end';
   options?: any;
 }
 
@@ -307,7 +307,17 @@ const ChatView = ({ conversation, userAction, onResponse, isTyping }: ChatViewPr
   };
 
   const renderUserActions = () => {
-    if (!userAction || isTyping) return null;
+    if (isTyping) return null;
+    if (!userAction || userAction.type === 'end') {
+        if (conversation.length > 0 && conversation[conversation.length -1].author === "Marius") {
+            const lastMessageContent = conversation[conversation.length - 1].content;
+            if (typeof lastMessageContent === 'string' && lastMessageContent.includes('Mulțumesc!')) {
+                 return <div className="text-center w-full" dangerouslySetInnerHTML={{__html: lastMessageContent}} />;
+            }
+        }
+        return null;
+    }
+
 
     switch (userAction.type) {
       case "buttons":
@@ -375,7 +385,11 @@ const ChatView = ({ conversation, userAction, onResponse, isTyping }: ChatViewPr
     }
   };
   
-  const renderMessageContent = (content: any) => {
+  const renderMessageContent = (content: any, author: 'Marius' | 'user') => {
+    if (author === 'Marius' && typeof content === 'string' && content.includes('Mulțumesc!')) {
+      return null;
+    }
+
     if (typeof content !== 'string') {
         return content;
     }
@@ -390,33 +404,38 @@ const ChatView = ({ conversation, userAction, onResponse, isTyping }: ChatViewPr
     <style>{styles}</style>
     <div id="chat-container" className="w-full h-full flex flex-col rounded-none md:rounded-2xl shadow-none md:shadow-2xl overflow-hidden animate-in fade-in-50">
         <div id="dialog-flow" className="flex-grow space-y-6 overflow-y-auto p-4 md:p-6 no-scrollbar">
-            {conversation.map((message) => (
-            <div
-                key={message.id}
-                className={cn(
-                "flex items-end gap-3 w-full animate-in fade-in slide-in-from-bottom-5 duration-500",
-                message.author === "Marius" ? "justify-start" : "justify-end"
-                )}
-            >
-                {message.author === "Marius" && (
-                <Avatar className="h-8 w-8 hidden sm:flex self-start flex-shrink-0">
-                    <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
-                    M
-                    </AvatarFallback>
-                </Avatar>
-                )}
-                <div
-                className={cn(
-                    "max-w-md md:max-w-lg rounded-2xl px-4 py-3 shadow-md text-base",
-                    message.author === "Marius"
-                    ? "bg-secondary text-secondary-foreground rounded-bl-none"
-                    : "bg-primary text-primary-foreground rounded-br-none"
-                )}
-                >
-                {renderMessageContent(message.content)}
-                </div>
-            </div>
-            ))}
+            {conversation.map((message) => {
+                 const content = renderMessageContent(message.content, message.author);
+                 if (!content) return null;
+
+                 return (
+                    <div
+                        key={message.id}
+                        className={cn(
+                        "flex items-end gap-3 w-full animate-in fade-in slide-in-from-bottom-5 duration-500",
+                        message.author === "Marius" ? "justify-start" : "justify-end"
+                        )}
+                    >
+                        {message.author === "Marius" && (
+                        <Avatar className="h-8 w-8 hidden sm:flex self-start flex-shrink-0">
+                            <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
+                            M
+                            </AvatarFallback>
+                        </Avatar>
+                        )}
+                        <div
+                        className={cn(
+                            "max-w-md md:max-w-lg rounded-2xl px-4 py-3 shadow-md text-base",
+                            message.author === "Marius"
+                            ? "bg-secondary text-secondary-foreground rounded-bl-none"
+                            : "bg-primary text-primary-foreground rounded-br-none"
+                        )}
+                        >
+                        {content}
+                        </div>
+                    </div>
+                )
+            })}
             {isTyping && (
             <div className="flex items-end gap-3 w-full justify-start animate-in fade-in slide-in-from-bottom-5 duration-500">
                 <Avatar className="h-8 w-8 hidden sm:flex self-start flex-shrink-0">
@@ -438,7 +457,7 @@ const ChatView = ({ conversation, userAction, onResponse, isTyping }: ChatViewPr
         </div>
       
         <div ref={actionsContainerRef} id="user-actions-container" className="flex-shrink-0 p-4 bg-background/80 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none fixed bottom-0 left-0 right-0 md:relative">
-             <div className="w-full max-w-full mx-auto md:w-full md:max-w-lg md:ml-auto flex flex-col justify-center items-center">
+             <div className="w-full max-w-lg mx-auto flex flex-col justify-center items-center">
                  {renderUserActions()}
             </div>
         </div>
