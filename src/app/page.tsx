@@ -112,7 +112,7 @@ Esti pregatit(a) sa mai facem un pas?`,
             nextStep: () => 'deces.show_deficit_2'
         },
         show_deficit_2: {
-            message: (data) => `Am obtinut a doua suma de bani - ${data.eventCosts.toLocaleString('ro-RO')} lei - care se va regasi in deficitul total cu care familia ta s-ar confrunta in absenta ta.\n\nMai avem doua sume.\n\nMergem mai departe?`,
+            message: (data) => `Am obtinut a doua suma de bani - ${Number(data.eventCosts).toLocaleString('ro-RO')} lei - care se va regasi in deficitul total cu care familia ta s-ar confrunta in absenta ta.\n\nMai avem doua sume.\n\nMergem mai departe?`,
             actionType: 'buttons',
             options: ['Da'],
             nextStep: () => 'deces.ask_projects'
@@ -125,7 +125,7 @@ Esti pregatit(a) sa mai facem un pas?`,
             nextStep: () => 'deces.show_deficit_3'
         },
         show_deficit_3: {
-             message: (data) => `Am obtinut a treia suma de bani - ${data.projects.toLocaleString('ro-RO')} lei care va fi inclusa in deficitul financiar care ar ramane in urma ta.\n\nMai rezisti?\n\nMai ai un singur pas prin acest „coridor” intunecat, apoi se va vedea „luminita” :) Da click pentru ultima suma-deficit.`,
+             message: (data) => `Am obtinut a treia suma de bani - ${Number(data.projects).toLocaleString('ro-RO')} lei care va fi inclusa in deficitul financiar care ar ramane in urma ta.\n\nMai rezisti?\n\nMai ai un singur pas prin acest „coridor” intunecat, apoi se va vedea „luminita” :) Da click pentru ultima suma-deficit.`,
             actionType: 'buttons',
             options: ['Click'],
             nextStep: () => 'deces.ask_debts'
@@ -232,18 +232,12 @@ Esti pregatit(a) sa mai facem un pas?`,
             message: () => `Cum ti se pare aceasta suma? Care este sentimentul pe care il simti acum?`,
             actionType: 'buttons',
             options: ['Nu îmi place ce văd', 'Interesant'],
-            nextStep: () => 'deces.ask_feeling_input'
-        },
-        ask_feeling_input: {
-            message: () => "Te rog, descrie pe scurt.",
-            actionType: 'input',
-            options: { placeholder: 'Scrie aici...', type: 'text' },
             handler: (response, data) => { data.feeling = response; },
             nextStep: () => 'deces.ask_dramatic_options'
         },
         ask_dramatic_options: {
             message: () => "In acest scenariu de imaginatie sumbru, ce optiuni ar avea cei dragi ai tai pentru a mentine un oarecare echilibru in standardul de viata?\n\nBifeaza optiunile realiste si cu care tu te simti confortabil pentru ai tai:",
-            actionType: 'checkbox',
+            actionType: 'interactive_scroll_list',
             options: {
                 options: [
                     'Sa se mute cu parintii',
@@ -267,32 +261,17 @@ Esti pregatit(a) sa mai facem un pas?`,
             nextStep: () => 'deces.present_solution'
         },
         present_solution: {
-            message: () => "Daca nu esti foarte multumit cu optiunile de mai sus, ai fi interesat sa vezi o solutie personalizata prin care sa anulezi complet aceasta mostenire-negativa si sa transferi riscul financiar catre o companie de asigurari?",
+            message: () => "Daca nu esti foarte multumit cu optiunile pe care familia ta le are pentru a mentine standardul actual de viata, ai fi interesat sa vezi o solutie personalizata care sa ofere celor dragi tie o a doua sansa la o viata relativ normala, fara poveri financiare?\n\nPractic, o solutie prin care dragostea ta si grija ta pentru ei va continua chiar si dupa tine. Poti crea instant o mostenire care sa ii ajute financiar pe cei dragi tie cu acele sume de bani pe care le-ai fi asigurat tu daca n-am fi venit pe rand si n-am fi plecat pe sarite...",
             actionType: 'buttons',
             options: ['Da', 'Nu'],
-            nextStep: (response) => response === 'Da' ? 'deces.ask_dob' : 'common.end_dialog_friendly'
-        },
-        ask_dob: {
-            message: () => "Pentru a-ți oferi o estimare de cost, mai am nevoie de câteva detalii. Te rog să selectezi data nașterii.",
-            actionType: 'date',
-            handler: (response, data) => { data.birthDate = response; },
-            nextStep: () => 'deces.ask_solution'
-        },
-        ask_solution: {
-            message: (data) => {
-                data.premium = Math.max(50, Math.round(data.finalDeficit / (250 * 5))); // Simplified calculation in EUR
-                return `Pentru a acoperi complet deficitul de ${data.finalDeficit.toLocaleString('ro-RO')} lei, costul estimat al unei asigurări de viață pentru tine ar fi de aproximativ ${data.premium.toLocaleString('ro-RO')} € pe lună. Ai fi interesat să vezi o soluție personalizată?`;
-            },
-            actionType: 'buttons',
-            options: ['Da, sunt interesat', 'Nu, mulțumesc'],
-            nextStep: (response) => response === 'Da, sunt interesat' ? 'deces.ask_contact_details' : 'common.end_dialog_friendly'
+            nextStep: (response) => response === 'Da' ? 'deces.ask_contact_details' : 'common.end_dialog_friendly'
         },
         ask_contact_details: {
-            message: () => "Perfect. Pentru a stabili o discuție cu un consultant, te rog să completezi datele de mai jos. Acestea sunt confidențiale și vor fi folosite exclusiv în acest scop.",
+            message: () => "Am nevoie de datele tale de contact (nume, telefon, email), iar in cel mai scurt timp posibil, consultantul care ti-a dat acest link te va contacta pentru construirea solutiei.\n\nDe asemenea, am rugamintea sa semnezi si un acord GDPR care sa ii permita consultantului sa te contacteze intr-un cadru legal.",
             actionType: 'form',
             options: {
                 fields: [
-                    { name: 'name', placeholder: 'Nume', type: 'text', required: true },
+                    { name: 'name', placeholder: 'Nume Prenume', type: 'text', required: true },
                     { name: 'email', placeholder: 'Email', type: 'email', required: true },
                     { name: 'phone', placeholder: 'Telefon', type: 'tel', required: true },
                 ],
@@ -300,8 +279,13 @@ Esti pregatit(a) sa mai facem un pas?`,
                 buttonText: 'Trimite'
             },
             handler: (response, data) => { data.contact = response; },
-            nextStep: () => 'common.end_dialog_success'
+            nextStep: () => 'deces.thank_you'
         },
+        thank_you: {
+            message: () => "Mulțumesc pentru că mi-ai răspuns la întrebări, te voi suna curând!",
+            actionType: 'end',
+            nextStep: () => '',
+        }
     },
     boala_grava: {
         start_flow: {

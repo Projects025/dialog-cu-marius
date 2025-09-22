@@ -29,7 +29,7 @@ export type Message = {
 };
 
 export type UserAction = {
-  type: 'input' | 'buttons' | 'date' | 'checkbox' | 'form' | 'multi_choice';
+  type: 'input' | 'buttons' | 'date' | 'interactive_scroll_list' | 'form' | 'multi_choice';
   options?: any;
 }
 
@@ -109,7 +109,7 @@ const DateOfBirthPicker = ({ onDateSelect }: { onDateSelect: (date: Date) => voi
     );
 };
 
-const CheckboxList = ({ options, buttonText, onConfirm }: { options: string[], buttonText: string, onConfirm: (selected: string[]) => void }) => {
+const InteractiveScrollList = ({ options, buttonText, onConfirm }: { options: string[], buttonText: string, onConfirm: (selected: string[]) => void }) => {
     const [selected, setSelected] = useState<string[]>([]);
 
     const toggleOption = (option: string) => {
@@ -119,18 +119,32 @@ const CheckboxList = ({ options, buttonText, onConfirm }: { options: string[], b
     };
 
     return (
-        <div className="flex flex-col w-full bg-background/80 backdrop-blur-sm border border-border rounded-lg shadow-md max-h-96 animate-in fade-in-50 overflow-hidden">
+        <div className="flex flex-col w-full bg-background/80 backdrop-blur-sm border border-border rounded-lg shadow-md max-h-80 animate-in fade-in-50 overflow-hidden">
             <ScrollArea className="flex-grow no-scrollbar">
-                 <div className="space-y-3 p-4">
-                    {options.map((option: string, index: number) => (
-                        <div key={index} className="flex items-center space-x-3">
-                            <Checkbox id={`checkbox-${index}`} onCheckedChange={() => toggleOption(option)} />
-                            <Label htmlFor={`checkbox-${index}`} className="text-base font-medium text-foreground/80 cursor-pointer">{option}</Label>
-                        </div>
-                    ))}
+                 <div className="space-y-1 p-3">
+                    {options.map((option: string, index: number) => {
+                        const isSelected = selected.includes(option);
+                        return (
+                             <div
+                                key={index}
+                                onClick={() => toggleOption(option)}
+                                className={cn(
+                                    "flex items-center space-x-3 p-3 rounded-md cursor-pointer transition-colors duration-200",
+                                    isSelected ? "bg-primary/20" : "hover:bg-accent/50"
+                                )}
+                            >
+                                {isSelected ? (
+                                    <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
+                                ) : (
+                                    <Circle className="h-5 w-5 text-foreground/30 flex-shrink-0" />
+                                )}
+                                <span className="text-sm font-medium text-foreground/90">{option}</span>
+                            </div>
+                        )
+                    })}
                 </div>
             </ScrollArea>
-            <div className="p-4 border-t border-border flex-shrink-0">
+            <div className="p-4 border-t border-border flex-shrink-0 bg-background/90">
                 <Button
                     onClick={() => onConfirm(selected)}
                     disabled={selected.length === 0}
@@ -345,9 +359,9 @@ const ChatView = ({ conversation, userAction, onResponse, isTyping }: ChatViewPr
         return (
           <DateOfBirthPicker onDateSelect={onResponse} />
         )
-      case "checkbox":
+      case "interactive_scroll_list":
         return (
-            <CheckboxList options={userAction.options.options} buttonText={userAction.options.buttonText} onConfirm={onResponse} />
+            <InteractiveScrollList options={userAction.options.options} buttonText={userAction.options.buttonText} onConfirm={onResponse} />
         );
       case 'multi_choice':
         return (
