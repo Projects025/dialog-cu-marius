@@ -63,7 +63,7 @@ Daca esti pregatit, haide sa continuam.`,
             nextStep: () => 'deces.ask_period'
         },
         ask_period: {
-            message: () => "In cazul unui posibil deces, care ar fi perioada de timp in care familia ta ar avea nevoie de sustinere financiara pentru a mentine standardul de viata actual (fara alte ajustari dureroase)?",
+            message: () => "In cazul unui posibil deces, care ar fi perioada de timp in care familia ta ar avea nevoie de sustinere financiara pentru a-si mentine nivelul de trai fara sa fie nevoita sa faca ajustari majore in stilul de viata (ex. vanzarea unor bunuri, ore suplimentare / al doilea job etc.)",
             actionType: 'buttons',
             options: ['3 ani', '4 ani', '5 ani'],
             handler: (response, data) => { data.period = parseInt(response); },
@@ -74,21 +74,40 @@ Daca esti pregatit, haide sa continuam.`,
             actionType: 'input',
             options: { placeholder: 'Ex: 10000', type: 'number' },
             handler: (response, data) => { data.monthlySum = Number(response); },
-            nextStep: () => 'deces.show_deficit_1'
+            nextStep: () => 'deces.show_deficit_1_intro'
         },
-        show_deficit_1: {
+        show_deficit_1_intro: {
+            message: () => "Avem o prima suma de bani.",
+            actionType: 'buttons',
+            options: [],
+            autoContinue: true,
+            nextStep: () => 'deces.show_deficit_1_amount'
+        },
+        show_deficit_1_amount: {
             message: (data) => {
                 const deficit1 = (data.monthlySum || 0) * (data.period || 0) * 12;
-                return `Avem o prima suma de bani, respectiv ${deficit1.toLocaleString('ro-RO')} lei, reprezentand nevoia de continuare a standardului de viata pe o perioada de ${data.period} ani. Esti pregatit(a) sa mai facem un pas?`;
+                return `<span class="text-2xl font-bold">${deficit1.toLocaleString('ro-RO')} lei</span>`;
             },
+            actionType: 'buttons',
+            options: [],
+            autoContinue: true,
+            delay: 1500, // Slower typing for this
+            nextStep: () => 'deces.show_deficit_1_explanation'
+        },
+        show_deficit_1_explanation: {
+            message: (data) => `Aceasta suma reprezinta deficitul pentru ${data.period} ani pentru mentinerea standardului de viata, respectiv pentru linistea sufleteasca si confortul financiar necesar celor dragi care fac mai usoara acomodarea la noua realitate.
+<br><br>
+Mai avem trei sume de calculat - trei deficite financiare cu care se confrunta o familie din care dispare un membru.
+<br><br>
+Esti pregatit(a) sa mai facem un pas?`,
             actionType: 'buttons',
             options: ['Da'],
             nextStep: () => 'deces.ask_event_costs'
         },
         ask_event_costs: {
-            message: () => "Ce suma de bani (in lei) ar trebui sa alocam pentru cheltuielile specifice unui astfel de eveniment (costuri de succesiune, taxe notariale, costuri de repatriere, etc)?",
+            message: () => "In cazul unui posibil deces, evenimentul in sine este insotit de anumite cheltuieli (ex. inmormantare, taxe succesorale etc.).\n\nDoresti ca aceste cheltuieli sa fie acoperite din buzunarul familiei sau constituim un fond separat?\n\nDaca optezi pentru un fond separat, care ar fi aceasta suma (in lei)?",
             actionType: 'input',
-            options: { placeholder: 'Ex: 25000', type: 'number' },
+            options: { placeholder: 'Ex: 25000', type: 'number', defaultValue: 0 },
             handler: (response, data) => { data.eventCosts = Number(response); },
             nextStep: () => 'deces.show_deficit_2'
         },
@@ -198,8 +217,8 @@ Daca esti pregatit, haide sa continuam.`,
         },
         ask_solution: {
             message: (data) => {
-                data.premium = Math.max(100, Math.round(data.finalDeficit / 250)); // Simplified calculation in EUR
-                return `Pentru a acoperi complet deficitul de ${data.finalDeficit.toLocaleString('ro-RO')} lei, costul estimat al unei asigurări de viață pentru tine ar fi de aproximativ ${(data.premium / 5).toLocaleString('ro-RO')} € pe lună. Ai fi interesat să vezi o soluție personalizată?`;
+                data.premium = Math.max(50, Math.round(data.finalDeficit / (250 * 5))); // Simplified calculation in EUR
+                return `Pentru a acoperi complet deficitul de ${data.finalDeficit.toLocaleString('ro-RO')} lei, costul estimat al unei asigurări de viață pentru tine ar fi de aproximativ ${data.premium.toLocaleString('ro-RO')} € pe lună. Ai fi interesat să vezi o soluție personalizată?`;
             },
             actionType: 'buttons',
             options: ['Da, sunt interesat', 'Nu, mulțumesc'],
@@ -282,7 +301,7 @@ Daca esti pregatit, haide sa continuam.`,
         },
         ask_solution_health: {
             message: (data) => {
-                data.premium = Math.max(100, Math.round(data.healthDeficit / 150)); // Simplified
+                data.premium = Math.max(25, Math.round(data.healthDeficit / 150)); // Simplified
                 return `O asigurare de sănătate care să acopere un risc de ${data.healthDeficit.toLocaleString('ro-RO')} € ar avea un cost estimat de ${data.premium.toLocaleString('ro-RO')} € pe lună. Dorești să afli mai multe de la un consultant?`;
             },
             actionType: 'buttons',
@@ -535,8 +554,8 @@ const getStep = (stepId: string): ConversationStep | null => {
     }
     
     // Check common flow last
-    if (conversationFlows.common[flow]) {
-         return conversationFlows.common[flow];
+    if (conversationFlows.common[stepId]) {
+         return conversationFlows.common[stepId];
     }
 
 
@@ -565,25 +584,24 @@ export default function Home() {
         setConversation(prev => prev.map(msg => msg.id === id ? { ...msg, content } : msg));
     }, []);
 
-    const typeMessage = useCallback(async (text: string, messageId: number, delay: number = 30) => {
+    const typeMessage = useCallback(async (text: string, messageId: number, baseDelay: number = 30) => {
         let currentText = '';
+        let isTag = false;
+        
         for (const char of text) {
-            if (char === '<') {
-                const closingTagIndex = text.indexOf('>', text.indexOf(char));
-                if (closingTagIndex !== -1) {
-                    const tag = text.substring(text.indexOf(char), closingTagIndex + 1);
-                    currentText += tag;
-                    // Skip the loop ahead past this tag
-                    // This is a simplification and might not handle all HTML cases.
-                    text = text.substring(closingTagIndex + 1);
-                    updateMessage(messageId, currentText + text); // Show rest of text at once
-                    return; // Exit typing animation
-                }
-            }
+            if (char === '<') isTag = true;
+            
             currentText += char;
-            updateMessage(messageId, currentText);
-            await new Promise(resolve => setTimeout(resolve, delay));
+            
+            if (char === '>') isTag = false;
+
+            if (!isTag) {
+                 updateMessage(messageId, currentText);
+                 await new Promise(resolve => setTimeout(resolve, baseDelay));
+            }
         }
+         // Final update to ensure full content with tags is rendered instantly
+        updateMessage(messageId, text);
     }, [updateMessage]);
     
     const renderStep = useCallback(async (stepId: string) => {
@@ -607,7 +625,8 @@ export default function Home() {
             const messageId = addMessage({ author: "Marius", type: "text" });
             setIsTyping(false);
 
-            await typeMessage(messageContent, messageId);
+            const typingDelay = step.delay === 1500 ? 60 : 30;
+            await typeMessage(messageContent, messageId, typingDelay);
         }
 
         if (step.autoContinue) {
@@ -697,3 +716,5 @@ export default function Home() {
         </div>
     );
 }
+
+    
