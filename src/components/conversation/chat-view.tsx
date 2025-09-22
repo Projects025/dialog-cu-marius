@@ -177,7 +177,6 @@ const MultiChoiceList = ({ options, onConfirm }: { options: {id: string, label: 
                     const label = isComplexOption ? option.label : option;
                     const id = isComplexOption ? option.id : option;
                     const isDisabled = isComplexOption ? !!option.disabled : false;
-                    const isSelected = selected.some(item => item.id === id);
                     const displayText = isDisabled ? `${label} (în curând)` : label;
                     
                     return (
@@ -186,7 +185,7 @@ const MultiChoiceList = ({ options, onConfirm }: { options: {id: string, label: 
                             onClick={() => !isDisabled && toggleOption({id, label})}
                             className={cn(
                                 "flex items-center space-x-3 p-3 rounded-md cursor-pointer transition-colors duration-200 bg-background/80 backdrop-blur-sm border border-border text-foreground shadow-md justify-center min-h-[52px] h-auto text-base",
-                                isSelected ? "bg-primary/20 text-primary-foreground border-primary" : "hover:bg-accent/50",
+                                selected.some(item => item.id === id) ? "bg-primary/20 text-primary-foreground border-primary" : "hover:bg-accent/50",
                                 isDisabled && "opacity-50 cursor-not-allowed hover:bg-transparent"
                             )}
                         >

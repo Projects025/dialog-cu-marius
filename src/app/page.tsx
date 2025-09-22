@@ -125,9 +125,9 @@ Esti pregatit(a) sa mai facem un pas?`,
             nextStep: () => 'deces.show_deficit_3'
         },
         show_deficit_3: {
-             message: (data) => `Am obtinut a treia suma de bani - ${Number(data.projects).toLocaleString('ro-RO')} lei care va fi inclusa in deficitul financiar care ar ramane in urma ta.\n\nMai rezisti?\n\nMai ai un singur pas prin acest „coridor” intunecat, apoi se va vedea „luminita” :) Da click pentru ultima suma-deficit.`,
+             message: (data) => `Am obtinut a treia suma de bani - ${Number(data.projects).toLocaleString('ro-RO')} lei care va fi inclusa in deficitul financiar care ar ramane in urma ta.\n\nMai rezisti?\n\nMai ai un singur pas prin acest „coridor” intunecat, apoi se va vedea „luminita” :)`,
             actionType: 'buttons',
-            options: ['Click'],
+            options: ['Hai sa vedem!'],
             nextStep: () => 'deces.ask_debts'
         },
         ask_debts: {
@@ -279,12 +279,19 @@ Esti pregatit(a) sa mai facem un pas?`,
                 buttonText: 'Trimite'
             },
             handler: (response, data) => { data.contact = response; },
-            nextStep: () => 'deces.thank_you'
+            nextStep: () => 'deces.thank_you_contact'
         },
-        thank_you: {
-            message: () => "Mulțumesc pentru că mi-ai răspuns la întrebări, te voi suna curând!",
+        thank_you_contact: {
+            message: () => "Mulțumesc pentru că mi-ai răspuns la întrebări, te voi contacta în curând!\n\nCând preferi să fii contactat?",
+            actionType: 'buttons',
+            options: ['Dimineața', 'După-masa', 'Seara'],
+            handler: (response, data) => { data.preferredContactTime = response; },
+            nextStep: () => 'deces.thank_you_final'
+        },
+        thank_you_final: {
+            message: () => `<div class="text-center w-full text-2xl font-bold">Mulțumesc!<br>O zi frumoasă!</div>`,
             actionType: 'end',
-            nextStep: () => '',
+            nextStep: () => ''
         }
     },
     boala_grava: {
