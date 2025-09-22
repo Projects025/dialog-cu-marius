@@ -112,7 +112,7 @@ Esti pregatit(a) sa mai facem un pas?`,
             nextStep: () => 'deces.show_deficit_2'
         },
         show_deficit_2: {
-            message: (data) => `Am adaugat si aceasta suma. Esti pregatit(a) sa mai facem un pas?`,
+            message: (data) => `Am obtinut a doua suma de bani - ${data.eventCosts.toLocaleString('ro-RO')} lei - care se va regasi in deficitul total cu care familia ta s-ar confrunta in absenta ta.\n\nMai avem doua sume.\n\nMergem mai departe?`,
             actionType: 'buttons',
             options: ['Da'],
             nextStep: () => 'deces.ask_projects'
@@ -125,13 +125,13 @@ Esti pregatit(a) sa mai facem un pas?`,
             nextStep: () => 'deces.show_deficit_3'
         },
         show_deficit_3: {
-             message: (data) => `Am adaugat si aceasta suma. Esti pregatit(a) sa mai facem un pas?`,
+             message: (data) => `Am obtinut a treia suma de bani - ${data.projects.toLocaleString('ro-RO')} lei care va fi inclusa in deficitul financiar care ar ramane in urma ta.\n\nMai rezisti?\n\nMai ai un singur pas prin acest „coridor” intunecat, apoi se va vedea „luminita” :) Da click pentru ultima suma-deficit.`,
             actionType: 'buttons',
-            options: ['Da'],
+            options: ['Click'],
             nextStep: () => 'deces.ask_debts'
         },
         ask_debts: {
-            message: () => "In cazul decesului, familia ar trebui sa gestioneze anumite credite / datorii (ipotecare, nevoi personale, etc)? Daca da, care este suma totala a acestora (in lei)?",
+            message: () => "In cazul unui posibil deces, raman pe umerii familiei anumite responsabilitati financiare de tip credite, datorii, obligatii financiare etc.?\n\nDaca ai vrea sa stingi aceste obligatii financiare astfel incat familia sa nu poarte aceasta povara financiara, care ar fi suma de bani de care ar avea nevoie (in lei)?",
             actionType: 'input',
             options: { placeholder: 'Ex: 400000', type: 'number', defaultValue: 0 },
             handler: (response, data) => { data.debts = Number(response); },
@@ -584,7 +584,7 @@ export default function Home() {
         setConversation(prev => prev.map(msg => msg.id === id ? { ...msg, content } : msg));
     }, []);
 
-    const typeMessage = useCallback(async (text: string, messageId: number, baseDelay: number = 30) => {
+    const typeMessage = useCallback(async (text: string, messageId: number, baseDelay: number = 20) => {
         let currentText = '';
         let isTag = false;
         
@@ -625,7 +625,7 @@ export default function Home() {
             const messageId = addMessage({ author: "Marius", type: "text" });
             setIsTyping(false);
 
-            const typingDelay = step.delay === 1500 ? 60 : 30;
+            const typingDelay = step.delay === 1500 ? 50 : 20;
             await typeMessage(messageContent, messageId, typingDelay);
         }
 
