@@ -34,14 +34,26 @@ const conversationFlows: { [key: string]: ConversationFlow } = {
             message: () => "Ar fi de interes pentru tine sa vezi care este gradul de expunere financiara a familiei tale in cazul unui deces spontan?",
             actionType: 'buttons',
             options: ['Da', 'Nu'],
-            nextStep: (response) => response === 'Da' ? 'deces.intro_analysis' : 'common.end_dialog_friendly'
+            nextStep: (response) => response === 'Da' ? 'deces.intro_analysis_1' : 'common.end_dialog_friendly'
         },
-        intro_analysis: {
-            message: () => `Un deces afecteaza negativ pe multiple planuri, doua dintre acestea fiind extrem de profunde si de durata - planul existential (drama care insoteste pierderea persoanei dragi) si planul financiar (disparitia optiunilor, aparitia presiunilor financiare si a necesitatii de a ajusta nivelul de trai la noile realitati).
-
-In momentele urmatoare, vom raspunde la cateva intrebari prin care sa stabilim care este suma de bani de care ar avea nevoie familia pentru a ameliora impactul financiar negativ al decesului asupra
-
-(1.) standardului de viata,
+        intro_analysis_1: {
+            message: () => `Un deces afecteaza negativ pe multiple planuri, doua dintre acestea fiind extrem de profunde si de durata - planul existential (drama care insoteste pierderea persoanei dragi) si planul financiar (disparitia optiunilor, aparitia presiunilor financiare si a necesitatii de a ajusta nivelul de trai la noile realitati).`,
+            actionType: 'buttons',
+            options: [],
+            autoContinue: true,
+            delay: 1200,
+            nextStep: () => 'deces.intro_analysis_2'
+        },
+        intro_analysis_2: {
+            message: () => `In momentele urmatoare, vom raspunde la cateva intrebari prin care sa stabilim care este suma de bani de care ar avea nevoie familia pentru a ameliora impactul financiar negativ al decesului asupra...`,
+            actionType: 'buttons',
+            options: [],
+            autoContinue: true,
+            delay: 1200,
+            nextStep: () => 'deces.intro_analysis_3'
+        },
+        intro_analysis_3: {
+            message: () => `(1.) standardului de viata,
 (2.) proiectelor in desfasurare si 
 (3.) a eventualelor credite / datorii.
 
@@ -516,14 +528,17 @@ const getStep = (stepId: string): ConversationStep | null => {
         return introFlow[stepId];
     }
     
-    if (conversationFlows.common[stepId]) {
-        return conversationFlows.common[stepId];
-    }
-
     const [flow, step] = stepId.split('.');
+    
     if (flow && step && conversationFlows[flow] && conversationFlows[flow][step]) {
         return conversationFlows[flow][step];
     }
+    
+    // Check common flow last
+    if (conversationFlows.common[flow]) {
+         return conversationFlows.common[flow];
+    }
+
 
     console.error("Invalid stepId:", stepId);
     return null;
@@ -682,5 +697,3 @@ export default function Home() {
         </div>
     );
 }
-
-    
