@@ -86,7 +86,7 @@ const DateOfBirthPicker = ({ onDateSelect }: { onDateSelect: (date: Date) => voi
                 </div>
                  <div className="flex flex-col gap-1.5">
                     <label htmlFor="month" className="text-sm font-medium text-foreground/80">Luna</label>
-                    <Select onValueChange={setMonth} value={month}>
+                    <Select onValuechange={setMonth} value={month}>
                         <SelectTrigger id="month" className="bg-background"><SelectValue placeholder="Lună" /></SelectTrigger>
                         <SelectContent>
                             {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
@@ -95,7 +95,7 @@ const DateOfBirthPicker = ({ onDateSelect }: { onDateSelect: (date: Date) => voi
                 </div>
                  <div className="flex flex-col gap-1.5">
                     <label htmlFor="year" className="text-sm font-medium text-foreground/80">Anul</label>
-                    <Select onValueChange={setYear} value={year}>
+                    <Select onValuechange={setYear} value={year}>
                         <SelectTrigger id="year" className="bg-background"><SelectValue placeholder="An" /></SelectTrigger>
                         <SelectContent>
                             {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
@@ -172,7 +172,7 @@ const MultiChoiceList = ({ options, onConfirm }: { options: {id: string, label: 
                 {options.map((option, index) => {
                     const label = isComplexOption ? option.label : option;
                     const id = isComplexOption ? option.id : option;
-                    const isDisabled = isComplexOption ? option.disabled : false;
+                    const isDisabled = isComplexOption ? !!option.disabled : false;
                     const isSelected = selected.some(item => item.id === id);
                     const displayText = isDisabled ? `${label} (în curând)` : label;
                     
@@ -181,20 +181,19 @@ const MultiChoiceList = ({ options, onConfirm }: { options: {id: string, label: 
                             key={index}
                             onClick={() => !isDisabled && toggleOption({id, label})}
                             className={cn(
-                                "flex items-center space-x-3 p-3 rounded-md cursor-pointer transition-colors duration-200 bg-background/80 backdrop-blur-sm border-border text-foreground shadow-md justify-center min-h-[52px] h-auto text-base",
+                                "flex items-center space-x-3 p-3 rounded-md cursor-pointer transition-colors duration-200 bg-background/80 backdrop-blur-sm border border-border text-foreground shadow-md justify-center min-h-[52px] h-auto text-base",
                                 isSelected ? "bg-primary/20 text-primary-foreground border-primary" : "hover:bg-accent/50",
                                 isDisabled && "opacity-50 cursor-not-allowed hover:bg-transparent"
                             )}
                         >
-                            {isSelected ? <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" /> : <Circle className="h-5 w-5 text-foreground/50 flex-shrink-0" />}
-                            <span className="text-base font-medium">{displayText}</span>
+                            <span className="text-base font-medium text-center">{displayText}</span>
                         </div>
                     )
                 })}
             </div>
             <div className="pt-3 flex-shrink-0">
                 <Button
-                    onClick={() => onConfirm(selected)}
+                    onClick={() => onConfirm(selected.map(s => s.id))}
                     disabled={selected.length === 0}
                     className="w-full h-12"
                 >
@@ -314,7 +313,7 @@ const ChatView = ({ conversation, userAction, onResponse, isTyping }: ChatViewPr
             {userAction.options?.map((option: any, index: number) => {
               const isComplexOption = typeof option === 'object' && option !== null;
               const label = isComplexOption ? option.label : option;
-              const isDisabled = isComplexOption ? option.disabled : false;
+              const isDisabled = isComplexOption ? !!option.disabled : false;
               const displayText = isDisabled ? `${label} (în curând)` : label;
 
               return (
@@ -446,3 +445,5 @@ const ChatView = ({ conversation, userAction, onResponse, isTyping }: ChatViewPr
 };
 
 export default ChatView;
+
+    
