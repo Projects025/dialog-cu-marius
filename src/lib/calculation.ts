@@ -1,11 +1,9 @@
 import { differenceInYears } from 'date-fns';
-import type { UserData } from '@/components/conversation/chat-view';
 
 // --- Tipuri de Date ---
 export type FinancialData = {
     // Comun
     birthDate?: Date;
-    isSmoker?: boolean;
     contact?: { name: string, email: string, phone: string };
 
     // Flux Deces
@@ -13,14 +11,31 @@ export type FinancialData = {
     monthlySum?: number;
     eventCosts?: number;
     projects?: number;
-    debts?: number;
     existingInsurance?: number;
     savings?: number;
+    premium?: number;
+    
+    // Flux Boala Grava
+    monthlyNeed?: number;
+    recoveryPeriod?: number;
+    medicalCosts?: number;
+    existingSavings?: number;
+
+    // Flux Pensionare
+    desiredPension?: number;
+    retirementAge?: number;
+    currentSavings?: number;
+    
+    // Flux Studii
+    studiesGoal?: number;
+    childAge?: number;
+    // `currentSavings` is reused here
 
     // Sume calculate
-    deficit1?: number;
     bruteDeficit?: number;
     finalDeficit?: number;
+    healthDeficit?: number;
+    monthlyContribution?: number;
 
     // Date calitative
     feeling?: string;
@@ -28,7 +43,7 @@ export type FinancialData = {
 };
 
 /**
- * Calculează deficitul brut pe baza datelor colectate.
+ * Calculează deficitul brut pentru scenariul de deces.
  */
 export const calculateBruteDeficit = (data: FinancialData): number => {
     const { 
@@ -36,21 +51,23 @@ export const calculateBruteDeficit = (data: FinancialData): number => {
         period = 0,
         eventCosts = 0,
         projects = 0,
-        debts = 0
     } = data;
 
     const standardOfLivingDeficit = monthlySum * period * 12;
-    const totalBruteDeficit = standardOfLivingDeficit + eventCosts + projects + debts;
+    const totalBruteDeficit = standardOfLivingDeficit + eventCosts + projects;
     
     return Math.max(0, totalBruteDeficit);
 };
 
 /**
- * Calculează deficitul final scăzând resursele existente.
+ * Calculează deficitul final pentru scenariul de deces.
  */
 export const calculateFinalDeficit = (data: FinancialData): number => {
+    // First calculate brute deficit
+    const bruteDeficit = calculateBruteDeficit(data);
+    data.bruteDeficit = bruteDeficit;
+    
     const {
-        bruteDeficit = 0,
         existingInsurance = 0,
         savings = 0
     } = data;
@@ -59,22 +76,62 @@ export const calculateFinalDeficit = (data: FinancialData): number => {
     return Math.max(0, finalDeficit);
 };
 
-// Matrice de risc (valori anuale per 1000 EUR asigurați)
-// Notă: Această matrice nu mai este folosită în logica actuală, dar este păstrată
-// pentru referințe viitoare sau extinderea funcționalităților.
-const baseRiskMatrix = {
-    male: [
-        { maxAge: 29, rate: 3.5 },
-        { maxAge: 39, rate: 5.0 },
-        { maxAge: 49, rate: 9.5 },
-        { maxAge: 59, rate: 20.0 },
-        { maxAge: 100, rate: 40.0 },
-    ],
-    female: [
-        { maxAge: 29, rate: 2.8 },
-        { maxAge: 39, rate: 4.0 },
-        { maxAge: 49, rate: 7.5 },
-        { maxAge: 59, rate: 15.0 },
-        { maxAge: 100, rate: 30.0 },
-    ]
+/**
+ * Calculează deficitul pentru scenariul de boală gravă.
+ */
+export const calculateHealthDeficit = (data: FinancialData): number => {
+    const {
+        monthlyNeed = 0,
+        recoveryPeriod = 0, // in months
+        medicalCosts = 0,
+        existingSavings = 0
+    } = data;
+    const totalNeed = (monthlyNeed * recoveryPeriod) + medicalCosts;
+    const deficit = totalNeed - existingSavings;
+    return Math.max(0, deficit);
+};
+
+/**
+ * Calculează contribuția lunară necesară pentru pensionare.
+ */
+export const calculateRetirementContribution = (data: FinancialData): number => {
+    const {
+        desiredPension = 0,
+        retirementAge = 0,
+        currentSavings = 0,
+        birthDate
+    } = data;
+    if (!birthDate || !retirementAge) return 0;
+
+    const yearsToRetirement = retirementAge - differenceInYears(new Date(), birthDate);
+    if (yearsToRetirement <= 0) return 0;
+
+    // Assuming a 20-year retirement period
+    const requiredCapital = desiredPension * 12 * 20;
+    const capitalDeficit = requiredCapital - currentSavings;
+    if (capitalDeficit <= 0) return 0;
+
+    const monthlyContribution = capitalDeficit / (yearsToRetirement * 12);
+    return Math.round(monthlyContribution);
+};
+
+
+/**
+ * Calculează contribuția lunară necesară pentru studiile copilului.
+ */
+export const calculateStudiesContribution = (data: FinancialData): number => {
+    const {
+        studiesGoal = 0,
+        childAge = 0,
+        currentSavings = 0,
+    } = data;
+
+    const yearsToMajority = 18 - childAge;
+    if (yearsToMajority <= 0) return 0;
+    
+    const studiesDeficit = studiesGoal - currentSavings;
+    if (studiesDeficit <= 0) return 0;
+
+    const monthlyContribution = studiesDeficit / (yearsToMajority * 12);
+    return Math.round(monthlyContribution);
 };

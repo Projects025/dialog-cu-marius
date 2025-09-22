@@ -26,24 +26,10 @@ export type Message = {
   author: "Marius" | "user";
   type: "text" | "response";
   content: any;
-  style?: 'normal' | 'dramatic';
 };
 
-export type UserData = {
-  birthDate: Date;
-  gender: 'Masculin' | 'Feminin';
-  isSmoker: boolean;
-  desiredSum: number;
-  name?: string;
-  email?: string;
-  phone?: string;
-}
-
-export type { FinancialData } from '@/lib/calculation';
-
-
 export type UserAction = {
-  type: 'input' | 'buttons' | 'date' | 'checkbox' | 'form' | 'interactive_scroll_list';
+  type: 'input' | 'buttons' | 'date' | 'checkbox' | 'form' | 'interactive_scroll_list' | 'multi_choice';
   options?: any;
 }
 
@@ -51,7 +37,7 @@ interface ChatViewProps {
   conversation: Message[];
   userAction: UserAction | null;
   onResponse: (response: any) => void;
-  isWaitingForResponse: boolean;
+  isTyping: boolean;
 }
 
 const DateOfBirthPicker = ({ onDateSelect }: { onDateSelect: (date: Date) => void }) => {
@@ -167,6 +153,58 @@ const InteractiveScrollList = ({ options, buttonText, onConfirm }: { options: st
     );
 };
 
+const MultiChoiceList = ({ options, onConfirm }: { options: {id: string, label: string, disabled?: boolean}[], onConfirm: (selected: any[]) => void }) => {
+    const [selected, setSelected] = useState<{id: string, label: string}[]>([]);
+
+    const toggleOption = (option: {id: string, label: string}) => {
+        setSelected(prev =>
+            prev.find(item => item.id === option.id)
+                ? prev.filter(item => item.id !== option.id)
+                : [...prev, option]
+        );
+    };
+    
+    const isComplexOption = typeof options[0] === 'object' && options[0] !== null;
+
+    return (
+        <div className="flex flex-col w-full bg-transparent max-h-96 animate-in fade-in-50 overflow-hidden">
+             <div className="flex-grow space-y-3">
+                {options.map((option, index) => {
+                    const label = isComplexOption ? option.label : option;
+                    const id = isComplexOption ? option.id : option;
+                    const isDisabled = isComplexOption ? option.disabled : false;
+                    const isSelected = selected.some(item => item.id === id);
+                    const displayText = isDisabled ? `${label} (în curând)` : label;
+                    
+                    return (
+                        <div
+                            key={index}
+                            onClick={() => !isDisabled && toggleOption({id, label})}
+                            className={cn(
+                                "flex items-center space-x-3 p-3 rounded-md cursor-pointer transition-colors duration-200 bg-background/80 backdrop-blur-sm border-border text-foreground shadow-md justify-center min-h-[52px] h-auto text-base",
+                                isSelected ? "bg-primary/20 text-primary-foreground border-primary" : "hover:bg-accent/50",
+                                isDisabled && "opacity-50 cursor-not-allowed hover:bg-transparent"
+                            )}
+                        >
+                            {isSelected ? <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" /> : <Circle className="h-5 w-5 text-foreground/50 flex-shrink-0" />}
+                            <span className="text-base font-medium">{displayText}</span>
+                        </div>
+                    )
+                })}
+            </div>
+            <div className="pt-3 flex-shrink-0">
+                <Button
+                    onClick={() => onConfirm(selected)}
+                    disabled={selected.length === 0}
+                    className="w-full h-12"
+                >
+                    Am ales
+                </Button>
+            </div>
+        </div>
+    );
+};
+
 
 const ContactForm = ({ options, onResponse }: { options: any, onResponse: (data: any) => void }) => {
     const [formData, setFormData] = useState<{[key: string]: string}>({});
@@ -221,7 +259,7 @@ const ContactForm = ({ options, onResponse }: { options: any, onResponse: (data:
     )
 }
 
-const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }: ChatViewProps) => {
+const ChatView = ({ conversation, userAction, onResponse, isTyping }: ChatViewProps) => {
   const [inputValue, setInputValue] = useState("");
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
   const actionsContainerRef = useRef<HTMLDivElement>(null);
@@ -250,7 +288,7 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
             resizeObserver.unobserve(actionsContainerRef.current);
         }
     };
-  }, [userAction, conversation]);
+  }, [userAction, conversation, isTyping]);
 
 
   const handleSend = () => {
@@ -267,7 +305,7 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
   };
 
   const renderUserActions = () => {
-    if (!userAction || !isWaitingForResponse) return null;
+    if (!userAction || isTyping) return null;
 
     switch (userAction.type) {
       case "buttons":
@@ -322,6 +360,10 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
         return (
             <InteractiveScrollList options={userAction.options.options} buttonText={userAction.options.buttonText} onConfirm={onResponse} />
         );
+      case 'multi_choice':
+        return (
+            <MultiChoiceList options={userAction.options} onConfirm={onResponse} />
+        );
       case "form":
         return (
             <ContactForm options={userAction.options} onResponse={onResponse} />
@@ -335,13 +377,10 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
     if (typeof content !== 'string') {
         return content;
     }
-    const parts = content.split(/(\*\*.*?\*\*)/g);
-    return parts.map((part:any, index:any) => {
-        if (part.startsWith('**') && part.endsWith('**')) {
-            return <strong key={index}>{part.slice(2, -2)}</strong>;
-        }
-        return part;
-    });
+    const createMarkup = () => {
+        return { __html: content.replace(/\n/g, '<br />') };
+    };
+    return <p className="whitespace-pre-wrap" dangerouslySetInnerHTML={createMarkup()} />;
 };
 
   return (
@@ -369,15 +408,14 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
                     "max-w-md md:max-w-lg rounded-2xl px-4 py-3 shadow-md text-base",
                     message.author === "Marius"
                     ? "bg-secondary text-secondary-foreground rounded-bl-none"
-                    : "bg-primary text-primary-foreground rounded-br-none",
-                    message.style === 'dramatic' && "bg-destructive/10 text-destructive-foreground italic border border-destructive/50"
+                    : "bg-primary text-primary-foreground rounded-br-none"
                 )}
                 >
-                <p className="whitespace-pre-wrap">{renderMessageContent(message.content)}</p>
+                {renderMessageContent(message.content)}
                 </div>
             </div>
             ))}
-            {isWaitingForResponse && conversation.length > 0 && userAction === null && (
+            {isTyping && (
             <div className="flex items-end gap-3 w-full justify-start animate-in fade-in slide-in-from-bottom-5 duration-500">
                 <Avatar className="h-8 w-8 hidden sm:flex self-start flex-shrink-0">
                     <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
