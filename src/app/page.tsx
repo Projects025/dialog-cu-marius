@@ -26,25 +26,31 @@ type ConversationFlow = {
 const conversationFlow: ConversationFlow = {
     // --- Faza 1: Introducere și Prioritizare ---
     intro_1: {
-        message: () => "Viața produce pierderi financiare semnificative in patru situații majore. Dintre acestea, două situații sunt previzibile, precis așezate pe axa vieții, iar două sunt total imprevizibile („ceasul rău, pisica neagră”).",
+        message: () => `Viața produce pierderi financiare semnificative in patru situații majore. 
+Dintre acestea, două situații sunt previzibile, precis așezate pe axa vieții, iar două sunt total imprevizibile („ceasul rău, pisica neagră”).
+
+**Previzibile:**
+1. Pensionarea - reducerea drastică a optiunilor, a demnitatii si a statutului de sustinator al familiei
+2. Studiile copiilor - cheltuieli complexe, unele neanticipate, care pun presiune pe bugetul familiei
+
+**Imprevizibile:**
+1. Decesul - detonează standardul de viata, proiectele in desfasurare și viitorul copiilor
+2. Bolile grave - nu decesul este cel mai rau eveniment care se poate intampla in viata unei familii`,
         actionType: 'buttons',
         options: [],
-        nextStep: () => 'intro_2',
+        nextStep: () => 'ask_priority_delayed',
         autoContinue: true
     },
-    intro_2: {
-        message: () => "Previzibile:\n1. Pensionarea...\n2. Studiile copiilor...",
+    ask_priority_delayed: {
+        message: () => "Care dintre aceste subiecte ar fi de interes pentru tine la acest moment?",
         actionType: 'buttons',
-        options: [],
-        nextStep: () => 'intro_3',
-        autoContinue: true
-    },
-    intro_3: {
-        message: () => "Imprevizibile:\n1. Decesul...\n2. Bolile grave...",
-        actionType: 'buttons',
-        options: [],
-        nextStep: () => 'ask_priority',
-        autoContinue: true
+        options: [
+            { label: 'Reducerea drastica a veniturilor la pensionare', disabled: true },
+            { label: 'Asigurarea viitorului copiilor', disabled: true },
+            { label: 'Decesul spontan', disabled: false },
+            { label: 'Bolile grave...', disabled: true }
+        ],
+        nextStep: (response) => response === 'Decesul spontan' ? 'confirm_deces_analysis' : 'end_dialog_friendly'
     },
     ask_priority: {
         message: () => "Care dintre aceste subiecte ar fi de interes pentru tine la acest moment?",
@@ -282,7 +288,8 @@ export default function Home() {
         if (step.actionType === 'end') {
             setIsWaitingForResponse(false);
         } else if (step.autoContinue) {
-             await new Promise(resolve => setTimeout(resolve, 1200));
+             const delay = stepId === 'intro_1' ? 2000 : 1200;
+             await new Promise(resolve => setTimeout(resolve, delay));
              const nextStepId = step.nextStep();
              renderStep(nextStepId);
         } else {
@@ -363,5 +370,3 @@ export default function Home() {
         </div>
     );
 }
-
-    

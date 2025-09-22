@@ -133,9 +133,9 @@ const InteractiveScrollList = ({ options, buttonText, onConfirm }: { options: st
     };
 
     return (
-        <div className="flex flex-col w-full bg-background/80 backdrop-blur-sm border border-border rounded-lg shadow-md max-h-96 animate-in fade-in-50">
-            <div className="flex-grow overflow-y-auto no-scrollbar p-4">
-                 <div className="space-y-3">
+        <div className="flex flex-col w-full bg-background/80 backdrop-blur-sm border border-border rounded-lg shadow-md max-h-96 animate-in fade-in-50 overflow-hidden">
+            <ScrollArea className="flex-grow no-scrollbar">
+                 <div className="space-y-3 p-4">
                     {options.map((option: string, index: number) => {
                         const isSelected = selected.includes(option);
                         return (
@@ -153,7 +153,7 @@ const InteractiveScrollList = ({ options, buttonText, onConfirm }: { options: st
                         )
                     })}
                 </div>
-            </div>
+            </ScrollArea>
             <div className="p-4 border-t border-border flex-shrink-0">
                 <Button
                     onClick={() => onConfirm(selected)}
@@ -330,6 +330,19 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
         return null;
     }
   };
+  
+  const renderMessageContent = (content: any) => {
+    if (typeof content !== 'string') {
+        return content;
+    }
+    const parts = content.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part:any, index:any) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+            return <strong key={index}>{part.slice(2, -2)}</strong>;
+        }
+        return part;
+    });
+};
 
   return (
     <>
@@ -360,7 +373,7 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
                     message.style === 'dramatic' && "bg-destructive/10 text-destructive-foreground italic border border-destructive/50"
                 )}
                 >
-                <p className="whitespace-pre-wrap">{message.content}</p>
+                <p className="whitespace-pre-wrap">{renderMessageContent(message.content)}</p>
                 </div>
             </div>
             ))}
@@ -395,5 +408,3 @@ const ChatView = ({ conversation, userAction, onResponse, isWaitingForResponse }
 };
 
 export default ChatView;
-
-    
