@@ -153,7 +153,7 @@ Esti pregatit(a) sa mai facem un pas?`,
         show_brute_deficit: {
             message: (data) => {
                 data.bruteDeficit = calculateBruteDeficit(data);
-                return `<span class="text-2xl font-bold">Suma-deficit totala: ${data.bruteDeficit.toLocaleString('ro-RO')} lei</span>`;
+                return `<span class="text-2xl font-bold">${data.bruteDeficit.toLocaleString('ro-RO')} lei</span>`;
             },
             actionType: 'buttons',
             options: [],
@@ -183,42 +183,83 @@ Esti pregatit(a) sa mai facem un pas?`,
             nextStep: () => 'deces.ask_savings'
         },
         ask_savings: {
-            message: () => "In cazul unui deces, familia ta ar putea accesa anumite economii / investitii / lichiditati (conturi curente, depozite, etc)? Daca da, care este suma acestora (in lei)?",
+            message: () => "In cazul unui posibil deces, familia ta ar putea accesa anumite economii sau ar putea apela la anumite investitii (ex. chirii, vanzarea unui imobil etc.)?\n\nDaca da, care este suma de bani disponibila din economii / investitii pentru perioada de tranzitie pe care ai mentionat-o anterior?",
             actionType: 'input',
             options: { placeholder: 'Ex: 75000', type: 'number', defaultValue: 0 },
             handler: (response, data) => { data.savings = Number(response); },
-            nextStep: () => 'deces.show_final_deficit'
+            nextStep: () => 'deces.show_final_deficit_intro'
         },
-        show_final_deficit: {
+        show_final_deficit_intro: {
+            message: () => "Sumele rezultate din asigurari de viata cu beneficiar familia si sumele de bani rezultate din economii / investitii vor fi scazute din suma-deficit calcultata anterior.",
+            actionType: 'buttons',
+            options: [],
+            autoContinue: true,
+            nextStep: () => 'deces.show_final_deficit_context_1'
+        },
+        show_final_deficit_context_1: {
+            message: () => "Si acum... suma-deficit finala cu care familia ta ar pasi in acest viitor sumbru daca n-ar mai putea conta pe sprijinul tau financiar.",
+             actionType: 'buttons',
+            options: [],
+            autoContinue: true,
+            nextStep: () => 'deces.show_final_deficit_context_2'
+        },
+        show_final_deficit_context_2: {
+            message: () => "Practic, vorbim despre mostenirea-negativa pe care ai lasa-o celor dragi tie.",
+            actionType: 'buttons',
+            options: [],
+            autoContinue: true,
+            nextStep: () => 'deces.show_final_deficit_context_3'
+        },
+        show_final_deficit_context_3: {
+            message: () => "Asadar, suma-deficit totala este:",
+            actionType: 'buttons',
+            options: [],
+            autoContinue: true,
+            nextStep: () => 'deces.show_final_deficit_amount'
+        },
+        show_final_deficit_amount: {
             message: (data) => {
                 data.finalDeficit = calculateFinalDeficit(data);
-                return `Am scazut din suma-deficit totala de ${data.bruteDeficit?.toLocaleString('ro-RO')} lei, suma asigurata de ${data.existingInsurance?.toLocaleString('ro-RO')} lei si suma economiilor de ${data.savings?.toLocaleString('ro-RO')} lei. Mostenirea financiara pe care ar primi-o familia ta, in cazul unui deces, este de fapt o mostenire-negativa. Asadar, suma-deficit finala este de: ${data.finalDeficit.toLocaleString('ro-RO')} lei.`;
+                return `<span class="text-2xl font-bold">${data.finalDeficit.toLocaleString('ro-RO')} lei</span>`;
             },
             actionType: 'buttons',
             options: [],
             autoContinue: true,
-            nextStep: () => 'deces.ask_feeling'
+            delay: 1500,
+            nextStep: () => 'deces.ask_feeling_buttons'
         },
-        ask_feeling: {
+        ask_feeling_buttons: {
             message: () => `Cum ti se pare aceasta suma? Care este sentimentul pe care il simti acum?`,
+            actionType: 'buttons',
+            options: ['Nu îmi place ce văd', 'Interesant'],
+            nextStep: () => 'deces.ask_feeling_input'
+        },
+        ask_feeling_input: {
+            message: () => "Te rog, descrie pe scurt.",
             actionType: 'input',
-             options: { placeholder: 'Scrie aici...', type: 'text' },
+            options: { placeholder: 'Scrie aici...', type: 'text' },
             handler: (response, data) => { data.feeling = response; },
             nextStep: () => 'deces.ask_dramatic_options'
         },
         ask_dramatic_options: {
-            message: () => "In acest scenariu, fara o planificare financiara care sa anuleze aceasta mostenire-negativa, ce optiuni ar avea cei dragi pentru a acoperi deficitul de mai sus? Te rog sa bifezi optiunile pe care le consideri realiste...",
-            actionType: 'interactive_scroll_list',
+            message: () => "In acest scenariu de imaginatie sumbru, ce optiuni ar avea cei dragi ai tai pentru a mentine un oarecare echilibru in standardul de viata?\n\nBifeaza optiunile realiste si cu care tu te simti confortabil pentru ai tai:",
+            actionType: 'checkbox',
             options: {
                 options: [
-                    'Partenerul de viata isi ia al doilea job', 'Partenerul de viata vinde casa',
-                    'Partenerul de viata vinde masina', 'Partenerul de viata renunta la concedii',
-                    'Partenerul de viata face un credit de nevoi personale', 'Partenerul de viata se imprumuta la prieteni',
-                    'Partenerul de viata se imprumuta la familie', 'Copiii renunta la meditatii',
-                    'Copiii renunta la sport', 'Copiii renunta la facultate in strainatate',
-                    'Copiii renunta la facultate in tara', 'Copiii se angajeaza imediat dupa liceu',
-                    'Bunicii contribuie financiar masiv', 'Bunicii au grija de nepoti non-stop',
-                    'Stilul de viata se reduce drastic'
+                    'Sa se mute cu parintii',
+                    'Sa se mute in alt oras',
+                    'Sa munceasca suplimentar sau la al doilea job (si sa dispara din viata copiilor)',
+                    'Sa vanda din bunurile personale',
+                    'Sa vanda casa / apartamentul',
+                    'Sa reduca drastic cheltuieli / sa renunte la hobby-uri',
+                    'Sa renunte la proiecte personale',
+                    'Sa amane educatia copiilor sau sa se multumeasca cu foarte putin',
+                    'Sa ceara in mod constant ajutor de la familiei si de la prieteni',
+                    'Sa renunte la economiile / investitiile existente',
+                    'Sa se mute in locuinta mai mica',
+                    'Sa accepte orice compromis major pentru a supravietui financiar',
+                    'Sa se casatoreasca din obligatii financiare',
+                    'Altceva'
                 ],
                 buttonText: "Am bifat"
             },
@@ -678,14 +719,18 @@ export default function Home() {
         
         const responseValue = (typeof response === 'object' && response !== null && response.label) ? response.label : response;
         
-        let userMessageContent = Array.isArray(response) 
-            ? response.map(r => r.label || r).join(', ')
+        let userMessageContent: string | null = Array.isArray(response) 
+            ? response.join(', ')
             : responseValue;
 
-        if (typeof response === 'object' && response !== null && response.name) {
-            userMessageContent = `Nume: ${response.name}, Email: ${response.email}, Telefon: ${response.phone}`;
-        } else if (response instanceof Date) {
-            userMessageContent = format(response, "dd/MM/yyyy");
+        if (typeof response === 'object' && response !== null) {
+            if (response.name) {
+                userMessageContent = `Nume: ${response.name}, Email: ${response.email}, Telefon: ${response.phone}`;
+            } else if (response instanceof Date) {
+                 userMessageContent = format(response, "dd/MM/yyyy");
+            } else if (response.label) {
+                userMessageContent = response.label;
+            }
         }
         
         if (userMessageContent) {
@@ -738,5 +783,3 @@ export default function Home() {
         </div>
     );
 }
-
-    
