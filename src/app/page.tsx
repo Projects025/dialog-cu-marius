@@ -91,38 +91,64 @@ Esti pregatit(a) sa mai facem un pas?`,
             nextStep: () => 'deces.ask_event_costs'
         },
         ask_event_costs: {
-            message: () => "Care este suma (în lei) necesară pentru a acoperi cheltuielile neprevăzute (ex. inmormantare, taxe succesorale etc.)?",
+            message: () => "2. În cazul unui posibil deces, evenimentul in sine este insotit de anumite cheluieli (ex. inmormantare, taxe succesorale etc.)?",
             actionType: 'input',
             options: { placeholder: 'Ex: 25000', type: 'number', defaultValue: 0 },
             handler: (response, data) => { data.eventCosts = Number(response); },
+            nextStep: () => 'deces.show_deficit_2_amount'
+        },
+        show_deficit_2_amount: {
+            message: (data) => {
+                return `<span class="text-2xl font-bold">${Number(data.eventCosts).toLocaleString('ro-RO')} lei</span>`;
+            },
+            actionType: 'buttons',
+            options: [],
+            autoContinue: true,
+            delay: 1500,
             nextStep: () => 'deces.show_deficit_2'
         },
         show_deficit_2: {
-            message: (data) => `Am obtinut a doua suma de bani - ${Number(data.eventCosts).toLocaleString('ro-RO')} lei - care se va regasi in deficitul total cu care familia ta s-ar confrunta in absenta ta.\n\nMai avem doua sume.\n\nMergem mai departe?`,
+            message: (data) => `Am obtinut a doua suma de bani care se va regasi in deficitul total cu care familia ta s-ar confrunta in absenta ta.\n\nMai avem doua sume.\n\nMergem mai departe?`,
             actionType: 'buttons',
             options: ['Da'],
             nextStep: () => 'deces.ask_projects'
         },
         ask_projects: {
-            message: () => "Exista proiecte in desfasurare (ex: educatia copiilor, avansuri pentru locuinte, etc) care ar trebui protejate? Daca da, care este suma necesara (in lei)?",
+            message: () => " 3. In cazul unui posibil deces, exista anumite proiecte in desfasurare la acest moment care ar avea de suferit (ex. o constructie la stadiu „la rosu” sau un sport de performanta al copiilor sau alte proiecte care sunt sustinute din finantele tale lunare)? \n\n Care ar fi suma totala de bani (in lei) necesară finalizării acestor proiecte?",
             actionType: 'input',
             options: { placeholder: 'Ex: 250000', type: 'number', defaultValue: 0 },
             handler: (response, data) => { data.projects = Number(response); },
+            nextStep: () => 'deces.show_deficit_3_amount'
+        },
+        show_deficit_3_amount: {
+             message: (data) => `<span class="text-2xl font-bold">${Number(data.projects).toLocaleString('ro-RO')} lei</span>`,
+            actionType: 'buttons',
+            options: [],
+            autoContinue: true,
+            delay: 1500,
             nextStep: () => 'deces.show_deficit_3'
         },
         show_deficit_3: {
-             message: (data) => `Am obtinut a treia suma de bani - ${Number(data.projects).toLocaleString('ro-RO')} lei care va fi inclusa in deficitul financiar care ar ramane in urma ta.\n\nMai rezisti?\n\nMai ai un singur pas prin acest „coridor” intunecat, apoi se va vedea „luminita” :)`,
+             message: (data) => `Am obtinut a treia suma de bani care va fi inclusa in deficitul financiar care ar ramane in urma ta.\n\nMai rezisti?\n\nMai ai un singur pas prin acest „coridor” intunecat, apoi se va vedea „luminita” :)`,
             actionType: 'buttons',
             options: ['Hai sa vedem!'],
             nextStep: () => 'deces.ask_debts'
         },
         ask_debts: {
-            message: () => "In cazul unui posibil deces, raman pe umerii familiei anumite responsabilitati financiare de tip credite, datorii, obligatii financiare etc.?\n\nDaca ai vrea sa stingi aceste obligatii financiare astfel incat familia sa nu poarte aceasta povara financiara, care ar fi suma de bani de care ar avea nevoie (in lei)?",
+            message: () => "4. In cazul unui posibil deces, raman pe umerii familiei anumite responsabilitati financiare de tip credite, datorii, obligatii financiare etc.?\n\n Care ar fi suma de bani de care ar avea nevoie pentru a stinge aceste obligatii (in lei)?",
             actionType: 'input',
             options: { placeholder: 'Ex: 400000', type: 'number', defaultValue: 0 },
             handler: (response, data) => { data.debts = Number(response); },
-            nextStep: () => 'deces.ask_show_brute_deficit_intro'
+            nextStep: () => 'deces.show_deficit_4_amount'
         },
+        show_deficit_4_amount: {
+            message: (data) => `<span class="text-2xl font-bold">${Number(data.debts).toLocaleString('ro-RO')} lei</span>`,
+           actionType: 'buttons',
+           options: [],
+           autoContinue: true,
+           delay: 1500,
+           nextStep: () => 'deces.ask_show_brute_deficit_intro'
+       },
         ask_show_brute_deficit_intro: {
             message: () => `Bun... Avem cele patru sume-deficit.`,
             actionType: 'buttons',
@@ -751,6 +777,8 @@ export default function Home() {
         </div>
     );
 }
+
+    
 
     
 
