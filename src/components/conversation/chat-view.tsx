@@ -110,7 +110,6 @@ const InteractiveScrollList = ({ options, buttonText, onConfirm }: { options: st
 
     return (
         <div className="flex flex-col w-full max-w-sm rounded-2xl bg-background/80 backdrop-blur-sm border border-border shadow-md animate-in fade-in-50">
-            {/* Scrollable List */}
             <div className="flex-grow overflow-y-auto max-h-72 no-scrollbar p-1">
                  <div className="space-y-1 p-2">
                     {options.map((option: string, index: number) => {
@@ -136,7 +135,6 @@ const InteractiveScrollList = ({ options, buttonText, onConfirm }: { options: st
                 </div>
             </div>
 
-            {/* Footer */}
             <div className="flex-shrink-0 p-3 border-t border-border">
                 <Button
                     onClick={() => onConfirm(selected)}
@@ -394,7 +392,7 @@ const ChatView = ({ conversation, userAction, onResponse, isTyping }: ChatViewPr
   return (
     <>
     <div id="chat-container" className="w-full h-full flex flex-col rounded-none md:rounded-2xl shadow-none md:shadow-2xl overflow-hidden animate-in fade-in-50">
-        <div id="dialog-flow" className="flex-grow space-y-6 overflow-y-auto p-4 md:p-6">
+        <div id="dialog-flow" className="flex-grow space-y-6 overflow-y-auto p-4 md:p-6 no-scrollbar">
             {conversation.map((message) => {
                  const content = renderMessageContent(message.content, message.author);
                  if (!content) return null;
