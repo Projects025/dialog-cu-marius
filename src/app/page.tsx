@@ -79,7 +79,7 @@ Daca esti pregatit/a, haide sa continuam.`,
             actionType: 'buttons',
             options: [],
             autoContinue: true,
-            delay: 1500, // Slower typing for this
+            delay: 1500,
             nextStep: () => 'deces.show_deficit_1_explanation'
         },
         show_deficit_1_explanation: {
@@ -113,12 +113,6 @@ Esti pregatit(a) sa mai facem un pas?`,
             options: [],
             autoContinue: true,
             delay: 1500,
-            nextStep: () => 'deces.show_deficit_2'
-        },
-        show_deficit_2: {
-            message: (data) => `Am obtinut a doua suma de bani care se va regasi in deficitul total cu care familia ta s-ar confrunta in absenta ta.\n\nMai avem doua sume.\n\nMergem mai departe?`,
-            actionType: 'buttons',
-            options: ['Da'],
             nextStep: () => 'deces.ask_projects'
         },
         ask_projects: {
@@ -134,12 +128,6 @@ Esti pregatit(a) sa mai facem un pas?`,
             options: [],
             autoContinue: true,
             delay: 1500,
-            nextStep: () => 'deces.show_deficit_3'
-        },
-        show_deficit_3: {
-             message: (data) => `Am obtinut a treia suma de bani care va fi inclusa in deficitul financiar care ar ramane in urma ta.\n\nMai rezisti?\n\nMai ai un singur pas prin acest „coridor” intunecat, apoi se va vedea „luminita” :)`,
-            actionType: 'buttons',
-            options: ['Hai sa vedem!'],
             nextStep: () => 'deces.ask_debts'
         },
         ask_debts: {
@@ -502,7 +490,7 @@ Esti pregatit(a) sa mai facem un pas?`,
 
 const introFlow: ConversationFlow = {
     intro_1: {
-        message: () => `Viața produce pierderi financiare semnificative in patru situații majore.`,
+        message: () => `Viata produce pierderi financiare semnificative in patru situatii majore.`,
         actionType: 'buttons',
         options: [],
         autoContinue: true,
@@ -510,7 +498,7 @@ const introFlow: ConversationFlow = {
         nextStep: () => 'intro_2',
     },
     intro_2: {
-        message: () => `Dintre acestea, două situații sunt previzibile, precis așezate pe axa vieții, iar două sunt total imprevizibile.`,
+        message: () => `Dintre acestea, doua situatii sunt previzibile, precis asezate pe axa vietii, iar doua sunt total imprevizibile.`,
         actionType: 'buttons',
         options: [],
         autoContinue: true,
@@ -519,7 +507,7 @@ const introFlow: ConversationFlow = {
     },
     intro_3: {
         message: () => `<strong>Previzibile:</strong> \n\n
-1. Pensionarea - reducerea drastică a optiunilor, a demnitatii si a statutului de sustinator al familiei\n\n
+1. Pensionarea - reducerea drastica a optiunilor, a demnitatii si a statutului de sustinator al familiei\n\n
 2. Studiile copiilor - cheltuieli complexe, unele neanticipate, care pun presiune pe bugetul familiei`,
         actionType: 'buttons',
         options: [],
@@ -529,8 +517,8 @@ const introFlow: ConversationFlow = {
     },
     intro_4: {
         message: () => `<strong>Imprevizibile:</strong> \n\n
-1. Decesul - detonează standardul de viata, proiectele in desfasurare și viitorul copiilor \n\n
-2. Bolile grave - Accident Vascular cerebral, Cancer, Infarct Miocardic, Transplant, etc,
+1. Decesul - detoneaza standardul de viata, proiectele in desfasurare si viitorul copiilor \n\n
+2. Bolile grave - Accident Vascular cerebral, Cancer, Infarct Miocardic, Transplant, etc,`,
         actionType: 'buttons',
         options: [],
         autoContinue: true,
@@ -538,7 +526,7 @@ const introFlow: ConversationFlow = {
         nextStep: () => 'ask_priority',
     },
     ask_priority: {
-        message: () => "Pentru care dintre aceste subiecte dorești să îți calculezi gradul de expunere financiară?",
+        message: () => "Pentru care dintre aceste subiecte doresti sa iti calculezi gradul de expunere financiara?",
         actionType: 'multi_choice',
         options: [
             { label: 'Reducerea drastica a veniturilor la pensionare', id: 'pensionare', disabled: true },
@@ -746,3 +734,5 @@ export default function Home() {
         </div>
     );
 }
+
+    
