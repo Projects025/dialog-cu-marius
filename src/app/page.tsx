@@ -32,7 +32,7 @@ type ConversationFlow = {
 const conversationFlows: { [key: string]: ConversationFlow } = {
     deces: {
         intro_analysis_1: {
-            message: () => `Un deces afecteaza negativ pe multiple planuri, doua dintre acestea fiind extrem de profunde si de durata - planul existential (drama care insoteste pierderea persoanei dragi) si planul financiar (disparitia optiunilor, aparitia presiunilor financiare si a necesitatii de a ajusta nivelul de trai la noile realitati).`,
+            message: () => `Un deces afectează negativ pe multiple planuri, două dintre acestea fiind extrem de profunde și de durată - planul existențial (drama care însoțește pierderea persoanei dragi) și planul financiar (dispariția opțiunilor, apariția presiunilor financiare și a necesității de a ajusta nivelul de trai la noile realități).`,
             actionType: 'buttons',
             options: [],
             autoContinue: true,
@@ -40,7 +40,7 @@ const conversationFlows: { [key: string]: ConversationFlow } = {
             nextStep: () => 'deces.intro_analysis_2'
         },
         intro_analysis_2: {
-            message: () => `In momentele urmatoare, vom raspunde la 6 intrebari prin care sa stabilim care este suma de bani de care ar avea nevoie familia pentru a ameliora impactul financiar negativ al decesului asupra...`,
+            message: () => `În momentele următoare, vom răspunde la 6 întrebări prin care să stabilim care este suma de bani de care ar avea nevoie familia pentru a ameliora impactul financiar negativ al decesului asupra...`,
             actionType: 'buttons',
             options: [],
             autoContinue: true,
@@ -48,24 +48,24 @@ const conversationFlows: { [key: string]: ConversationFlow } = {
             nextStep: () => 'deces.intro_analysis_3'
         },
         intro_analysis_3: {
-            message: () => `(1.) standardului de viata,
-(2.) proiectelor in desfasurare si 
+            message: () => `(1.) standardului de viață,
+(2.) proiectelor în desfășurare și 
 (3.) eventualelor credite / datorii.
 
-Daca esti pregatit/a, haide sa continuam.`,
+Dacă ești pregătit/ă, haide să continuăm.`,
             actionType: 'buttons',
-            options: ['Continuam'],
+            options: ['Continuăm'],
             nextStep: () => 'deces.ask_period'
         },
         ask_period: {
-            message: () => "1. In cazul unui posibil deces, care ar fi perioada de timp in care familia ta ar avea nevoie de sustinere financiara pentru a-si mentine nivelul de trai fara sa fie nevoita sa faca ajustari majore in stilul de viata (ex. vanzarea unor bunuri, ore suplimentare / al doilea job etc.)",
+            message: () => "1. În cazul unui posibil deces, care ar fi perioada de timp în care familia ta ar avea nevoie de susținere financiară pentru a-și menține nivelul de trai fără să fie nevoită să facă ajustări majore în stilul de viață (ex. vânzarea unor bunuri, ore suplimentare / al doilea job etc.)",
             actionType: 'buttons',
             options: ['3 ani', '4 ani', '5 ani'],
             handler: (response, data) => { data.period = parseInt(response); },
             nextStep: () => 'deces.ask_monthly_sum'
         },
         ask_monthly_sum: {
-            message: () => "Care ar fi suma lunara necesara (in lei) pentru acoperirea cheltuielilor lunare si mentinerea actualului standard de viata?",
+            message: () => "Care ar fi suma lunară necesară (în lei) pentru acoperirea cheltuielilor lunare și menținerea actualului standard de viață?",
             actionType: 'input',
             options: { placeholder: 'Ex: 10000', type: 'number' },
             handler: (response, data) => { data.monthlySum = Number(response); },
@@ -83,15 +83,15 @@ Daca esti pregatit/a, haide sa continuam.`,
             nextStep: () => 'deces.show_deficit_1_explanation'
         },
         show_deficit_1_explanation: {
-            message: (data) => `Aceasta suma reprezinta deficitul pentru ${data.period} ani pentru mentinerea standardului de viata, respectiv pentru linistea sufleteasca si confortul financiar necesar celor dragi care fac mai usoara acomodarea la noua realitate.
+            message: (data) => `Această sumă reprezintă deficitul pentru ${data.period} ani pentru menținerea standardului de viață, respectiv pentru liniștea sufletească și confortul financiar necesar celor dragi care fac mai ușoară acomodarea la noua realitate.
 <br><br>
-Esti pregatit(a) sa mai facem un pas?`,
+Ești pregătit(ă) să mai facem un pas?`,
             actionType: 'buttons',
             options: ['Da'],
             nextStep: () => 'deces.ask_event_costs_intro'
         },
         ask_event_costs_intro: {
-            message: () => "2. In cazul unui posibil deces, evenimentul in sine este insotit de anumite cheltuieli (ex. inmormantare, taxe succesorale etc.)",
+            message: () => "2. În cazul unui posibil deces, evenimentul în sine este însoțit de anumite cheltuieli (ex. înmormântare, taxe succesorale etc.)",
             actionType: 'buttons',
             options: [],
             autoContinue: true,
@@ -99,7 +99,7 @@ Esti pregatit(a) sa mai facem un pas?`,
             nextStep: () => 'deces.ask_event_costs_prompt'
         },
         ask_event_costs_prompt: {
-            message: () => "Care ar fi aceasta suma?",
+            message: () => "Care ar fi această sumă?",
             actionType: 'input',
             options: { placeholder: 'Ex: 25000', type: 'number', defaultValue: 0 },
             handler: (response, data) => { data.eventCosts = Number(response); },
@@ -112,14 +112,14 @@ Esti pregatit(a) sa mai facem un pas?`,
             nextStep: () => 'deces.ask_projects'
         },
         ask_projects: {
-            message: () => "3. In cazul unui posibil deces, exista anumite proiecte in desfasurare la acest moment care ar avea de suferit (ex. o constructie la stadiu „la rosu” sau un sport de performanta al copiilor sau alte proiecte care sunt sustinute din finantele tale lunare)? \n\n Care ar fi suma totala de bani (in lei) necesara finalizarii acestor proiecte?",
+            message: () => "3. În cazul unui posibil deces, există anumite proiecte în desfășurare la acest moment care ar avea de suferit (ex. o construcție la stadiu „la roșu” sau un sport de performanță al copiilor sau alte proiecte care sunt susținute din finanțele tale lunare)? \n\n Care ar fi suma totală de bani (în lei) necesară finalizării acestor proiecte?",
             actionType: 'input',
             options: { placeholder: 'Ex: 250000', type: 'number', defaultValue: 0 },
             handler: (response, data) => { data.projects = Number(response); },
             nextStep: () => 'deces.ask_debts'
         },
         ask_debts: {
-            message: () => "4. In cazul unui posibil deces, raman pe umerii familiei anumite responsabilitati financiare de tip credite, datorii, obligatii financiare etc.?\n\n Care ar fi suma de bani de care ar avea nevoie pentru a stinge aceste obligatii (in lei)?",
+            message: () => "4. În cazul unui posibil deces, rămân pe umerii familiei anumite responsabilități financiare de tip credite, datorii, obligații financiare etc.?\n\n Care ar fi suma de bani de care ar avea nevoie pentru a stinge aceste obligații (în lei)?",
             actionType: 'input',
             options: { placeholder: 'Ex: 400000', type: 'number', defaultValue: 0 },
             handler: (response, data) => {
@@ -128,7 +128,7 @@ Esti pregatit(a) sa mai facem un pas?`,
             nextStep: () => 'deces.brute_deficit_intro'
         },
         brute_deficit_intro: {
-            message: () => "Suma deficit totala este:",
+            message: () => "Suma deficit totală este:",
             actionType: 'buttons',
             options: [],
             autoContinue: true,
@@ -147,28 +147,28 @@ Esti pregatit(a) sa mai facem un pas?`,
             nextStep: () => 'deces.ask_insurance'
         },
         ask_insurance: {
-            message: () => "5. In cazul unui posibil deces, familia ta ar beneficia de vreo asigurare de viata pe numele tau? Nu ma refer la acele asigurari care sunt cesionate in favoarea bancii, ci acele asigurari care sa aiba ca beneficiar - familia ta.\n\nDaca da, care este suma de bani pe care ai tai ar incasa-o dintr-o astfel de asigurare de viata (in lei)?",
+            message: () => "5. În cazul unui posibil deces, familia ta ar beneficia de vreo asigurare de viață pe numele tău? Nu mă refer la acele asigurări care sunt cesionate în favoarea băncii, ci acele asigurări care să aibă ca beneficiar - familia ta.\n\nDacă da, care este suma de bani pe care ai tăi ar încasa-o dintr-o astfel de asigurare de viață (în lei)?",
             actionType: 'input',
             options: { placeholder: 'Ex: 125000', type: 'number', defaultValue: 0 },
             handler: (response, data) => { data.existingInsurance = Number(response); },
             nextStep: () => 'deces.ask_savings'
         },
         ask_savings: {
-            message: () => "6. In cazul unui posibil deces, familia ta ar putea accesa anumite economii sau ar putea apela la anumite investitii (ex. chirii, vanzarea unui imobil etc.)?\n\nDaca da, care este suma de bani disponibila?",
+            message: () => "6. În cazul unui posibil deces, familia ta ar putea accesa anumite economii sau ar putea apela la anumite investiții (ex. chirii, vânzarea unui imobil etc.)?\n\nDacă da, care este suma de bani disponibilă?",
             actionType: 'input',
             options: { placeholder: 'Ex: 75000', type: 'number', defaultValue: 0 },
             handler: (response, data) => { data.savings = Number(response); },
             nextStep: () => 'deces.show_final_deficit_intro'
         },
         show_final_deficit_intro: {
-            message: () => "Sumele rezultate din asigurari de viata cu beneficiar familia si sumele de bani rezultate din economii / investitii vor fi scazute din suma-deficit calcultata anterior.",
+            message: () => "Sumele rezultate din asigurări de viață cu beneficiar familia și sumele de bani rezultate din economii / investiții vor fi scăzute din suma-deficit calculată anterior.",
             actionType: 'buttons',
             options: [],
             autoContinue: true,
             nextStep: () => 'deces.show_final_deficit_context_1'
         },
         show_final_deficit_context_1: {
-            message: () => "Deficitul financiar cu care familia ta ar pasi in acest viitor sumbru daca n-ar mai putea conta pe sprijinul tau financiar este:",
+            message: () => "Deficitul financiar cu care familia ta ar păși în acest viitor sumbru dacă n-ar mai putea conta pe sprijinul tău financiar este:",
              actionType: 'buttons',
             options: [],
             autoContinue: true,
@@ -186,14 +186,14 @@ Esti pregatit(a) sa mai facem un pas?`,
             nextStep: () => 'deces.ask_feeling_buttons'
         },
         ask_feeling_buttons: {
-            message: () => `Cum ti se pare aceasta suma? Care este sentimentul pe care il simti acum?`,
+            message: () => `Cum ți se pare această sumă? Care este sentimentul pe care îl simți acum?`,
             actionType: 'input',
             options: { placeholder: 'Scrie aici...', type: 'text' },
             handler: (response, data) => { data.feeling = response; },
             nextStep: () => 'deces.ask_dramatic_options_intro'
         },
         ask_dramatic_options_intro: {
-            message: () => "In acest scenariu de imaginatie sumbru, ce optiuni ar avea cei dragi ai tai pentru a mentine un oarecare echilibru in standardul de viata?",
+            message: () => "În acest scenariu de imaginație sumbru, ce opțiuni ar avea cei dragi ai tăi pentru a menține un oarecare echilibru în standardul de viață?",
             actionType: 'buttons',
             options: [],
             autoContinue: true,
@@ -201,23 +201,23 @@ Esti pregatit(a) sa mai facem un pas?`,
             nextStep: () => 'deces.ask_dramatic_options_prompt',
         },
         ask_dramatic_options_prompt: {
-            message: () => "Bifeaza optiunile realiste si cu care tu te simti confortabil pentru ai tai:",
+            message: () => "Bifează opțiunile realiste și cu care tu te simți confortabil pentru ai tăi:",
             actionType: 'interactive_scroll_list',
             options: {
                 options: [
-                    'Sa se mute cu parintii',
-                    'Sa se mute in alt oras',
-                    'Sa munceasca suplimentar sau la al doilea job (si sa dispara din viata copiilor)',
-                    'Sa vanda din bunurile personale',
-                    'Sa vanda casa / apartamentul',
-                    'Sa reduca drastic cheltuieli / sa renunte la hobby-uri',
-                    'Sa renunte la proiecte personale',
-                    'Sa amane educatia copiilor sau sa se multumeasca cu foarte putin',
-                    'Sa ceara in mod constant ajutor de la familiei si de la prieteni',
-                    'Sa renunte la economiile / investitiile existente',
-                    'Sa se mute in locuinta mai mica',
-                    'Sa accepte orice compromis major pentru a supravietui financiar',
-                    'Sa se casatoreasca din obligatii financiare',
+                    'Să se mute cu părinții',
+                    'Să se mute în alt oraș',
+                    'Să muncească suplimentar sau la al doilea job (și să dispară din viața copiilor)',
+                    'Să vândă din bunurile personale',
+                    'Să vândă casa / apartamentul',
+                    'Să reducă drastic cheltuieli / să renunțe la hobby-uri',
+                    'Să renunțe la proiecte personale',
+                    'Să amâne educația copiilor sau să se mulțumească cu foarte puțin',
+                    'Să ceară în mod constant ajutor de la familiei și de la prieteni',
+                    'Să renunțe la economiile / investițiile existente',
+                    'Să se mute în locuință mai mică',
+                    'Să accepte orice compromis major pentru a supraviețui financiar',
+                    'Să se căsătorească din obligații financiare',
                     'Altceva'
                 ],
                 buttonText: "Am bifat"
@@ -226,13 +226,13 @@ Esti pregatit(a) sa mai facem un pas?`,
             nextStep: () => 'deces.present_solution'
         },
         present_solution: {
-            message: () => "Daca nu esti foarte multumit cu optiunile pe care familia ta le are pentru a mentine standardul actual de viata, ai fi interesat sa vezi o solutie personalizata care sa ofere celor dragi tie o a doua sansa la o viata relativ normala, fara poveri financiare?\n\nPractic, o solutie prin care dragostea ta si grija ta pentru ei va continua chiar si dupa tine. \n\nPoti crea instant o mostenire care sa ii ajute financiar pe cei dragi tie chiar si (mai ales!) in absenta ta!",
+            message: () => "Dacă nu ești foarte mulțumit cu opțiunile pe care familia ta le are pentru a menține standardul actual de viață, ai fi interesat să vezi o soluție personalizată care să ofere celor dragi ție o a doua șansă la o viață relativ normală, fără poveri financiare?\n\nPractic, o soluție prin care dragostea ta și grija ta pentru ei va continua chiar și după tine. \n\nPoți crea instant o moștenire care să îi ajute financiar pe cei dragi ție chiar și (mai ales!) în absența ta!",
             actionType: 'buttons',
             options: ['Da', 'Nu'],
             nextStep: (response) => response === 'Da' ? 'deces.ask_contact_details' : 'common.end_dialog_friendly'
         },
         ask_contact_details: {
-            message: () => "Am nevoie de datele tale de contact (nume, telefon, email), iar in cel mai scurt timp posibil, consultantul care ti-a dat acest link te va contacta pentru construirea solutiei.\n\nDe asemenea, am rugamintea sa semnezi si un acord GDPR care sa ii permita consultantului sa te contacteze intr-un cadru legal.",
+            message: () => "Am nevoie de datele tale de contact (nume, telefon, email), iar în cel mai scurt timp posibil, consultantul care ți-a dat acest link te va contacta pentru construirea soluției.\n\nDe asemenea, am rugămintea să semnezi și un acord GDPR care să îi permită consultantului să te contacteze într-un cadru legal.",
             actionType: 'form',
             options: {
                 fields: [
@@ -247,49 +247,49 @@ Esti pregatit(a) sa mai facem un pas?`,
             nextStep: () => 'deces.thank_you_contact'
         },
         thank_you_contact: {
-            message: () => "Multumesc pentru ca mi-ai raspuns la intrebari, te voi contacta in curand!\n\nCand preferi sa fii contactat?",
+            message: () => "Mulțumesc pentru că mi-ai răspuns la întrebări, te voi contacta în curând!\n\nCând preferi să fii contactat?",
             actionType: 'buttons',
-            options: ['Dimineata', 'Dupa-masa', 'Seara'],
+            options: ['Dimineața', 'După-masa', 'Seara'],
             handler: (response, data) => { data.preferredContactTime = response; },
             nextStep: () => 'deces.thank_you_final'
         },
         thank_you_final: {
-            message: () => `<div class="text-center w-full text-2xl font-bold">Multumesc!<br>O zi frumoasa!</div>`,
+            message: () => `<div class="text-center w-full text-2xl font-bold">Mulțumesc!<br>O zi frumoasă!</div>`,
             actionType: 'end',
             nextStep: () => ''
         }
     },
     boala_grava: {
         start_flow: {
-            message: () => "Am inteles. Protejarea stabilitatii tale financiare in fata provocarilor medicale este esentiala.",
+            message: () => "Am înțeles. Protejarea stabilității tale financiare în fața provocărilor medicale este esențială.",
             actionType: 'buttons',
             options: [],
             autoContinue: true,
             nextStep: () => 'boala_grava.ask_monthly_need_health'
         },
         ask_monthly_need_health: {
-            message: () => "Mai intai, care este suma lunara (in €) de care ai avea nevoie pentru a acoperi cheltuielile curente daca nu ai mai putea genera venit?",
+            message: () => "Mai întâi, care este suma lunară (în €) de care ai avea nevoie pentru a acoperi cheltuielile curente dacă nu ai mai putea genera venit?",
             actionType: 'input',
             options: { placeholder: 'Ex: 1500', type: 'number' },
             handler: (response, data) => { data.monthlyNeed = Number(response); },
             nextStep: () => 'boala_grava.ask_recovery_period'
         },
         ask_recovery_period: {
-            message: () => "Pentru ce perioada (in luni) estimezi ca ai avea nevoie de acest sprijin financiar pentru recuperare?",
+            message: () => "Pentru ce perioadă (în luni) estimezi că ai avea nevoie de acest sprijin financiar pentru recuperare?",
             actionType: 'buttons',
             options: ['6 luni', '12 luni', '24 luni'],
             handler: (response, data) => { data.recoveryPeriod = parseInt(response); },
             nextStep: () => 'boala_grava.ask_medical_costs'
         },
         ask_medical_costs: {
-            message: () => "Ce suma unica (in €) estimezi ca ar fi necesara pentru costuri medicale (tratamente, interventii, medicamente) neacoperite de stat?",
+            message: () => "Ce sumă unică (în €) estimezi că ar fi necesară pentru costuri medicale (tratamente, intervenții, medicamente) neacoperite de stat?",
             actionType: 'input',
             options: { placeholder: 'Ex: 20000', type: 'number' },
             handler: (response, data) => { data.medicalCosts = Number(response); },
             nextStep: () => 'boala_grava.ask_existing_savings_health'
         },
         ask_existing_savings_health: {
-            message: () => "Ai deja o asigurare privata de sanatate sau economii dedicate pentru urgente medicale? Daca da, care este suma totala?",
+            message: () => "Ai deja o asigurare privată de sănătate sau economii dedicate pentru urgențe medicale? Dacă da, care este suma totală?",
             actionType: 'input',
             options: { placeholder: 'Ex: 5000', type: 'number', defaultValue: 0 },
             handler: (response, data) => { data.existingSavings = Number(response); },
@@ -298,7 +298,7 @@ Esti pregatit(a) sa mai facem un pas?`,
         show_health_deficit: {
             message: (data) => {
                 data.healthDeficit = calculateHealthDeficit(data);
-                return `Am calculat. Necesarul financiar pentru a trece peste o perioada dificila este de ${data.healthDeficit.toLocaleString('ro-RO')} €.`;
+                return `Am calculat. Necesarul financiar pentru a trece peste o perioadă dificilă este de ${data.healthDeficit.toLocaleString('ro-RO')} €.`;
             },
             actionType: 'buttons',
             options: [],
@@ -306,14 +306,14 @@ Esti pregatit(a) sa mai facem un pas?`,
             nextStep: () => 'boala_grava.show_impact_health'
         },
         show_impact_health: {
-            message: () => "A avea aceasta siguranta inseamna ca te poti concentra 100% pe recuperare, fara stresul banilor si fara a afecta economiile familiei.",
+            message: () => "A avea această siguranță înseamnă că te poți concentra 100% pe recuperare, fără stresul banilor și fără a afecta economiile familiei.",
             actionType: 'buttons',
             options: [],
             autoContinue: true,
             nextStep: () => 'boala_grava.ask_dob_health'
         },
         ask_dob_health: {
-            message: () => "Pentru a-ti oferi o estimare de cost, mai am nevoie de data nasterii.",
+            message: () => "Pentru a-ți oferi o estimare de cost, mai am nevoie de data nașterii.",
             actionType: 'date',
             handler: (response, data) => { data.birthDate = response; },
             nextStep: () => 'boala_grava.ask_solution_health'
@@ -321,14 +321,14 @@ Esti pregatit(a) sa mai facem un pas?`,
         ask_solution_health: {
             message: (data) => {
                 data.premium = Math.max(25, Math.round(data.healthDeficit / 150)); // Simplified
-                return `O asigurare de sanatate care sa acopere un risc de ${data.healthDeficit.toLocaleString('ro-RO')} € ar avea un cost estimat de ${data.premium.toLocaleString('ro-RO')} € pe luna. Doresti sa afli mai multe de la un consultant?`;
+                return `O asigurare de sănătate care să acopere un risc de ${data.healthDeficit.toLocaleString('ro-RO')} € ar avea un cost estimat de ${data.premium.toLocaleString('ro-RO')} € pe lună. Dorești să afli mai multe de la un consultant?`;
             },
             actionType: 'buttons',
             options: ['Da, vreau detalii', 'Nu acum'],
             nextStep: (response) => response === 'Da, vreau detalii' ? 'boala_grava.ask_contact_details' : 'common.end_dialog_friendly'
         },
         ask_contact_details: {
-             message: () => "Perfect. Pentru a stabili o discutie cu un consultant, te rog sa completezi datele de mai jos. Acestea sunt confidentiale si vor fi folosite exclusiv in acest scop.",
+             message: () => "Perfect. Pentru a stabili o discuție cu un consultant, te rog să completezi datele de mai jos. Acestea sunt confidențiale și vor fi folosite exclusiv în acest scop.",
             actionType: 'form',
             options: {
                 fields: [
@@ -345,35 +345,35 @@ Esti pregatit(a) sa mai facem un pas?`,
     },
     pensionare: {
         start_flow: {
-            message: () => "Excelenta alegere! Planificarea pensiei este cheia unui viitor linistit.",
+            message: () => "Excelentă alegere! Planificarea pensiei este cheia unui viitor liniștit.",
             actionType: 'buttons',
             options: [],
             autoContinue: true,
             nextStep: () => 'pensionare.ask_desired_pension'
         },
         ask_desired_pension: {
-            message: () => "Mai intai, ce suma lunara (in €) ti-ai dori sa ai la pensie, in banii de azi?",
+            message: () => "Mai întâi, ce sumă lunară (în €) ți-ai dori să ai la pensie, în banii de azi?",
             actionType: 'input',
             options: { placeholder: 'Ex: 1500', type: 'number' },
             handler: (response, data) => { data.desiredPension = Number(response); },
             nextStep: () => 'pensionare.ask_retirement_age'
         },
         ask_retirement_age: {
-            message: () => "La ce varsta ti-ai dori sa te pensionezi?",
+            message: () => "La ce vârstă ți-ai dori să te pensionezi?",
             actionType: 'input',
             options: { placeholder: 'Ex: 65', type: 'number' },
             handler: (response, data) => { data.retirementAge = Number(response); },
             nextStep: () => 'pensionare.ask_current_savings_pension'
         },
         ask_current_savings_pension: {
-            message: () => "Ai deja o suma economisita special pentru pensie (Pilon 2, Pilon 3, alte investitii)? Daca da, care este valoarea ei actuala?",
+            message: () => "Ai deja o sumă economisită special pentru pensie (Pilon 2, Pilon 3, alte investiții)? Dacă da, care este valoarea ei actuală?",
             actionType: 'input',
             options: { placeholder: 'Ex: 10000', type: 'number', defaultValue: 0 },
             handler: (response, data) => { data.currentSavings = Number(response); },
             nextStep: () => 'pensionare.ask_dob_pension'
         },
         ask_dob_pension: {
-            message: () => "Pentru a-ti oferi un plan, am nevoie si de data ta de nastere.",
+            message: () => "Pentru a-ți oferi un plan, am nevoie și de data ta de naștere.",
             actionType: 'date',
             handler: (response, data) => { data.birthDate = response; },
             nextStep: () => 'pensionare.show_retirement_plan'
@@ -381,7 +381,7 @@ Esti pregatit(a) sa mai facem un pas?`,
         show_retirement_plan: {
             message: (data) => {
                 data.monthlyContribution = calculateRetirementContribution(data);
-                return `Am calculat. Pentru a atinge obiectivul tau, ar fi necesar sa economisesti/investesti aproximativ ${data.monthlyContribution.toLocaleString('ro-RO')} € pe luna, pana la varsta de pensionare.`;
+                return `Am calculat. Pentru a atinge obiectivul tău, ar fi necesar să economisești/investești aproximativ ${data.monthlyContribution.toLocaleString('ro-RO')} € pe lună, până la vârsta de pensionare.`;
             },
             actionType: 'buttons',
             options: [],
@@ -389,13 +389,13 @@ Esti pregatit(a) sa mai facem un pas?`,
             nextStep: () => 'pensionare.ask_solution_pension'
         },
         ask_solution_pension: {
-            message: () => "Vestea buna este ca, prin instrumente de investitii inteligente, poti pune banii la treaba pentru tine. Doresti sa discuti cu un consultant despre un plan de acumulare personalizat?",
+            message: () => "Vestea bună este că, prin instrumente de investiții inteligente, poți pune banii la treabă pentru tine. Dorești să discuți cu un consultant despre un plan de acumulare personalizat?",
             actionType: 'buttons',
             options: ['Da, vreau detalii', 'Nu acum'],
             nextStep: (response) => response === 'Da, vreau detalii' ? 'pensionare.ask_contact_details' : 'common.end_dialog_friendly'
         },
         ask_contact_details: {
-             message: () => "Perfect. Pentru a stabili o discutie cu un consultant, te rog sa completezi datele de mai jos. Acestea sunt confidentiale si vor fi folosite exclusiv in acest scop.",
+             message: () => "Perfect. Pentru a stabili o discuție cu un consultant, te rog să completezi datele de mai jos. Acestea sunt confidențiale și vor fi folosite exclusiv în acest scop.",
             actionType: 'form',
             options: {
                 fields: [
@@ -412,28 +412,28 @@ Esti pregatit(a) sa mai facem un pas?`,
     },
     studii_copii: {
         start_flow: {
-            message: () => "O decizie minunata! Investitia in educatia copiilor este cel mai de pret cadou.",
+            message: () => "O decizie minunată! Investiția în educația copiilor este cel mai de preț cadou.",
             actionType: 'buttons',
             options: [],
             autoContinue: true,
             nextStep: () => 'studii_copii.ask_studies_goal'
         },
         ask_studies_goal: {
-            message: () => "Mai intai, care este suma totala (in €) pe care estimezi ca o vei avea nevoie pentru studiile copilului tau?",
+            message: () => "Mai întâi, care este suma totală (în €) pe care estimezi că o vei avea nevoie pentru studiile copilului tău?",
             actionType: 'input',
             options: { placeholder: 'Ex: 50000', type: 'number' },
             handler: (response, data) => { data.studiesGoal = Number(response); },
             nextStep: () => 'studii_copii.ask_child_age'
         },
         ask_child_age: {
-            message: () => "Care este varsta actuala a copilului?",
+            message: () => "Care este vârsta actuală a copilului?",
             actionType: 'input',
             options: { placeholder: 'Ex: 5', type: 'number' },
             handler: (response, data) => { data.childAge = Number(response); },
             nextStep: () => 'studii_copii.ask_current_savings_studies'
         },
         ask_current_savings_studies: {
-            message: () => "Ai deja o suma economisita special pentru acest scop? Daca da, care este valoarea ei?",
+            message: () => "Ai deja o sumă economisită special pentru acest scop? Dacă da, care este valoarea ei?",
             actionType: 'input',
             options: { placeholder: 'Ex: 2000', type: 'number', defaultValue: 0 },
             handler: (response, data) => { data.currentSavings = Number(response); },
@@ -442,7 +442,7 @@ Esti pregatit(a) sa mai facem un pas?`,
         show_studies_plan: {
             message: (data) => {
                 data.monthlyContribution = calculateStudiesContribution(data);
-                return `Am calculat. Pentru a atinge obiectivul tau pana la majoratul copilului, ar fi necesar sa economisesti ${data.monthlyContribution.toLocaleString('ro-RO')} € pe luna.`;
+                return `Am calculat. Pentru a atinge obiectivul tău până la majoratul copilului, ar fi necesar să economisești ${data.monthlyContribution.toLocaleString('ro-RO')} € pe lună.`;
             },
             actionType: 'buttons',
             options: [],
@@ -450,13 +450,13 @@ Esti pregatit(a) sa mai facem un pas?`,
             nextStep: () => 'studii_copii.ask_solution_studies'
         },
         ask_solution_studies: {
-            message: () => "Prin produse dedicate, cum ar fi asigurarile de studii, poti asigura acest viitor chiar si in situatii neprevazute. Doresti sa afli mai multe de la un consultant?",
+            message: () => "Prin produse dedicate, cum ar fi asigurările de studii, poți asigura acest viitor chiar și în situații neprevăzute. Dorești să afli mai multe de la un consultant?",
             actionType: 'buttons',
             options: ['Da, vreau detalii', 'Nu acum'],
             nextStep: (response) => response === 'Da, vreau detalii' ? 'studii_copii.ask_contact_details' : 'common.end_dialog_friendly'
         },
         ask_contact_details: {
-             message: () => "Perfect. Pentru a stabili o discutie cu un consultant, te rog sa completezi datele de mai jos. Acestea sunt confidentiale si vor fi folosite exclusiv in acest scop.",
+             message: () => "Perfect. Pentru a stabili o discuție cu un consultant, te rog să completezi datele de mai jos. Acestea sunt confidențiale și vor fi folosite exclusiv în acest scop.",
             actionType: 'form',
             options: {
                 fields: [
@@ -474,12 +474,12 @@ Esti pregatit(a) sa mai facem un pas?`,
     // Common steps
     common: {
         end_dialog_friendly: {
-            message: () => "Am inteles. Iti multumesc pentru timpul acordat! Daca te razgandesti, stii unde ma gasesti.",
+            message: () => "Am înțeles. Îți mulțumesc pentru timpul acordat! Dacă te răzgândești, știi unde mă găsești.",
             actionType: 'end',
             nextStep: () => ''
         },
         end_dialog_success: {
-            message: () => "Multumesc! Datele tale au fost inregistrate. Un consultant te va suna in curand. O zi excelenta!",
+            message: () => "Mulțumesc! Datele tale au fost înregistrate. Un consultant te va suna în curând. O zi excelentă!",
             actionType: 'end',
             nextStep: () => ''
         }
@@ -488,7 +488,7 @@ Esti pregatit(a) sa mai facem un pas?`,
 
 const introFlow: ConversationFlow = {
     intro_1: {
-        message: () => `Viata produce pierderi financiare semnificative in patru situatii majore.`,
+        message: () => `Viața produce pierderi financiare semnificative în patru situații majore.`,
         actionType: 'buttons',
         options: [],
         autoContinue: true,
@@ -496,7 +496,7 @@ const introFlow: ConversationFlow = {
         nextStep: () => 'intro_2',
     },
     intro_2: {
-        message: () => `Dintre acestea, doua situatii sunt previzibile, precis asezate pe axa vietii, iar doua sunt total imprevizibile.`,
+        message: () => `Dintre acestea, două situații sunt previzibile, precis așezate pe axa vieții, iar două sunt total imprevizibile.`,
         actionType: 'buttons',
         options: [],
         autoContinue: true,
@@ -505,7 +505,7 @@ const introFlow: ConversationFlow = {
     },
     intro_3: {
         message: () => `<strong>Previzibile:</strong> \n\n
-1. Pensionarea - reducerea drastica a optiunilor, a demnitatii si a statutului de sustinator al familiei\n\n
+1. Pensionarea - reducerea drastică a opțiunilor, a demnității și a statutului de susținător al familiei\n\n
 2. Studiile copiilor - cheltuieli complexe, unele neanticipate, care pun presiune pe bugetul familiei`,
         actionType: 'buttons',
         options: [],
@@ -515,7 +515,7 @@ const introFlow: ConversationFlow = {
     },
     intro_4: {
         message: () => `<strong>Imprevizibile:</strong> \n\n
-1. Decesul - detoneaza standardul de viata, proiectele in desfasurare si viitorul copiilor \n\n
+1. Decesul - detonează standardul de viață, proiectele în desfășurare și viitorul copiilor \n\n
 2. Bolile grave - Accident Vascular cerebral, Cancer, Infarct Miocardic, Transplant, etc,`,
         actionType: 'buttons',
         options: [],
@@ -524,13 +524,13 @@ const introFlow: ConversationFlow = {
         nextStep: () => 'ask_priority',
     },
     ask_priority: {
-        message: () => "Pentru care dintre aceste subiecte doresti sa iti calculezi gradul de expunere financiara?",
+        message: () => "Pentru care dintre aceste subiecte dorești să îți calculezi gradul de expunere financiară?",
         actionType: 'multi_choice',
         options: [
-            { label: 'Reducerea drastica a veniturilor la pensionare', id: 'pensionare', disabled: true },
+            { label: 'Reducerea drastică a veniturilor la pensionare', id: 'pensionare', disabled: true },
             { label: 'Asigurarea viitorului copiilor', id: 'studii_copii', disabled: true },
             { label: 'Decesul spontan', id: 'deces', disabled: false },
-            { label: 'Protectie in caz de boala grava', id: 'boala_grava', disabled: true }
+            { label: 'Protecție în caz de boală gravă', id: 'boala_grava', disabled: true }
         ],
         nextStep: (response) => {
             if (!response || response.length === 0) return 'common.end_dialog_friendly';

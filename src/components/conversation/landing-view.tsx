@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -23,14 +24,14 @@ const LandingView = ({ onStart, isFadingOut }: LandingViewProps) => {
         )}
       >
         <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-foreground">
-          Linistea ta financiara, simplificata.
+          Liniștea ta financiară, simplificată.
         </h1>
         <div className="max-w-xl mx-auto text-base md:text-lg text-foreground/70 space-y-4">
             <p style={{ animationDelay: '150ms' }}>
-                Descopera in cateva minute cum iti poti proteja viitorul si pe al celor dragi.
+                Descoperă care este gradul tău de expunere financiară
             </p>
             <p style={{ animationDelay: '150ms' }}>
-                Fara jargon, fara obligatii.
+                Fără jargon, fără obligații.
             </p>
         </div>
       </div>
@@ -44,7 +45,7 @@ const LandingView = ({ onStart, isFadingOut }: LandingViewProps) => {
         )}
         style={{ animationDelay: '300ms' }}
       >
-        Incepe Analiza Gratuita
+        Începe Analiza Gratuită
       </Button>
     </div>
   );
