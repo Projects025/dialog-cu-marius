@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -30,12 +31,6 @@ type ConversationFlow = {
 
 const conversationFlows: { [key: string]: ConversationFlow } = {
     deces: {
-        start_flow: {
-            message: () => "Ar fi de interes pentru tine sa vezi care este gradul de expunere financiara a familiei tale in cazul unui deces spontan?",
-            actionType: 'buttons',
-            options: ['Da', 'Nu'],
-            nextStep: (response) => response === 'Da' ? 'deces.intro_analysis_1' : 'common.end_dialog_friendly'
-        },
         intro_analysis_1: {
             message: () => `Un deces afecteaza negativ pe multiple planuri, doua dintre acestea fiind extrem de profunde si de durata - planul existential (drama care insoteste pierderea persoanei dragi) si planul financiar (disparitia optiunilor, aparitia presiunilor financiare si a necesitatii de a ajusta nivelul de trai la noile realitati).`,
             actionType: 'buttons',
@@ -45,7 +40,7 @@ const conversationFlows: { [key: string]: ConversationFlow } = {
             nextStep: () => 'deces.intro_analysis_2'
         },
         intro_analysis_2: {
-            message: () => `In momentele urmatoare, vom raspunde la cateva intrebari prin care sa stabilim care este suma de bani de care ar avea nevoie familia pentru a ameliora impactul financiar negativ al decesului asupra...`,
+            message: () => `In momentele urmatoare, vom raspunde la intrebari prin care sa stabilim care este suma de bani de care ar avea nevoie familia pentru a ameliora impactul financiar negativ al decesului asupra...`,
             actionType: 'buttons',
             options: [],
             autoContinue: true,
@@ -63,7 +58,7 @@ Daca esti pregatit, haide sa continuam.`,
             nextStep: () => 'deces.ask_period'
         },
         ask_period: {
-            message: () => "In cazul unui posibil deces, care ar fi perioada de timp in care familia ta ar avea nevoie de sustinere financiara pentru a-si mentine nivelul de trai fara sa fie nevoita sa faca ajustari majore in stilul de viata (ex. vanzarea unor bunuri, ore suplimentare / al doilea job etc.)",
+            message: () => "1. In cazul unui posibil deces, care ar fi perioada de timp in care familia ta ar avea nevoie de sustinere financiara pentru a-si mentine nivelul de trai fara sa fie nevoita sa faca ajustari majore in stilul de viata (ex. vanzarea unor bunuri, ore suplimentare / al doilea job etc.)",
             actionType: 'buttons',
             options: ['3 ani', '4 ani', '5 ani'],
             handler: (response, data) => { data.period = parseInt(response); },
@@ -74,13 +69,6 @@ Daca esti pregatit, haide sa continuam.`,
             actionType: 'input',
             options: { placeholder: 'Ex: 10000', type: 'number' },
             handler: (response, data) => { data.monthlySum = Number(response); },
-            nextStep: () => 'deces.show_deficit_1_intro'
-        },
-        show_deficit_1_intro: {
-            message: () => "Avem o prima suma de bani.",
-            actionType: 'buttons',
-            options: [],
-            autoContinue: true,
             nextStep: () => 'deces.show_deficit_1_amount'
         },
         show_deficit_1_amount: {
@@ -556,16 +544,10 @@ const introFlow: ConversationFlow = {
         options: [],
         autoContinue: true,
         delay: 2500,
-        nextStep: () => 'dramatic_pause',
-    },
-    dramatic_pause: {
-        message: () => '', // No new message bubble
-        actionType: 'buttons',
-        options: ['Am înțeles'],
         nextStep: () => 'ask_priority',
     },
     ask_priority: {
-        message: () => "Care dintre aceste subiecte ar fi de interes pentru tine la acest moment?",
+        message: () => "Pentru care dintre aceste subiecte dorești să îți calculezi gradul de expunere financiară?",
         actionType: 'multi_choice',
         options: [
             { label: 'Reducerea drastica a veniturilor la pensionare', id: 'pensionare', disabled: true },
@@ -580,7 +562,7 @@ const introFlow: ConversationFlow = {
             
             switch (selectedId) {
                 case 'deces':
-                    return 'deces.start_flow';
+                    return 'deces.intro_analysis_1';
                 case 'boala_grava':
                     return 'boala_grava.start_flow';
                 case 'pensionare':
@@ -608,8 +590,9 @@ const getStep = (stepId: string): ConversationStep | null => {
     }
     
     // Check common flow last
-    if (conversationFlows.common[stepId]) {
-         return conversationFlows.common[stepId];
+    const commonStepId = stepId.includes('.') ? stepId.split('.')[1] : stepId;
+    if (conversationFlows.common[commonStepId]) {
+         return conversationFlows.common[commonStepId];
     }
 
 
@@ -638,7 +621,7 @@ export default function Home() {
         setConversation(prev => prev.map(msg => msg.id === id ? { ...msg, content } : msg));
     }, []);
 
-    const typeMessage = useCallback(async (text: string, messageId: number, baseDelay: number = 20) => {
+    const typeMessage = useCallback(async (text: string, messageId: number, baseDelay: number = 10) => {
         let currentText = '';
         let isTag = false;
         
@@ -679,7 +662,7 @@ export default function Home() {
             const messageId = addMessage({ author: "Marius", type: "text" });
             setIsTyping(false);
 
-            const typingDelay = step.delay === 1500 ? 50 : 20;
+            const typingDelay = step.delay === 1500 ? 50 : 10;
             await typeMessage(messageContent, messageId, typingDelay);
         }
 
@@ -770,3 +753,5 @@ export default function Home() {
         </div>
     );
 }
+
+    
