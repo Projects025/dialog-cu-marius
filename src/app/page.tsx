@@ -147,21 +147,8 @@ Esti pregatit(a) sa mai facem un pas?`,
            options: [],
            autoContinue: true,
            delay: 1500,
-           nextStep: () => 'deces.ask_show_brute_deficit_intro'
+           nextStep: () => 'deces.show_brute_deficit'
        },
-        ask_show_brute_deficit_intro: {
-            message: () => `Bun... Avem cele patru sume-deficit.`,
-            actionType: 'buttons',
-            options: [],
-            autoContinue: true,
-            nextStep: () => 'deces.ask_show_brute_deficit_context_1'
-        },
-        ask_show_brute_deficit_context_1: {
-             message: () => `Esti pregatit sa vezi suma-deficit totala? <br><br>Suma de bani de care familia ta ar avea nevoie in absenta ta pentru a-i ajuta financiar.`,
-             actionType: 'buttons',
-             options: ['Da'],
-             nextStep: () => 'deces.show_brute_deficit'
-        },
         show_brute_deficit: {
             message: (data) => {
                 data.bruteDeficit = calculateBruteDeficit(data);
@@ -171,20 +158,6 @@ Esti pregatit(a) sa mai facem un pas?`,
             options: [],
             autoContinue: true,
             delay: 1500,
-            nextStep: () => 'deces.ask_insurance_intro'
-        },
-        ask_insurance_intro: {
-            message: () => "Bun! Pentru a avea o imagine clara si corecta a necesarului financiar, vom mai explora doua domenii care ajuta in astfel de situatii:",
-            actionType: 'buttons',
-            options: [],
-            autoContinue: true,
-            nextStep: () => 'deces.ask_insurance_context'
-        },
-        ask_insurance_context: {
-            message: () => `(1.) existenta unor asigurari de viata care acopera decesul din orice cauza si<br>(2.) existenta unor economii sau a unor investitii la care familia ar putea apela`,
-            actionType: 'buttons',
-            options: [],
-            autoContinue: true,
             nextStep: () => 'deces.ask_insurance'
         },
         ask_insurance: {
@@ -195,7 +168,7 @@ Esti pregatit(a) sa mai facem un pas?`,
             nextStep: () => 'deces.ask_savings'
         },
         ask_savings: {
-            message: () => "In cazul unui posibil deces, familia ta ar putea accesa anumite economii sau ar putea apela la anumite investitii (ex. chirii, vanzarea unui imobil etc.)?\n\nDaca da, care este suma de bani disponibila din economii / investitii pentru perioada de tranzitie pe care ai mentionat-o anterior?",
+            message: () => "5. In cazul unui posibil deces, familia ta ar putea accesa anumite economii sau ar putea apela la anumite investitii (ex. chirii, vanzarea unui imobil etc.)?\n\nDaca da, care este suma de bani disponibila din economii / investitii pentru perioada de tranzitie pe care ai mentionat-o anterior?",
             actionType: 'input',
             options: { placeholder: 'Ex: 75000', type: 'number', defaultValue: 0 },
             handler: (response, data) => { data.savings = Number(response); },
