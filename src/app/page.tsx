@@ -103,16 +103,12 @@ Esti pregatit(a) sa mai facem un pas?`,
             actionType: 'input',
             options: { placeholder: 'Ex: 25000', type: 'number', defaultValue: 0 },
             handler: (response, data) => { data.eventCosts = Number(response); },
-            nextStep: () => 'deces.show_deficit_2_amount'
+            nextStep: () => 'deces.continue_prompt_1'
         },
-        show_deficit_2_amount: {
-            message: (data) => {
-                return `<span class="text-2xl font-bold">${Number(data.eventCosts).toLocaleString('ro-RO')} lei</span>`;
-            },
+        continue_prompt_1: {
+            message: () => "Mergem mai departe?",
             actionType: 'buttons',
-            options: [],
-            autoContinue: true,
-            delay: 1500,
+            options: ['Da'],
             nextStep: () => 'deces.ask_projects'
         },
         ask_projects: {
@@ -197,8 +193,8 @@ Esti pregatit(a) sa mai facem un pas?`,
         },
         ask_feeling_buttons: {
             message: () => `Cum ti se pare aceasta suma? Care este sentimentul pe care il simti acum?`,
-            actionType: 'buttons',
-            options: ['Nu imi place ce vad', 'Interesant'],
+            actionType: 'input',
+            options: { placeholder: 'Scrie aici...', type: 'text' },
             handler: (response, data) => { data.feeling = response; },
             nextStep: () => 'deces.ask_dramatic_options'
         },
@@ -734,5 +730,7 @@ export default function Home() {
         </div>
     );
 }
+
+    
 
     
