@@ -510,8 +510,8 @@ const introFlow: ConversationFlow = {
         nextStep: () => 'intro_3',
     },
     intro_3: {
-        message: () => `<strong>Previzibile:</strong>
-1. Pensionarea - reducerea drastică a optiunilor, a demnitatii si a statutului de sustinator al familiei
+        message: () => `<strong>Previzibile:</strong> \n\n
+1. Pensionarea - reducerea drastică a optiunilor, a demnitatii si a statutului de sustinator al familiei\n\n
 2. Studiile copiilor - cheltuieli complexe, unele neanticipate, care pun presiune pe bugetul familiei`,
         actionType: 'buttons',
         options: [],
@@ -520,9 +520,9 @@ const introFlow: ConversationFlow = {
         nextStep: () => 'intro_4',
     },
     intro_4: {
-        message: () => `<strong>Imprevizibile:</strong>
-1. Decesul - detonează standardul de viata, proiectele in desfasurare și viitorul copiilor
-2. Bolile grave - nu decesul este cel mai rau eveniment care se poate intampla in viata unei familii`,
+        message: () => `<strong>Imprevizibile:</strong> \n\n
+1. Decesul - detonează standardul de viata, proiectele in desfasurare și viitorul copiilor \n\n
+2. Bolile grave`,
         actionType: 'buttons',
         options: [],
         autoContinue: true,
