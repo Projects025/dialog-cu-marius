@@ -76,7 +76,7 @@ const DateOfBirthPicker = ({ onDateSelect }: { onDateSelect: (date: Date) => voi
                 </div>
                  <div className="flex flex-col gap-1.5">
                     <label htmlFor="month" className="text-sm font-medium text-foreground/80">Luna</label>
-                    <Select onValuechange={setMonth} value={month}>
+                    <Select onValueChange={setMonth} value={month}>
                         <SelectTrigger id="month" className="bg-background"><SelectValue placeholder="Lună" /></SelectTrigger>
                         <SelectContent>
                             {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
@@ -85,7 +85,7 @@ const DateOfBirthPicker = ({ onDateSelect }: { onDateSelect: (date: Date) => voi
                 </div>
                  <div className="flex flex-col gap-1.5">
                     <label htmlFor="year" className="text-sm font-medium text-foreground/80">Anul</label>
-                    <Select onValuechange={setYear} value={year}>
+                    <Select onValueChange={setYear} value={year}>
                         <SelectTrigger id="year" className="bg-background"><SelectValue placeholder="An" /></SelectTrigger>
                         <SelectContent>
                             {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
@@ -161,7 +161,7 @@ const MultiChoiceList = ({ options, onConfirm }: { options: {id: string, label: 
     const isComplexOption = typeof options[0] === 'object' && options[0] !== null;
 
     return (
-        <div className="flex flex-col w-full bg-transparent max-h-96 animate-in fade-in-50 overflow-hidden">
+        <div className="flex flex-col w-full bg-transparent max-h-96 animate-in fade-in-50">
              <div className="flex-grow space-y-3">
                 {options.map((option, index) => {
                     const label = isComplexOption ? option.label : option;
