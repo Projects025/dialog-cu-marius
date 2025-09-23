@@ -11,16 +11,6 @@ import { Checkbox } from "../ui/checkbox";
 import { Label } from "../ui/label";
 import { ScrollArea } from "../ui/scroll-area";
 
-const styles = `
-.no-scrollbar::-webkit-scrollbar {
-    display: none;
-}
-.no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
-`;
-
 export type Message = {
   id: number;
   author: "Marius" | "user";
@@ -120,7 +110,7 @@ const InteractiveScrollList = ({ options, buttonText, onConfirm }: { options: st
 
     return (
         <div className="flex flex-col w-full bg-background/80 backdrop-blur-sm border border-border rounded-lg shadow-md max-h-80 animate-in fade-in-50">
-            <ScrollArea className="flex-grow no-scrollbar">
+            <ScrollArea className="flex-grow">
                  <div className="space-y-1 p-3">
                     {options.map((option: string, index: number) => {
                         const isSelected = selected.includes(option);
@@ -311,7 +301,7 @@ const ChatView = ({ conversation, userAction, onResponse, isTyping }: ChatViewPr
     if (!userAction || userAction.type === 'end') {
         if (conversation.length > 0 && conversation[conversation.length -1].author === "Marius") {
             const lastMessageContent = conversation[conversation.length - 1].content;
-            if (typeof lastMessageContent === 'string' && lastMessageContent.includes('Mulțumesc!')) {
+            if (typeof lastMessageContent === 'string' && lastMessageContent.includes('Multumesc!')) {
                  return <div className="text-center w-full" dangerouslySetInnerHTML={{__html: lastMessageContent}} />;
             }
         }
@@ -386,7 +376,7 @@ const ChatView = ({ conversation, userAction, onResponse, isTyping }: ChatViewPr
   };
   
   const renderMessageContent = (content: any, author: 'Marius' | 'user') => {
-    if (author === 'Marius' && typeof content === 'string' && content.includes('Mulțumesc!')) {
+    if (author === 'Marius' && typeof content === 'string' && content.includes('Multumesc!')) {
       return null;
     }
 
@@ -401,9 +391,8 @@ const ChatView = ({ conversation, userAction, onResponse, isTyping }: ChatViewPr
 
   return (
     <>
-    <style>{styles}</style>
     <div id="chat-container" className="w-full h-full flex flex-col rounded-none md:rounded-2xl shadow-none md:shadow-2xl overflow-hidden animate-in fade-in-50">
-        <div id="dialog-flow" className="flex-grow space-y-6 overflow-y-auto p-4 md:p-6 no-scrollbar">
+        <div id="dialog-flow" className="flex-grow space-y-6 overflow-y-auto p-4 md:p-6">
             {conversation.map((message) => {
                  const content = renderMessageContent(message.content, message.author);
                  if (!content) return null;
