@@ -183,10 +183,18 @@ Ești pregătit(ă) să mai facem un pas?`,
             options: [],
             autoContinue: true,
             delay: 1500,
-            nextStep: () => 'deces.ask_feeling_buttons'
+            nextStep: () => 'deces.ask_feeling_intro'
         },
-        ask_feeling_buttons: {
-            message: () => `Cum ți se pare această sumă? Care este sentimentul pe care îl simți acum?`,
+        ask_feeling_intro: {
+            message: () => `Cum ți se pare această sumă?`,
+            actionType: 'buttons',
+            options: [],
+            autoContinue: true,
+            delay: 800,
+            nextStep: () => 'deces.ask_feeling_prompt'
+        },
+        ask_feeling_prompt: {
+            message: () => `Care este sentimentul pe care îl simți acum?`,
             actionType: 'input',
             options: { placeholder: 'Scrie aici...', type: 'text' },
             handler: (response, data) => { data.feeling = response; },
