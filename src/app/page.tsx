@@ -40,7 +40,7 @@ const conversationFlows: { [key: string]: ConversationFlow } = {
             nextStep: () => 'deces.intro_analysis_2'
         },
         intro_analysis_2: {
-            message: () => `In momentele urmatoare, vom raspunde la intrebari prin care sa stabilim care este suma de bani de care ar avea nevoie familia pentru a ameliora impactul financiar negativ al decesului asupra...`,
+            message: () => `In momentele urmatoare, vom raspunde la 6 intrebari prin care sa stabilim care este suma de bani de care ar avea nevoie familia pentru a ameliora impactul financiar negativ al decesului asupra...`,
             actionType: 'buttons',
             options: [],
             autoContinue: true,
@@ -112,7 +112,7 @@ Esti pregatit(a) sa mai facem un pas?`,
             nextStep: () => 'deces.ask_projects'
         },
         ask_projects: {
-            message: () => " 3. In cazul unui posibil deces, exista anumite proiecte in desfasurare la acest moment care ar avea de suferit (ex. o constructie la stadiu „la rosu” sau un sport de performanta al copiilor sau alte proiecte care sunt sustinute din finantele tale lunare)? \n\n Care ar fi suma totala de bani (in lei) necesara finalizarii acestor proiecte?",
+            message: () => "3. In cazul unui posibil deces, exista anumite proiecte in desfasurare la acest moment care ar avea de suferit (ex. o constructie la stadiu „la rosu” sau un sport de performanta al copiilor sau alte proiecte care sunt sustinute din finantele tale lunare)? \n\n Care ar fi suma totala de bani (in lei) necesara finalizarii acestor proiecte?",
             actionType: 'input',
             options: { placeholder: 'Ex: 250000', type: 'number', defaultValue: 0 },
             handler: (response, data) => { data.projects = Number(response); },
@@ -122,7 +122,9 @@ Esti pregatit(a) sa mai facem un pas?`,
             message: () => "4. In cazul unui posibil deces, raman pe umerii familiei anumite responsabilitati financiare de tip credite, datorii, obligatii financiare etc.?\n\n Care ar fi suma de bani de care ar avea nevoie pentru a stinge aceste obligatii (in lei)?",
             actionType: 'input',
             options: { placeholder: 'Ex: 400000', type: 'number', defaultValue: 0 },
-            handler: (response, data) => { data.debts = Number(response); },
+            handler: (response, data) => {
+                data.debts = Number(response);
+            },
             nextStep: () => 'deces.brute_deficit_intro'
         },
         brute_deficit_intro: {
