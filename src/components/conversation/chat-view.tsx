@@ -99,7 +99,7 @@ const DateOfBirthPicker = ({ onDateSelect }: { onDateSelect: (date: Date) => voi
     );
 };
 
-const InteractiveScrollList = ({ options, buttonText, onConfirm }: { options: string[], buttonText: string, onConfirm: (selected: string[]) => void }) => {
+const InteractiveScrollList = ({ title, options, buttonText, onConfirm }: { title: string, options: string[], buttonText: string, onConfirm: (selected: string[]) => void }) => {
     const [selected, setSelected] = useState<string[]>([]);
 
     const toggleOption = (option: string) => {
@@ -109,8 +109,14 @@ const InteractiveScrollList = ({ options, buttonText, onConfirm }: { options: st
     };
 
     return (
-        <div className="flex flex-col w-full bg-background/80 backdrop-blur-sm border border-border rounded-lg shadow-md max-h-80 animate-in fade-in-50">
-            <ScrollArea className="flex-grow">
+        <div className="flex flex-col w-full max-w-sm rounded-2xl bg-background/80 backdrop-blur-sm border border-border shadow-md animate-in fade-in-50">
+            {/* Header */}
+            <div className="flex-shrink-0 p-4 border-b border-border">
+                <p className="text-foreground/90 text-sm" dangerouslySetInnerHTML={{ __html: title.replace(/\n/g, '<br />') }}/>
+            </div>
+            
+            {/* Scrollable List */}
+            <div className="flex-grow overflow-y-auto max-h-72 no-scrollbar">
                  <div className="space-y-1 p-3">
                     {options.map((option: string, index: number) => {
                         const isSelected = selected.includes(option);
@@ -133,8 +139,10 @@ const InteractiveScrollList = ({ options, buttonText, onConfirm }: { options: st
                         )
                     })}
                 </div>
-            </ScrollArea>
-            <div className="p-4 border-t border-border flex-shrink-0 bg-background/90">
+            </div>
+
+            {/* Footer */}
+            <div className="flex-shrink-0 p-4 border-t border-border">
                 <Button
                     onClick={() => onConfirm(selected)}
                     disabled={selected.length === 0}
@@ -360,7 +368,7 @@ const ChatView = ({ conversation, userAction, onResponse, isTyping }: ChatViewPr
         )
       case "interactive_scroll_list":
         return (
-            <InteractiveScrollList options={userAction.options.options} buttonText={userAction.options.buttonText} onConfirm={onResponse} />
+            <InteractiveScrollList title={userAction.options.title} options={userAction.options.options} buttonText={userAction.options.buttonText} onConfirm={onResponse} />
         );
       case 'multi_choice':
         return (
@@ -456,5 +464,3 @@ const ChatView = ({ conversation, userAction, onResponse, isTyping }: ChatViewPr
 };
 
 export default ChatView;
-
-    

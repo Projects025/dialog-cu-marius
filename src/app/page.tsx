@@ -196,6 +196,7 @@ Esti pregatit(a) sa mai facem un pas?`,
             message: () => "In acest scenariu de imaginatie sumbru, ce optiuni ar avea cei dragi ai tai pentru a mentine un oarecare echilibru in standardul de viata?\n\nBifeaza optiunile realiste si cu care tu te simti confortabil pentru ai tai:",
             actionType: 'interactive_scroll_list',
             options: {
+                title: "In acest scenariu de imaginatie sumbru, ce optiuni ar avea cei dragi ai tai pentru a mentine un oarecare echilibru in standardul de viata?\n\nBifeaza optiunile realiste si cu care tu te simti confortabil pentru ai tai:",
                 options: [
                     'Sa se mute cu parintii',
                     'Sa se mute in alt oras',
@@ -488,7 +489,7 @@ const introFlow: ConversationFlow = {
         nextStep: () => 'intro_2',
     },
     intro_2: {
-        message: () => `Dintre acestea, două situații sunt previzibile, precis așezate pe axa vieții, iar două sunt total imprevizibile.`,
+        message: () => `Dintre acestea, doua situatii sunt previzibile, precis asezate pe axa vietii, iar doua sunt total imprevizibile.`,
         actionType: 'buttons',
         options: [],
         autoContinue: true,
@@ -634,6 +635,11 @@ export default function Home() {
             const typingDelay = step.delay === 1500 ? 50 : 10;
             await typeMessage(messageContent, messageId, typingDelay);
         }
+        
+        // Pass the message content as the title for the interactive scroll list
+        const actionOptions = step.actionType === 'interactive_scroll_list' 
+            ? { ...step.options, title: messageContent }
+            : step.options;
 
         if (step.autoContinue) {
              const delay = step.delay || 1200;
@@ -641,7 +647,7 @@ export default function Home() {
              const nextStepId = step.nextStep();
              renderStep(nextStepId);
         } else {
-            setCurrentUserAction({ type: step.actionType, options: step.options });
+            setCurrentUserAction({ type: step.actionType, options: actionOptions });
         }
     }, [addMessage, typeMessage]);
 
