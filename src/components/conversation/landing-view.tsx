@@ -18,19 +18,21 @@ const LandingView = ({ onStart, isFadingOut }: LandingViewProps) => {
     >
       <div
         className={cn(
-          "space-y-6 transition-all duration-500",
+          "space-y-4 transition-all duration-500",
           isFadingOut ? "transform-none" : "animate-in fade-in-0 slide-in-from-bottom-10"
         )}
       >
         <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-foreground">
-          Liniștea ta financiară, simplificată.
+          Linistea ta financiara, simplificata.
         </h1>
-        <p
-          className="max-w-xl mx-auto text-base md:text-lg text-foreground/70"
-          style={{ animationDelay: '150ms' }}
-        >
-          Descoperă în câteva minute cum îți poți proteja viitorul și pe al celor dragi. Fără jargon, fără obligații.
-        </p>
+        <div className="max-w-xl mx-auto text-base md:text-lg text-foreground/70 space-y-4">
+            <p style={{ animationDelay: '150ms' }}>
+                Descopera in cateva minute cum iti poti proteja viitorul si pe al celor dragi.
+            </p>
+            <p style={{ animationDelay: '150ms' }}>
+                Fara jargon, fara obligatii.
+            </p>
+        </div>
       </div>
 
       <Button 
@@ -42,7 +44,7 @@ const LandingView = ({ onStart, isFadingOut }: LandingViewProps) => {
         )}
         style={{ animationDelay: '300ms' }}
       >
-        Începe Analiza Gratuită
+        Incepe Analiza Gratuita
       </Button>
     </div>
   );
