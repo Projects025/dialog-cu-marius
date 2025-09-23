@@ -190,10 +190,18 @@ Esti pregatit(a) sa mai facem un pas?`,
             actionType: 'input',
             options: { placeholder: 'Scrie aici...', type: 'text' },
             handler: (response, data) => { data.feeling = response; },
-            nextStep: () => 'deces.ask_dramatic_options'
+            nextStep: () => 'deces.ask_dramatic_options_intro'
         },
-        ask_dramatic_options: {
-            message: () => "In acest scenariu de imaginatie sumbru, ce optiuni ar avea cei dragi ai tai pentru a mentine un oarecare echilibru in standardul de viata?\n\nBifeaza optiunile realiste si cu care tu te simti confortabil pentru ai tai:",
+        ask_dramatic_options_intro: {
+            message: () => "In acest scenariu de imaginatie sumbru, ce optiuni ar avea cei dragi ai tai pentru a mentine un oarecare echilibru in standardul de viata?",
+            actionType: 'buttons',
+            options: [],
+            autoContinue: true,
+            delay: 800,
+            nextStep: () => 'deces.ask_dramatic_options_prompt',
+        },
+        ask_dramatic_options_prompt: {
+            message: () => "Bifeaza optiunile realiste si cu care tu te simti confortabil pentru ai tai:",
             actionType: 'interactive_scroll_list',
             options: {
                 options: [
