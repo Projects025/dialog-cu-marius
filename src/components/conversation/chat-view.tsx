@@ -279,8 +279,7 @@ const ChatView = ({ conversation, userAction, onResponse, isTyping }: ChatViewPr
 
     return () => {
         if (actionsContainerRef.current) {
-             // eslint-disable-next-line react-hooks/exhaustive-deps
-            resizeObserver.unobserve(actionsContainer-ref.current);
+            resizeObserver.unobserve(actionsContainerRef.current);
         }
     };
   }, [userAction, conversation, isTyping]);
