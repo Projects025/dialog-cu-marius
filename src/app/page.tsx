@@ -85,15 +85,13 @@ Daca esti pregatit, haide sa continuam.`,
         show_deficit_1_explanation: {
             message: (data) => `Aceasta suma reprezinta deficitul pentru ${data.period} ani pentru mentinerea standardului de viata, respectiv pentru linistea sufleteasca si confortul financiar necesar celor dragi care fac mai usoara acomodarea la noua realitate.
 <br><br>
-Mai avem trei sume de calculat - trei deficite financiare cu care se confrunta o familie din care dispare un membru.
-<br><br>
 Esti pregatit(a) sa mai facem un pas?`,
             actionType: 'buttons',
             options: ['Da'],
             nextStep: () => 'deces.ask_event_costs'
         },
         ask_event_costs: {
-            message: () => "In cazul unui posibil deces, evenimentul in sine este insotit de anumite cheltuieli (ex. inmormantare, taxe succesorale etc.).\n\nDoresti ca aceste cheltuieli sa fie acoperite din buzunarul familiei sau constituim un fond separat?\n\nDaca optezi pentru un fond separat, care ar fi aceasta suma (in lei)?",
+            message: () => "Care este suma (în lei) necesară pentru a acoperi cheltuielile neprevăzute (ex. inmormantare, taxe succesorale etc.)?",
             actionType: 'input',
             options: { placeholder: 'Ex: 25000', type: 'number', defaultValue: 0 },
             handler: (response, data) => { data.eventCosts = Number(response); },
@@ -753,5 +751,7 @@ export default function Home() {
         </div>
     );
 }
+
+    
 
     
