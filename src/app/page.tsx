@@ -116,7 +116,7 @@ Esti pregatit(a) sa mai facem un pas?`,
             actionType: 'input',
             options: { placeholder: 'Ex: 250000', type: 'number', defaultValue: 0 },
             handler: (response, data) => { data.projects = Number(response); },
-            nextStep: () => 'deces.show_deficit_3_amount'
+            nextStep: () => 'deces.ask_debts'
         },
         show_deficit_3_amount: {
              message: (data) => `<span class="text-2xl font-bold">${Number(data.projects).toLocaleString('ro-RO')} lei</span>`,
@@ -131,7 +131,7 @@ Esti pregatit(a) sa mai facem un pas?`,
             actionType: 'input',
             options: { placeholder: 'Ex: 400000', type: 'number', defaultValue: 0 },
             handler: (response, data) => { data.debts = Number(response); },
-            nextStep: () => 'deces.show_deficit_4_amount'
+            nextStep: () => 'deces.show_brute_deficit'
         },
         show_deficit_4_amount: {
             message: (data) => `<span class="text-2xl font-bold">${Number(data.debts).toLocaleString('ro-RO')} lei</span>`,
@@ -494,7 +494,7 @@ const introFlow: ConversationFlow = {
         nextStep: () => 'intro_2',
     },
     intro_2: {
-        message: () => `Dintre acestea, doua situatii sunt previzibile, precis asezate pe axa vietii, iar doua sunt total imprevizibile.`,
+        message: () => `Dintre acestea, două situații sunt previzibile, precis așezate pe axa vieții, iar două sunt total imprevizibile.`,
         actionType: 'buttons',
         options: [],
         autoContinue: true,
@@ -730,7 +730,3 @@ export default function Home() {
         </div>
     );
 }
-
-    
-
-    
