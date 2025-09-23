@@ -196,7 +196,6 @@ Esti pregatit(a) sa mai facem un pas?`,
             message: () => "In acest scenariu de imaginatie sumbru, ce optiuni ar avea cei dragi ai tai pentru a mentine un oarecare echilibru in standardul de viata?\n\nBifeaza optiunile realiste si cu care tu te simti confortabil pentru ai tai:",
             actionType: 'interactive_scroll_list',
             options: {
-                title: "In acest scenariu de imaginatie sumbru, ce optiuni ar avea cei dragi ai tai pentru a mentine un oarecare echilibru in standardul de viata?\n\nBifeaza optiunile realiste si cu care tu te simti confortabil pentru ai tai:",
                 options: [
                     'Sa se mute cu parintii',
                     'Sa se mute in alt oras',
@@ -636,10 +635,7 @@ export default function Home() {
             await typeMessage(messageContent, messageId, typingDelay);
         }
         
-        // Pass the message content as the title for the interactive scroll list
-        const actionOptions = step.actionType === 'interactive_scroll_list' 
-            ? { ...step.options, title: messageContent }
-            : step.options;
+        const actionOptions = step.options;
 
         if (step.autoContinue) {
              const delay = step.delay || 1200;
