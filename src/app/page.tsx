@@ -232,7 +232,7 @@ Esti pregatit(a) sa mai facem un pas?`,
             nextStep: () => 'deces.present_solution'
         },
         present_solution: {
-            message: () => "Daca nu esti foarte multumit cu optiunile pe care familia ta le are pentru a mentine standardul actual de viata, ai fi interesat sa vezi o solutie personalizata care sa ofere celor dragi tie o a doua sansa la o viata relativ normala, fara poveri financiare?\n\nPractic, o solutie prin care dragostea ta si grija ta pentru ei va continua chiar si dupa tine. Poti crea instant o mostenire care sa ii ajute financiar pe cei dragi tie cu acele sume de bani pe care le-ai fi asigurat tu daca n-am fi venit pe rand si n-am fi plecat pe sarite...",
+            message: () => "Daca nu esti foarte multumit cu optiunile pe care familia ta le are pentru a mentine standardul actual de viata, ai fi interesat sa vezi o solutie personalizata care sa ofere celor dragi tie o a doua sansa la o viata relativ normala, fara poveri financiare?\n\nPractic, o solutie prin care dragostea ta si grija ta pentru ei va continua chiar si dupa tine. \n\nPoti crea instant o mostenire care sa ii ajute financiar pe cei dragi tie cu acele sume de bani pe care le-ai fi asigurat tu daca n-am fi venit pe rand si n-am fi plecat pe sarite...",
             actionType: 'buttons',
             options: ['Da', 'Nu'],
             nextStep: (response) => response === 'Da' ? 'deces.ask_contact_details' : 'common.end_dialog_friendly'

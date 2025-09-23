@@ -119,7 +119,7 @@ const InteractiveScrollList = ({ options, buttonText, onConfirm }: { options: st
     };
 
     return (
-        <div className="flex flex-col w-full bg-background/80 backdrop-blur-sm border border-border rounded-lg shadow-md max-h-80 animate-in fade-in-50 overflow-hidden">
+        <div className="flex flex-col w-full bg-background/80 backdrop-blur-sm border border-border rounded-lg shadow-md max-h-80 animate-in fade-in-50">
             <ScrollArea className="flex-grow no-scrollbar">
                  <div className="space-y-1 p-3">
                     {options.map((option: string, index: number) => {
