@@ -161,14 +161,14 @@ Esti pregatit(a) sa mai facem un pas?`,
             nextStep: () => 'deces.ask_insurance'
         },
         ask_insurance: {
-            message: () => "In cazul unui posibil deces, familia ta ar beneficia de vreo asigurare de viata pe numele tau? Nu ma refer la acele asigurari care sunt cesionate in favoarea bancii, ci acele asigurari care sa aiba ca beneficiar - familia ta.\n\nDaca da, care este suma de bani pe care ai tai ar incasa-o dintr-o astfel de asigurare de viata (in lei)?",
+            message: () => "5. In cazul unui posibil deces, familia ta ar beneficia de vreo asigurare de viata pe numele tau? Nu ma refer la acele asigurari care sunt cesionate in favoarea bancii, ci acele asigurari care sa aiba ca beneficiar - familia ta.\n\nDaca da, care este suma de bani pe care ai tai ar incasa-o dintr-o astfel de asigurare de viata (in lei)?",
             actionType: 'input',
             options: { placeholder: 'Ex: 125000', type: 'number', defaultValue: 0 },
             handler: (response, data) => { data.existingInsurance = Number(response); },
             nextStep: () => 'deces.ask_savings'
         },
         ask_savings: {
-            message: () => "5. In cazul unui posibil deces, familia ta ar putea accesa anumite economii sau ar putea apela la anumite investitii (ex. chirii, vanzarea unui imobil etc.)?\n\nDaca da, care este suma de bani disponibila din economii / investitii pentru perioada de tranzitie pe care ai mentionat-o anterior?",
+            message: () => "6. In cazul unui posibil deces, familia ta ar putea accesa anumite economii sau ar putea apela la anumite investitii (ex. chirii, vanzarea unui imobil etc.)?\n\nDaca da, care este suma de bani disponibila?",
             actionType: 'input',
             options: { placeholder: 'Ex: 75000', type: 'number', defaultValue: 0 },
             handler: (response, data) => { data.savings = Number(response); },
@@ -182,22 +182,8 @@ Esti pregatit(a) sa mai facem un pas?`,
             nextStep: () => 'deces.show_final_deficit_context_1'
         },
         show_final_deficit_context_1: {
-            message: () => "Si acum... suma-deficit finala cu care familia ta ar pasi in acest viitor sumbru daca n-ar mai putea conta pe sprijinul tau financiar.",
+            message: () => "Deficitul financiar cu care familia ta ar pasi in acest viitor sumbru daca n-ar mai putea conta pe sprijinul tau financiar este:",
              actionType: 'buttons',
-            options: [],
-            autoContinue: true,
-            nextStep: () => 'deces.show_final_deficit_context_2'
-        },
-        show_final_deficit_context_2: {
-            message: () => "Practic, vorbim despre mostenirea-negativa pe care ai lasa-o celor dragi tie.",
-            actionType: 'buttons',
-            options: [],
-            autoContinue: true,
-            nextStep: () => 'deces.show_final_deficit_context_3'
-        },
-        show_final_deficit_context_3: {
-            message: () => "Asadar, suma-deficit totala este:",
-            actionType: 'buttons',
             options: [],
             autoContinue: true,
             nextStep: () => 'deces.show_final_deficit_amount'
@@ -729,6 +715,8 @@ export default function Home() {
         }, 500);
     };
 
+
+
     useEffect(() => {
         if (view === 'chat' && conversation.length === 0) {
             startConversation();
@@ -756,3 +744,4 @@ export default function Home() {
     
 
     
+
