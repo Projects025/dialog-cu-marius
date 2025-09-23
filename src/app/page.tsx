@@ -502,7 +502,7 @@ const introFlow: ConversationFlow = {
         nextStep: () => 'intro_2',
     },
     intro_2: {
-        message: () => `Dintre acestea, două situații sunt previzibile, precis așezate pe axa vieții, iar două sunt total imprevizibile (<span class="inline-block animate-subtle-wave">„ceasul rău, pisica neagră”</span>).`,
+        message: () => `Dintre acestea, două situații sunt previzibile, precis așezate pe axa vieții, iar două sunt total imprevizibile.`,
         actionType: 'buttons',
         options: [],
         autoContinue: true,
