@@ -118,29 +118,21 @@ Esti pregatit(a) sa mai facem un pas?`,
             handler: (response, data) => { data.projects = Number(response); },
             nextStep: () => 'deces.ask_debts'
         },
-        show_deficit_3_amount: {
-             message: (data) => `<span class="text-2xl font-bold">${Number(data.projects).toLocaleString('ro-RO')} lei</span>`,
-            actionType: 'buttons',
-            options: [],
-            autoContinue: true,
-            delay: 1500,
-            nextStep: () => 'deces.ask_debts'
-        },
         ask_debts: {
             message: () => "4. In cazul unui posibil deces, raman pe umerii familiei anumite responsabilitati financiare de tip credite, datorii, obligatii financiare etc.?\n\n Care ar fi suma de bani de care ar avea nevoie pentru a stinge aceste obligatii (in lei)?",
             actionType: 'input',
             options: { placeholder: 'Ex: 400000', type: 'number', defaultValue: 0 },
             handler: (response, data) => { data.debts = Number(response); },
+            nextStep: () => 'deces.brute_deficit_intro'
+        },
+        brute_deficit_intro: {
+            message: () => "Suma deficit totala este:",
+            actionType: 'buttons',
+            options: [],
+            autoContinue: true,
+            delay: 800,
             nextStep: () => 'deces.show_brute_deficit'
         },
-        show_deficit_4_amount: {
-            message: (data) => `<span class="text-2xl font-bold">${Number(data.debts).toLocaleString('ro-RO')} lei</span>`,
-           actionType: 'buttons',
-           options: [],
-           autoContinue: true,
-           delay: 1500,
-           nextStep: () => 'deces.show_brute_deficit'
-       },
         show_brute_deficit: {
             message: (data) => {
                 data.bruteDeficit = calculateBruteDeficit(data);

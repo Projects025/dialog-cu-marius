@@ -11,6 +11,7 @@ export type FinancialData = {
     monthlySum?: number;
     eventCosts?: number;
     projects?: number;
+    debts?: number;
     existingInsurance?: number;
     savings?: number;
     premium?: number;
@@ -51,10 +52,11 @@ export const calculateBruteDeficit = (data: FinancialData): number => {
         period = 0,
         eventCosts = 0,
         projects = 0,
+        debts = 0,
     } = data;
 
     const standardOfLivingDeficit = monthlySum * period * 12;
-    const totalBruteDeficit = standardOfLivingDeficit + eventCosts + projects;
+    const totalBruteDeficit = standardOfLivingDeficit + eventCosts + projects + debts;
     
     return Math.max(0, totalBruteDeficit);
 };
