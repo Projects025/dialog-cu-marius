@@ -263,7 +263,7 @@ const ChatView = ({ conversation, userAction, onResponse, progress }: ChatViewPr
   useEffect(() => {
     const calculateHeightAndScroll = () => {
       if (actionsContainerRef.current && spacerRef.current) {
-        const height = actionsContainerf.current.offsetHeight;
+        const height = actionsContainerRef.current.offsetHeight;
         spacerRef.current.style.height = `${height}px`;
       }
       setTimeout(() => {
@@ -448,3 +448,5 @@ const ChatView = ({ conversation, userAction, onResponse, progress }: ChatViewPr
 };
 
 export default ChatView;
+
+    
