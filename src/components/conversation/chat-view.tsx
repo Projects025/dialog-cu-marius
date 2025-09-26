@@ -255,7 +255,6 @@ const ContactForm = ({ options, onResponse }: { options: any, onResponse: (data:
 }
 
 const ChatView = ({ conversation, userAction, onResponse, progress }: ChatViewProps) => {
-  const [inputValue, setInputValue] = useState("");
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
   const actionsContainerRef = useRef<HTMLDivElement>(null);
   const spacerRef = useRef<HTMLDivElement>(null);
@@ -286,10 +285,7 @@ const ChatView = ({ conversation, userAction, onResponse, progress }: ChatViewPr
 
 
   const handleSend = () => {
-    if (inputValue.trim()) {
-      onResponse(inputValue.trim());
-      setInputValue("");
-    }
+    // This is a placeholder, real logic is in parent component
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -338,18 +334,37 @@ const ChatView = ({ conversation, userAction, onResponse, progress }: ChatViewPr
           </div>
         );
       case "input":
+          const [inputValue, setInputValue] = useState(userAction.options?.defaultValue?.toString() || "");
+          const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+            setInputValue(e.target.value);
+        };
+
+        const handleSendInput = () => {
+            if (inputValue.trim() || userAction.options?.type === 'number') {
+                const valueToSend = userAction.options?.type === 'number' ? Number(inputValue) : inputValue.trim();
+                onResponse(valueToSend);
+                setInputValue("");
+            }
+        };
+
+        const handleInputKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+            if (e.key === 'Enter') {
+                handleSendInput();
+            }
+        };
+
         return (
             <div className="flex w-full items-center space-x-2 animate-in fade-in-50">
               <Input
                 type={userAction.options?.type || 'text'}
                 placeholder={userAction.options?.placeholder || ''}
                 value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={handleKeyPress}
+                onChange={handleInputChange}
+                onKeyPress={handleInputKeyPress}
                 className="bg-background h-12 text-base"
                 autoFocus
               />
-              <Button type="submit" onClick={handleSend} disabled={!inputValue.trim()} size="icon" className="h-12 w-12 flex-shrink-0">
+              <Button type="submit" onClick={handleSendInput} disabled={!inputValue.trim() && userAction.options?.type !== 'number'} size="icon" className="h-12 w-12 flex-shrink-0">
                 <Send className="h-5 w-5" />
                 <span className="sr-only">Trimite</span>
               </Button>
@@ -392,6 +407,19 @@ const ChatView = ({ conversation, userAction, onResponse, progress }: ChatViewPr
 
   return (
     <div id="chat-container" className="relative w-full h-full flex flex-col rounded-none md:rounded-2xl shadow-none md:shadow-2xl animate-in fade-in-50">
+        
+        {progress > 0 && (
+             <div id="progress-container" className="flex-shrink-0 px-4 pt-4 pb-2 w-full">
+                <div className="w-full h-2.5 bg-muted rounded-full">
+                    <div 
+                        id="progress-bar" 
+                        className="h-full bg-primary rounded-full transition-all duration-500 ease-in-out" 
+                        style={{ width: `${progress}%` }}>
+                    </div>
+                </div>
+            </div>
+        )}
+        
         <div id="dialog-flow" className="flex-grow space-y-6 overflow-y-auto p-4 md:p-6 no-scrollbar">
             {conversation.map((message) => {
                  const content = renderMessageContent(message.content, message.author);
@@ -431,15 +459,6 @@ const ChatView = ({ conversation, userAction, onResponse, progress }: ChatViewPr
       
         <div ref={actionsContainerRef} id="user-actions-container" className="flex-shrink-0 p-4 bg-background/80 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none fixed bottom-0 left-0 right-0 md:relative flex flex-col">
              <div className="w-full max-w-lg mx-auto flex flex-col justify-center items-center">
-                 {userAction && userAction.type !== 'end' && (
-                    <div id="progress-container" className="w-full h-2.5 bg-muted rounded-full mb-4">
-                        <div
-                            id="progress-bar"
-                            className="h-full bg-primary rounded-full transition-all duration-500 ease-in-out"
-                            style={{ width: `${progress}%` }}
-                        ></div>
-                    </div>
-                )}
                  {renderUserActions()}
             </div>
         </div>
@@ -448,5 +467,3 @@ const ChatView = ({ conversation, userAction, onResponse, progress }: ChatViewPr
 };
 
 export default ChatView;
-
-    

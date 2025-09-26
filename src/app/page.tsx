@@ -549,6 +549,7 @@ const introFlow: ConversationFlow = {
     ask_priority: {
         message: () => "Pentru care dintre aceste subiecte dorești să îți calculezi gradul de expunere financiară?",
         actionType: 'multi_choice',
+        isProgressStep: true,
         options: [
             { label: 'Reducerea drastică a veniturilor la pensionare', id: 'pensionare', disabled: true },
             { label: 'Asigurarea viitorului copiilor', id: 'studii_copii', disabled: true },
@@ -740,3 +741,5 @@ export default function Home() {
         </>
     );
 }
+
+    
