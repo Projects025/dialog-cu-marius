@@ -37,7 +37,6 @@ const conversationFlows: { [key: string]: ConversationFlow } = {
             actionType: 'buttons',
             options: [],
             autoContinue: true,
-            delay: 800,
             nextStep: () => 'deces.intro_analysis_2'
         },
         intro_analysis_2: {
@@ -45,7 +44,6 @@ const conversationFlows: { [key: string]: ConversationFlow } = {
             actionType: 'buttons',
             options: [],
             autoContinue: true,
-            delay: 800,
             nextStep: () => 'deces.intro_analysis_3'
         },
         intro_analysis_3: {
@@ -82,7 +80,6 @@ Dacă ești pregătit/ă, haide să continuăm.`,
             actionType: 'buttons',
             options: [],
             autoContinue: true,
-            delay: 800,
             nextStep: () => 'deces.show_deficit_1_explanation'
         },
         show_deficit_1_explanation: {
@@ -98,7 +95,6 @@ Ești pregătit(ă) să mai facem un pas?`,
             actionType: 'buttons',
             options: [],
             autoContinue: true,
-            delay: 800,
             nextStep: () => 'deces.ask_event_costs_prompt'
         },
         ask_event_costs_prompt: {
@@ -138,7 +134,6 @@ Ești pregătit(ă) să mai facem un pas?`,
             actionType: 'buttons',
             options: [],
             autoContinue: true,
-            delay: 800,
             nextStep: () => 'deces.show_brute_deficit'
         },
         show_brute_deficit: {
@@ -149,7 +144,6 @@ Ești pregătit(ă) să mai facem un pas?`,
             actionType: 'buttons',
             options: [],
             autoContinue: true,
-            delay: 800,
             nextStep: () => 'deces.ask_insurance'
         },
         ask_insurance: {
@@ -173,7 +167,6 @@ Ești pregătit(ă) să mai facem un pas?`,
             actionType: 'buttons',
             options: [],
             autoContinue: true,
-            delay: 800,
             nextStep: () => 'deces.show_final_deficit_context_1'
         },
         show_final_deficit_context_1: {
@@ -181,7 +174,6 @@ Ești pregătit(ă) să mai facem un pas?`,
              actionType: 'buttons',
             options: [],
             autoContinue: true,
-            delay: 800,
             nextStep: () => 'deces.show_final_deficit_amount'
         },
         show_final_deficit_amount: {
@@ -192,7 +184,6 @@ Ești pregătit(ă) să mai facem un pas?`,
             actionType: 'buttons',
             options: [],
             autoContinue: true,
-            delay: 800,
             nextStep: () => 'deces.ask_feeling_intro'
         },
         ask_feeling_intro: {
@@ -200,7 +191,6 @@ Ești pregătit(ă) să mai facem un pas?`,
             actionType: 'buttons',
             options: [],
             autoContinue: true,
-            delay: 800,
             nextStep: () => 'deces.ask_feeling_prompt'
         },
         ask_feeling_prompt: {
@@ -216,7 +206,6 @@ Ești pregătit(ă) să mai facem un pas?`,
             actionType: 'buttons',
             options: [],
             autoContinue: true,
-            delay: 800,
             nextStep: () => 'deces.ask_dramatic_options_prompt',
         },
         ask_dramatic_options_prompt: {
@@ -515,7 +504,6 @@ const introFlow: ConversationFlow = {
         actionType: 'buttons',
         options: [],
         autoContinue: true,
-        delay: 800,
         nextStep: () => 'intro_2',
     },
     intro_2: {
@@ -523,7 +511,6 @@ const introFlow: ConversationFlow = {
         actionType: 'buttons',
         options: [],
         autoContinue: true,
-        delay: 800,
         nextStep: () => 'intro_3',
     },
     intro_3: {
@@ -533,7 +520,6 @@ const introFlow: ConversationFlow = {
         actionType: 'buttons',
         options: [],
         autoContinue: true,
-        delay: 800,
         nextStep: () => 'intro_4',
     },
     intro_4: {
@@ -543,7 +529,6 @@ const introFlow: ConversationFlow = {
         actionType: 'buttons',
         options: [],
         autoContinue: true,
-        delay: 800,
         nextStep: () => 'ask_priority',
     },
     ask_priority: {
@@ -605,6 +590,22 @@ const getStep = (stepId: string): ConversationStep | null => {
     return null;
 }
 
+const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+
+const calculateDynamicDelay = (text: string): number => {
+    if (!text) return 1200;
+    const BASE_DELAY = 1200; 
+    const WORDS_PER_SECOND = 3; 
+
+    const cleanText = text.replace(/<[^>]*>?/gm, '');
+    const wordCount = cleanText.split(/\s+/).filter(Boolean).length;
+
+    const readingTime = (wordCount / WORDS_PER_SECOND) * 1000;
+    
+    return Math.min(BASE_DELAY + readingTime, 4500);
+}
+
+
 export default function Home() {
     const [view, setView] = useState<"landing" | "chat">("landing");
     const [isFadingOut, setIsFadingOut] = useState(false);
@@ -648,9 +649,12 @@ export default function Home() {
 
         if (messageContent) {
             setIsTyping(true);
-            await new Promise(resolve => setTimeout(resolve, step.delay || 1500));
+            await delay(step.delay || 1500);
             setIsTyping(false);
             addMessage({ author: "Marius", type: "text" }, messageContent);
+            
+            const dynamicDelay = calculateDynamicDelay(messageContent);
+            await delay(dynamicDelay);
         }
         
         const actionOptions = step.options;
@@ -660,7 +664,6 @@ export default function Home() {
              await renderStep(nextStepId);
         } else if (step.autoContinue && messageContent) {
              const nextStepId = step.nextStep();
-             await new Promise(resolve => setTimeout(resolve, 300));
              await renderStep(nextStepId);
         } else {
             setCurrentUserAction({ type: step.actionType, options: actionOptions });
@@ -773,3 +776,5 @@ export default function Home() {
         </>
     );
 }
+
+    
