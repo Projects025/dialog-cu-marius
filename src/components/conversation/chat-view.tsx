@@ -11,7 +11,6 @@ import { cn } from "@/lib/utils";
 import { Checkbox } from "../ui/checkbox";
 import { Label } from "../ui/label";
 import { ScrollArea } from "../ui/scroll-area";
-import { Progress } from "@/components/ui/progress";
 
 
 export type Message = {
@@ -394,8 +393,8 @@ const ChatView = ({ conversation, userAction, onResponse, progress }: ChatViewPr
   return (
     <>
     <div id="chat-container" className="w-full h-full flex flex-col rounded-none md:rounded-2xl shadow-none md:shadow-2xl animate-in fade-in-50 relative">
-        <div id="progress-container" className="absolute top-0 left-0 right-0 z-10 h-1.5">
-            <Progress value={progress} className="h-full rounded-none" />
+        <div id="progress-container" className="fixed top-0 left-0 w-full h-1.5 bg-muted z-50">
+            <div id="progress-bar" className="h-full bg-primary transition-all duration-500 ease-in-out" style={{ width: `${progress}%` }}></div>
         </div>
         <div id="dialog-flow" className="flex-grow space-y-6 overflow-y-auto p-4 md:p-6 no-scrollbar pt-6">
             {conversation.map((message) => {
