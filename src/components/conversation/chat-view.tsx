@@ -21,7 +21,7 @@ export type Message = {
 };
 
 export type UserAction = {
-  type: 'input' | 'buttons' | 'date' | 'interactive_scroll_list' | 'form' | 'multi_choice' | 'end';
+  type: 'input' | 'buttons' | 'date' | 'interactive_scroll_list' | 'form' | 'multi_choice';
   options?: any;
 }
 
@@ -29,6 +29,8 @@ interface ChatViewProps {
   conversation: Message[];
   userAction: UserAction | null;
   onResponse: (response: any) => void;
+  progress: number;
+  isConversationDone: boolean;
 }
 
 const UserInput = ({ options, onResponse }: { options: any, onResponse: (value: string | number) => void }) => {
@@ -283,6 +285,10 @@ const ContactForm = ({ options, onResponse }: { options: any, onResponse: (data:
             if (field.required && !formData[field.name]) {
                 newErrors[field.name] = 'Acest câmp este obligatoriu.';
             }
+            // Basic email validation
+            if (field.type === 'email' && formData[field.name] && !/\S+@\S+\.\S+/.test(formData[field.name])) {
+                 newErrors[field.name] = 'Adresa de email nu este validă.';
+            }
         });
         if (!gdprChecked) {
             newErrors.gdpr = 'Acordul este necesar.';
@@ -321,7 +327,28 @@ const ContactForm = ({ options, onResponse }: { options: any, onResponse: (data:
     )
 }
 
-const ChatView = ({ conversation, userAction, onResponse, progress }: ChatViewProps & {progress?: number}) => {
+const EndConversationModal = () => {
+    return (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center animate-in fade-in-50">
+            <div className="bg-background rounded-2xl shadow-xl p-8 text-center w-full max-w-sm mx-4 animate-in fade-in-0 zoom-in-95">
+                <h2 className="text-4xl font-bold text-primary">Mulțumesc!</h2>
+                <p className="text-lg text-foreground/80 mt-2">O zi frumoasă îți doresc.</p>
+                
+                <div className="mt-6 border-t border-border/50 pt-6 text-sm text-foreground/70">
+                    <p>Dacă vrei să mă contactezi tu mai repede, te rog fă-o aici:</p>
+                    <a 
+                        href="tel:+40745288882" 
+                        className="text-amber-500 font-semibold text-xl mt-2 block hover:scale-105 transition-transform"
+                    >
+                        +40 745 288 882
+                    </a>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const ChatView = ({ conversation, userAction, onResponse, progress, isConversationDone }: ChatViewProps) => {
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
   const actionsContainerRef = useRef<HTMLDivElement>(null);
   const spacerRef = useRef<HTMLDivElement>(null);
@@ -345,21 +372,14 @@ const ChatView = ({ conversation, userAction, onResponse, progress }: ChatViewPr
 
     return () => {
         if (actionsContainerRef.current) {
+            // eslint-disable-next-line react-hooks/exhaustive-deps
             resizeObserver.unobserve(actionsContainerRef.current);
         }
     };
   }, [userAction, conversation]);
 
   const renderUserActions = () => {
-    if (!userAction || userAction.type === 'end') {
-        if (conversation.length > 0 && conversation[conversation.length -1].author === "Marius") {
-            const lastMessageContent = conversation[conversation.length - 1].content;
-            if (typeof lastMessageContent === 'string' && lastMessageContent.includes('Mulțumesc!')) {
-                 return <div className="text-center w-full" dangerouslySetInnerHTML={{__html: lastMessageContent}} />;
-            }
-        }
-        return null;
-    }
+    if (!userAction) return null;
 
     switch (userAction.type) {
       case "buttons":
@@ -379,13 +399,9 @@ const ChatView = ({ conversation, userAction, onResponse, progress }: ChatViewPr
     }
   };
   
-  const renderMessageContent = (content: any, author: 'Marius' | 'user') => {
-    if (author === 'Marius' && typeof content === 'string' && content.includes('Mulțumesc!')) {
-      return null;
-    }
-
-    if (typeof content !== 'string') {
-        return content;
+  const renderMessageContent = (content: any) => {
+    if (typeof content !== 'string' || !content.trim()) {
+        return null;
     }
     const createMarkup = () => {
         return { __html: content.replace(/\n/g, '<br />') };
@@ -396,21 +412,19 @@ const ChatView = ({ conversation, userAction, onResponse, progress }: ChatViewPr
   return (
     <div id="chat-container" className="relative w-full h-full flex flex-col rounded-none md:rounded-2xl shadow-none md:shadow-2xl animate-in fade-in-50">
         
-        {typeof progress !== 'undefined' && progress > 0 && (
-             <div id="progress-container" className="flex-shrink-0 px-4 pt-4 pb-2 w-full">
-                <div className="w-full h-2.5 bg-muted rounded-full">
-                    <div 
-                        id="progress-bar" 
-                        className="h-full bg-primary rounded-full transition-all duration-500 ease-in-out" 
-                        style={{ width: `${progress}%` }}>
-                    </div>
+        <div id="progress-container" className="w-full flex-shrink-0 p-4 pt-6">
+             <div className="w-full h-2.5 bg-muted rounded-full">
+                <div 
+                    id="progress-bar" 
+                    className="h-full bg-primary rounded-full transition-all duration-500 ease-in-out" 
+                    style={{ width: `${progress}%` }}>
                 </div>
             </div>
-        )}
+        </div>
         
         <div id="dialog-flow" className="flex-grow space-y-6 overflow-y-auto p-4 md:p-6 no-scrollbar">
             {conversation.map((message) => {
-                 const content = renderMessageContent(message.content, message.author);
+                 const content = renderMessageContent(message.content);
                  if (!content) return null;
 
                  return (
@@ -450,6 +464,8 @@ const ChatView = ({ conversation, userAction, onResponse, progress }: ChatViewPr
                  {renderUserActions()}
             </div>
         </div>
+        
+        {isConversationDone && <EndConversationModal />}
     </div>
   );
 };

@@ -17,7 +17,7 @@ import { format } from "date-fns";
 
 type ConversationStep = {
     message: (data: any) => string;
-    actionType: UserAction['type'] | 'calculation' | 'sequence';
+    actionType: UserAction['type'] | 'calculation' | 'sequence' | 'end';
     options?: any;
     handler?: (response: any, data: any) => void;
     nextStep: (response?: any, data?: any) => string;
@@ -277,7 +277,7 @@ Ești pregătit(ă) să mai facem un pas?`,
             nextStep: () => 'deces.thank_you_final'
         },
         thank_you_final: {
-            message: () => `<div class="text-center w-full text-2xl font-bold">Mulțumesc!<br>O zi frumoasă!</div>`,
+            message: () => ``,
             actionType: 'end',
             nextStep: () => ''
         }
@@ -497,12 +497,12 @@ Ești pregătit(ă) să mai facem un pas?`,
     // Common steps
     common: {
         end_dialog_friendly: {
-            message: () => "Am înțeles. Îți mulțumesc pentru timpul acordat! Dacă te răzgândești, știi unde mă găsești.",
+            message: () => "",
             actionType: 'end',
             nextStep: () => ''
         },
         end_dialog_success: {
-            message: () => "Mulțumesc! Datele tale au fost înregistrate. Un consultant te va suna în curând. O zi excelentă!",
+            message: () => "",
             actionType: 'end',
             nextStep: () => ''
         }
@@ -612,6 +612,7 @@ export default function Home() {
     const [conversation, setConversation] = useState<Message[]>([]);
     const [currentUserAction, setCurrentUserAction] = useState<UserAction | null>(null);
     const [progress, setProgress] = useState(0);
+    const [isConversationDone, setIsConversationDone] = useState(false);
     
     const conversationIdRef = useRef(0);
     const currentStateRef = useRef<string | null>(null);
@@ -629,6 +630,12 @@ export default function Home() {
         const step = getStep(stepId);
 
         if (!step) {
+            setCurrentUserAction(null);
+            return;
+        }
+        
+        if (step.actionType === 'end') {
+            setIsConversationDone(true);
             setCurrentUserAction(null);
             return;
         }
@@ -664,6 +671,11 @@ export default function Home() {
 
         const step = getStep(currentStateRef.current);
         if (!step) return;
+        
+        if (step.actionType === 'end') {
+            setIsConversationDone(true);
+            return;
+        }
 
         if (step.isProgressStep) {
             currentProgressStep.current++;
@@ -707,6 +719,7 @@ export default function Home() {
         currentProgressStep.current = 0;
         setProgress(0);
         setConversation([]);
+        setIsConversationDone(false);
         renderStep('intro_1');
     }, [renderStep]);
 
@@ -735,6 +748,7 @@ export default function Home() {
                         userAction={currentUserAction}
                         onResponse={processUserResponse}
                         progress={progress}
+                        isConversationDone={isConversationDone}
                     />
                 )}
             </div>
