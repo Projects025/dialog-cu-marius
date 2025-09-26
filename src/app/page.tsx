@@ -582,7 +582,6 @@ const allFlows = { ...introFlow, ...conversationFlows.deces, ...conversationFlow
 const PROGRESS_STEPS_IDS = Object.keys(allFlows).filter(key => allFlows[key].isProgressStep);
 const TOTAL_STEPS = PROGRESS_STEPS_IDS.length;
 
-
 const getStep = (stepId: string): ConversationStep | null => {
     if (!stepId) return null;
     
@@ -613,6 +612,7 @@ export default function Home() {
     const [currentUserAction, setCurrentUserAction] = useState<UserAction | null>(null);
     const [progress, setProgress] = useState(0);
     const [isConversationDone, setIsConversationDone] = useState(false);
+    const [isTyping, setIsTyping] = useState(false);
     
     const conversationIdRef = useRef(0);
     const currentStateRef = useRef<string | null>(null);
@@ -630,11 +630,13 @@ export default function Home() {
         const step = getStep(stepId);
 
         if (!step) {
+            setIsTyping(false);
             setCurrentUserAction(null);
             return;
         }
         
         if (step.actionType === 'end') {
+            setIsTyping(false);
             setIsConversationDone(true);
             setCurrentUserAction(null);
             return;
@@ -643,18 +645,22 @@ export default function Home() {
         setCurrentUserAction(null);
 
         const messageContent = step.message(userDataRef.current);
+
         if (messageContent) {
+            setIsTyping(true);
+            await new Promise(resolve => setTimeout(resolve, step.delay || 1500));
+            setIsTyping(false);
             addMessage({ author: "Marius", type: "text" }, messageContent);
         }
         
         const actionOptions = step.options;
-        
-        if (step.delay) {
-            await new Promise(resolve => setTimeout(resolve, step.delay));
-        }
 
-        if (step.autoContinue) {
+        if (step.autoContinue && !messageContent) {
              const nextStepId = step.nextStep();
+             await renderStep(nextStepId);
+        } else if (step.autoContinue && messageContent) {
+             const nextStepId = step.nextStep();
+             await new Promise(resolve => setTimeout(resolve, 300));
              await renderStep(nextStepId);
         } else {
             setCurrentUserAction({ type: step.actionType, options: actionOptions });
@@ -688,11 +694,10 @@ export default function Home() {
         let userMessageContent: string | null = null;
 
         if (typeof response === 'number') {
-            userMessageContent = response.toString();
+            userMessageContent = response.toLocaleString('ro-RO');
         } else if (typeof response === 'string') {
             userMessageContent = response;
         } else if (Array.isArray(response) && response.length > 0) {
-            // This handles arrays from multi-choice or interactive lists
             const labels = response.map(item => {
                 if (typeof item === 'object' && item !== null && item.label) {
                     return item.label;
@@ -703,7 +708,6 @@ export default function Home() {
         } else if (response instanceof Date) {
             userMessageContent = format(response, "dd/MM/yyyy");
         } else if (typeof response === 'object' && response !== null) {
-            // This handles form submissions and single complex objects
             if (response.name) { // Contact form
                 userMessageContent = `Nume: ${response.name}, Email: ${response.email}, Telefon: ${response.phone}`;
             } else if (response.label) { // Single choice from button list
@@ -761,6 +765,7 @@ export default function Home() {
                         onResponse={processUserResponse}
                         progress={progress}
                         isConversationDone={isConversationDone}
+                        isTyping={isTyping}
                     />
 
                 )}

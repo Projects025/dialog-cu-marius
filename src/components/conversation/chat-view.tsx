@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { Checkbox } from "../ui/checkbox";
 import { Label } from "../ui/label";
 import { ScrollArea } from "../ui/scroll-area";
+import TypingIndicator from "./typing-indicator";
 
 
 export type Message = {
@@ -31,6 +32,7 @@ interface ChatViewProps {
   onResponse: (response: any) => void;
   progress: number;
   isConversationDone: boolean;
+  isTyping: boolean;
 }
 
 const UserInput = ({ options, onResponse }: { options: any, onResponse: (value: string | number) => void }) => {
@@ -355,7 +357,7 @@ const EndConversationModal = () => {
     );
 };
 
-const ChatView = ({ conversation, userAction, onResponse, progress, isConversationDone }: ChatViewProps) => {
+const ChatView = ({ conversation, userAction, onResponse, progress, isConversationDone, isTyping }: ChatViewProps) => {
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
   const actionsContainerRef = useRef<HTMLDivElement>(null);
   const spacerRef = useRef<HTMLDivElement>(null);
@@ -462,6 +464,7 @@ const ChatView = ({ conversation, userAction, onResponse, progress, isConversati
                     </div>
                 )
             })}
+             {isTyping && <TypingIndicator />}
             <div ref={spacerRef} className="flex-shrink-0 transition-height duration-300" />
             <div ref={endOfMessagesRef} />
         </div>
@@ -478,5 +481,3 @@ const ChatView = ({ conversation, userAction, onResponse, progress, isConversati
 };
 
 export default ChatView;
-
-      
