@@ -102,7 +102,7 @@ const DateOfBirthPicker = ({ onDateSelect }: { onDateSelect: (date: Date) => voi
     );
 };
 
-const InteractiveScrollList = ({ options, buttonText, onConfirm }: { options: string[], buttonText: string, onConfirm: (selected: string[]) => void }) => {
+const InteractiveScrollList = ({ options, buttonText, onConfirm }: { options: any, buttonText: string, onConfirm: (selected: string[]) => void }) => {
     const [selected, setSelected] = useState<string[]>([]);
 
     const toggleOption = (option: string) => {
@@ -446,3 +446,5 @@ const ChatView = ({ conversation, userAction, onResponse, progress }: ChatViewPr
 
 export default ChatView;
 
+
+    
