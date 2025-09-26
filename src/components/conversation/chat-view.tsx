@@ -29,7 +29,6 @@ interface ChatViewProps {
   conversation: Message[];
   userAction: UserAction | null;
   onResponse: (response: any) => void;
-  progress: number;
 }
 
 const DateOfBirthPicker = ({ onDateSelect }: { onDateSelect: (date: Date) => void }) => {
@@ -254,7 +253,7 @@ const ContactForm = ({ options, onResponse }: { options: any, onResponse: (data:
     )
 }
 
-const ChatView = ({ conversation, userAction, onResponse, progress }: ChatViewProps) => {
+const ChatView = ({ conversation, userAction, onResponse }: ChatViewProps) => {
   const [inputValue, setInputValue] = useState("");
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
   const actionsContainerRef = useRef<HTMLDivElement>(null);
@@ -392,9 +391,6 @@ const ChatView = ({ conversation, userAction, onResponse, progress }: ChatViewPr
 
   return (
     <div id="chat-container" className="relative w-full h-full flex flex-col rounded-none md:rounded-2xl shadow-none md:shadow-2xl animate-in fade-in-50">
-        <div id="progress-container" className="fixed top-0 left-0 w-full h-1.5 bg-muted z-50">
-            <div id="progress-bar" className="h-full bg-primary transition-all duration-500 ease-in-out" style={{ width: `${progress}%` }}></div>
-        </div>
         <div id="dialog-flow" className="flex-grow space-y-6 overflow-y-auto p-4 md:p-6 no-scrollbar pt-6">
             {conversation.map((message) => {
                  const content = renderMessageContent(message.content, message.author);
@@ -442,5 +438,3 @@ const ChatView = ({ conversation, userAction, onResponse, progress }: ChatViewPr
 };
 
 export default ChatView;
-
-    

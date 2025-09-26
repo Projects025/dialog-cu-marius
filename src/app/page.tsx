@@ -727,18 +727,28 @@ export default function Home() {
     }, [view, startConversation, conversation.length]);
 
     return (
-        <div className="container mx-auto h-full max-h-[-webkit-fill-available] p-0 flex flex-col">
-            {view === "landing" ? (
-                <LandingView onStart={handleStart} isFadingOut={isFadingOut} />
-            ) : (
-                <ChatView
-                    conversation={conversation}
-                    userAction={currentUserAction}
-                    onResponse={processUserResponse}
-                    progress={progress}
-                />
+        <>
+            {view === "chat" && (
+                <div id="progress-container" className="fixed top-0 left-0 w-full h-1.5 bg-muted z-50">
+                    <div
+                        id="progress-bar"
+                        className="h-full bg-primary transition-all duration-500 ease-in-out"
+                        style={{ width: `${progress}%` }}
+                    ></div>
+                </div>
             )}
-        </div>
+            <div className="container mx-auto h-full max-h-[-webkit-fill-available] p-0 flex flex-col">
+                {view === "landing" ? (
+                    <LandingView onStart={handleStart} isFadingOut={isFadingOut} />
+                ) : (
+                    <ChatView
+                        conversation={conversation}
+                        userAction={currentUserAction}
+                        onResponse={processUserResponse}
+                    />
+                )}
+            </div>
+        </>
     );
 }
 
