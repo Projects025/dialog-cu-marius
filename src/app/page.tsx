@@ -23,6 +23,7 @@ type ConversationStep = {
     nextStep: (response?: any, data?: any) => string;
     autoContinue?: boolean;
     isProgressStep?: boolean;
+    delay?: number;
 };
 
 type ConversationFlow = {
@@ -36,6 +37,7 @@ const conversationFlows: { [key: string]: ConversationFlow } = {
             actionType: 'buttons',
             options: [],
             autoContinue: true,
+            delay: 800,
             nextStep: () => 'deces.intro_analysis_2'
         },
         intro_analysis_2: {
@@ -43,6 +45,7 @@ const conversationFlows: { [key: string]: ConversationFlow } = {
             actionType: 'buttons',
             options: [],
             autoContinue: true,
+            delay: 800,
             nextStep: () => 'deces.intro_analysis_3'
         },
         intro_analysis_3: {
@@ -79,6 +82,7 @@ Dacă ești pregătit/ă, haide să continuăm.`,
             actionType: 'buttons',
             options: [],
             autoContinue: true,
+            delay: 800,
             nextStep: () => 'deces.show_deficit_1_explanation'
         },
         show_deficit_1_explanation: {
@@ -94,6 +98,7 @@ Ești pregătit(ă) să mai facem un pas?`,
             actionType: 'buttons',
             options: [],
             autoContinue: true,
+            delay: 800,
             nextStep: () => 'deces.ask_event_costs_prompt'
         },
         ask_event_costs_prompt: {
@@ -133,6 +138,7 @@ Ești pregătit(ă) să mai facem un pas?`,
             actionType: 'buttons',
             options: [],
             autoContinue: true,
+            delay: 800,
             nextStep: () => 'deces.show_brute_deficit'
         },
         show_brute_deficit: {
@@ -143,6 +149,7 @@ Ești pregătit(ă) să mai facem un pas?`,
             actionType: 'buttons',
             options: [],
             autoContinue: true,
+            delay: 800,
             nextStep: () => 'deces.ask_insurance'
         },
         ask_insurance: {
@@ -166,6 +173,7 @@ Ești pregătit(ă) să mai facem un pas?`,
             actionType: 'buttons',
             options: [],
             autoContinue: true,
+            delay: 800,
             nextStep: () => 'deces.show_final_deficit_context_1'
         },
         show_final_deficit_context_1: {
@@ -173,6 +181,7 @@ Ești pregătit(ă) să mai facem un pas?`,
              actionType: 'buttons',
             options: [],
             autoContinue: true,
+            delay: 800,
             nextStep: () => 'deces.show_final_deficit_amount'
         },
         show_final_deficit_amount: {
@@ -183,6 +192,7 @@ Ești pregătit(ă) să mai facem un pas?`,
             actionType: 'buttons',
             options: [],
             autoContinue: true,
+            delay: 800,
             nextStep: () => 'deces.ask_feeling_intro'
         },
         ask_feeling_intro: {
@@ -190,6 +200,7 @@ Ești pregătit(ă) să mai facem un pas?`,
             actionType: 'buttons',
             options: [],
             autoContinue: true,
+            delay: 800,
             nextStep: () => 'deces.ask_feeling_prompt'
         },
         ask_feeling_prompt: {
@@ -205,6 +216,7 @@ Ești pregătit(ă) să mai facem un pas?`,
             actionType: 'buttons',
             options: [],
             autoContinue: true,
+            delay: 800,
             nextStep: () => 'deces.ask_dramatic_options_prompt',
         },
         ask_dramatic_options_prompt: {
@@ -503,6 +515,7 @@ const introFlow: ConversationFlow = {
         actionType: 'buttons',
         options: [],
         autoContinue: true,
+        delay: 800,
         nextStep: () => 'intro_2',
     },
     intro_2: {
@@ -510,6 +523,7 @@ const introFlow: ConversationFlow = {
         actionType: 'buttons',
         options: [],
         autoContinue: true,
+        delay: 800,
         nextStep: () => 'intro_3',
     },
     intro_3: {
@@ -519,6 +533,7 @@ const introFlow: ConversationFlow = {
         actionType: 'buttons',
         options: [],
         autoContinue: true,
+        delay: 800,
         nextStep: () => 'intro_4',
     },
     intro_4: {
@@ -528,6 +543,7 @@ const introFlow: ConversationFlow = {
         actionType: 'buttons',
         options: [],
         autoContinue: true,
+        delay: 800,
         nextStep: () => 'ask_priority',
     },
     ask_priority: {
@@ -638,6 +654,10 @@ export default function Home() {
         }
         
         const actionOptions = step.options;
+        
+        if (step.delay) {
+            await new Promise(resolve => setTimeout(resolve, step.delay));
+        }
 
         if (step.autoContinue) {
              const nextStepId = step.nextStep();
