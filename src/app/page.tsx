@@ -593,16 +593,17 @@ const getStep = (stepId: string): ConversationStep | null => {
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 const calculateDynamicDelay = (text: string): number => {
-    if (!text) return 1200;
-    const BASE_DELAY = 1200; 
-    const WORDS_PER_SECOND = 3; 
+    const BASE_DELAY = 800; 
+    const WORDS_PER_SECOND = 4; 
+
+    if (!text) return BASE_DELAY;
 
     const cleanText = text.replace(/<[^>]*>?/gm, '');
     const wordCount = cleanText.split(/\s+/).filter(Boolean).length;
 
     const readingTime = (wordCount / WORDS_PER_SECOND) * 1000;
     
-    return Math.min(BASE_DELAY + readingTime, 4500);
+    return Math.min(BASE_DELAY + readingTime, 3000);
 }
 
 
