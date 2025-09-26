@@ -29,8 +29,75 @@ interface ChatViewProps {
   conversation: Message[];
   userAction: UserAction | null;
   onResponse: (response: any) => void;
-  progress: number;
 }
+
+const UserInput = ({ options, onResponse }: { options: any, onResponse: (value: string | number) => void }) => {
+    const [inputValue, setInputValue] = useState(options?.defaultValue?.toString() || "");
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setInputValue(e.target.value);
+    };
+
+    const handleSendInput = () => {
+        if (inputValue.trim() || options?.type === 'number') {
+            const valueToSend = options?.type === 'number' ? Number(inputValue) : inputValue.trim();
+            onResponse(valueToSend);
+            setInputValue("");
+        }
+    };
+
+    const handleInputKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            handleSendInput();
+        }
+    };
+
+    return (
+        <div className="flex w-full items-center space-x-2 animate-in fade-in-50">
+            <Input
+                type={options?.type || 'text'}
+                placeholder={options?.placeholder || ''}
+                value={inputValue}
+                onChange={handleInputChange}
+                onKeyPress={handleInputKeyPress}
+                className="bg-background h-12 text-base"
+                autoFocus
+            />
+            <Button type="submit" onClick={handleSendInput} disabled={!inputValue.trim() && options?.type !== 'number'} size="icon" className="h-12 w-12 flex-shrink-0">
+                <Send className="h-5 w-5" />
+                <span className="sr-only">Trimite</span>
+            </Button>
+        </div>
+    );
+};
+
+const ActionButtons = ({ options, onResponse }: { options: any[], onResponse: (value: any) => void }) => {
+    return (
+        <div className="flex flex-col gap-3 w-full animate-in fade-in-50">
+            {options?.map((option: any, index: number) => {
+                const isComplexOption = typeof option === 'object' && option !== null;
+                const label = isComplexOption ? option.label : option;
+                const isDisabled = isComplexOption ? !!option.disabled : false;
+                const displayText = isDisabled ? `${label} (în curând)` : label;
+
+                return (
+                    <Button
+                        key={index}
+                        onClick={() => onResponse(isComplexOption ? option : label)}
+                        variant="outline"
+                        disabled={isDisabled}
+                        className={cn(
+                            "bg-background/80 backdrop-blur-sm border-border text-foreground shadow-md justify-center py-3 min-h-[52px] h-auto text-base hover:bg-accent",
+                            isDisabled && "opacity-50 cursor-not-allowed hover:bg-transparent"
+                        )}
+                    >
+                        {displayText}
+                    </Button>
+                );
+            })}
+        </div>
+    );
+};
 
 const DateOfBirthPicker = ({ onDateSelect }: { onDateSelect: (date: Date) => void }) => {
     const [day, setDay] = useState<string>("");
@@ -254,7 +321,7 @@ const ContactForm = ({ options, onResponse }: { options: any, onResponse: (data:
     )
 }
 
-const ChatView = ({ conversation, userAction, onResponse, progress }: ChatViewProps) => {
+const ChatView = ({ conversation, userAction, onResponse, progress }: ChatViewProps & {progress?: number}) => {
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
   const actionsContainerRef = useRef<HTMLDivElement>(null);
   const spacerRef = useRef<HTMLDivElement>(null);
@@ -283,17 +350,6 @@ const ChatView = ({ conversation, userAction, onResponse, progress }: ChatViewPr
     };
   }, [userAction, conversation]);
 
-
-  const handleSend = () => {
-    // This is a placeholder, real logic is in parent component
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      handleSend();
-    }
-  };
-
   const renderUserActions = () => {
     if (!userAction || userAction.type === 'end') {
         if (conversation.length > 0 && conversation[conversation.length -1].author === "Marius") {
@@ -305,87 +361,19 @@ const ChatView = ({ conversation, userAction, onResponse, progress }: ChatViewPr
         return null;
     }
 
-
     switch (userAction.type) {
       case "buttons":
-        return (
-          <div className="flex flex-col gap-3 w-full animate-in fade-in-50">
-            {userAction.options?.map((option: any, index: number) => {
-              const isComplexOption = typeof option === 'object' && option !== null;
-              const label = isComplexOption ? option.label : option;
-              const isDisabled = isComplexOption ? !!option.disabled : false;
-              const displayText = isDisabled ? `${label} (în curând)` : label;
-
-              return (
-                <Button
-                  key={index}
-                  onClick={() => onResponse(isComplexOption ? option : label)}
-                  variant="outline"
-                  disabled={isDisabled}
-                  className={cn(
-                    "bg-background/80 backdrop-blur-sm border-border text-foreground shadow-md justify-center py-3 min-h-[52px] h-auto text-base hover:bg-accent",
-                    isDisabled && "opacity-50 cursor-not-allowed hover:bg-transparent"
-                  )}
-                >
-                  {displayText}
-                </Button>
-              );
-            })}
-          </div>
-        );
+        return <ActionButtons options={userAction.options} onResponse={onResponse} />;
       case "input":
-          const [inputValue, setInputValue] = useState(userAction.options?.defaultValue?.toString() || "");
-          const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-            setInputValue(e.target.value);
-        };
-
-        const handleSendInput = () => {
-            if (inputValue.trim() || userAction.options?.type === 'number') {
-                const valueToSend = userAction.options?.type === 'number' ? Number(inputValue) : inputValue.trim();
-                onResponse(valueToSend);
-                setInputValue("");
-            }
-        };
-
-        const handleInputKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-            if (e.key === 'Enter') {
-                handleSendInput();
-            }
-        };
-
-        return (
-            <div className="flex w-full items-center space-x-2 animate-in fade-in-50">
-              <Input
-                type={userAction.options?.type || 'text'}
-                placeholder={userAction.options?.placeholder || ''}
-                value={inputValue}
-                onChange={handleInputChange}
-                onKeyPress={handleInputKeyPress}
-                className="bg-background h-12 text-base"
-                autoFocus
-              />
-              <Button type="submit" onClick={handleSendInput} disabled={!inputValue.trim() && userAction.options?.type !== 'number'} size="icon" className="h-12 w-12 flex-shrink-0">
-                <Send className="h-5 w-5" />
-                <span className="sr-only">Trimite</span>
-              </Button>
-            </div>
-        );
+        return <UserInput options={userAction.options} onResponse={onResponse} />;
       case "date":
-        return (
-          <DateOfBirthPicker onDateSelect={onResponse} />
-        )
+        return <DateOfBirthPicker onDateSelect={onResponse} />;
       case "interactive_scroll_list":
-        return (
-            <InteractiveScrollList options={userAction.options.options} buttonText={userAction.options.buttonText} onConfirm={onResponse} />
-        );
+        return <InteractiveScrollList options={userAction.options.options} buttonText={userAction.options.buttonText} onConfirm={onResponse} />;
       case 'multi_choice':
-        return (
-            <MultiChoiceList options={userAction.options} onConfirm={onResponse} />
-        );
+        return <MultiChoiceList options={userAction.options} onConfirm={onResponse} />;
       case "form":
-        return (
-            <ContactForm options={userAction.options} onResponse={onResponse} />
-        )
+        return <ContactForm options={userAction.options} onResponse={onResponse} />;
       default:
         return null;
     }
@@ -408,7 +396,7 @@ const ChatView = ({ conversation, userAction, onResponse, progress }: ChatViewPr
   return (
     <div id="chat-container" className="relative w-full h-full flex flex-col rounded-none md:rounded-2xl shadow-none md:shadow-2xl animate-in fade-in-50">
         
-        {progress > 0 && (
+        {typeof progress !== 'undefined' && progress > 0 && (
              <div id="progress-container" className="flex-shrink-0 px-4 pt-4 pb-2 w-full">
                 <div className="w-full h-2.5 bg-muted rounded-full">
                     <div 
@@ -467,3 +455,5 @@ const ChatView = ({ conversation, userAction, onResponse, progress }: ChatViewPr
 };
 
 export default ChatView;
+
+      
