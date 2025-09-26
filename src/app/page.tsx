@@ -685,21 +685,33 @@ export default function Home() {
         
         const responseValue = (typeof response === 'object' && response !== null && response.label) ? response.label : response;
         
-        let userMessageContent: string | null = Array.isArray(response) 
-            ? response.join(', ')
-            : responseValue;
+        let userMessageContent: string | null = null;
 
-        if (typeof response === 'object' && response !== null) {
-            if (response.name) {
+        if (typeof response === 'number') {
+            userMessageContent = response.toString();
+        } else if (typeof response === 'string') {
+            userMessageContent = response;
+        } else if (Array.isArray(response) && response.length > 0) {
+            // This handles arrays from multi-choice or interactive lists
+            const labels = response.map(item => {
+                if (typeof item === 'object' && item !== null && item.label) {
+                    return item.label;
+                }
+                return item;
+            });
+            userMessageContent = labels.join(', ');
+        } else if (response instanceof Date) {
+            userMessageContent = format(response, "dd/MM/yyyy");
+        } else if (typeof response === 'object' && response !== null) {
+            // This handles form submissions and single complex objects
+            if (response.name) { // Contact form
                 userMessageContent = `Nume: ${response.name}, Email: ${response.email}, Telefon: ${response.phone}`;
-            } else if (response instanceof Date) {
-                 userMessageContent = format(response, "dd/MM/yyyy");
-            } else if (response.label) {
+            } else if (response.label) { // Single choice from button list
                 userMessageContent = response.label;
             }
         }
         
-        if (userMessageContent) {
+        if (userMessageContent !== null && userMessageContent.trim() !== '') {
             addMessage({ author: "user", type: "response" }, userMessageContent);
         }
         
@@ -750,10 +762,9 @@ export default function Home() {
                         progress={progress}
                         isConversationDone={isConversationDone}
                     />
+
                 )}
             </div>
         </>
     );
 }
-
-    

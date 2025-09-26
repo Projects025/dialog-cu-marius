@@ -343,6 +343,13 @@ const EndConversationModal = () => {
                         +40 745 288 882
                     </a>
                 </div>
+                <Button 
+                    variant="outline" 
+                    className="w-full mt-6"
+                    onClick={() => window.location.reload()}
+                >
+                    Înapoi la început
+                </Button>
             </div>
         </div>
     );
@@ -413,7 +420,7 @@ const ChatView = ({ conversation, userAction, onResponse, progress, isConversati
     <div id="chat-container" className="relative w-full h-full flex flex-col rounded-none md:rounded-2xl shadow-none md:shadow-2xl animate-in fade-in-50">
         
         <div id="progress-container" className="w-full flex-shrink-0 p-4 pt-6">
-             <div className="w-full h-2.5 bg-muted rounded-full">
+            <div className="w-full h-2.5 bg-muted rounded-full">
                 <div 
                     id="progress-bar" 
                     className="h-full bg-primary rounded-full transition-all duration-500 ease-in-out" 
