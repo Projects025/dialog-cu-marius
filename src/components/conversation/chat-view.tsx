@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -10,6 +11,8 @@ import { cn } from "@/lib/utils";
 import { Checkbox } from "../ui/checkbox";
 import { Label } from "../ui/label";
 import { ScrollArea } from "../ui/scroll-area";
+import { Progress } from "@/components/ui/progress";
+
 
 export type Message = {
   id: number;
@@ -27,7 +30,7 @@ interface ChatViewProps {
   conversation: Message[];
   userAction: UserAction | null;
   onResponse: (response: any) => void;
-  isTyping: boolean;
+  progress: number;
 }
 
 const DateOfBirthPicker = ({ onDateSelect }: { onDateSelect: (date: Date) => void }) => {
@@ -110,7 +113,7 @@ const InteractiveScrollList = ({ options, buttonText, onConfirm }: { options: st
 
     return (
         <div className="flex flex-col w-full max-w-sm rounded-2xl bg-background/80 backdrop-blur-sm border border-border shadow-md animate-in fade-in-50">
-            <div className="flex-grow overflow-y-auto max-h-72 no-scrollbar p-1">
+            <ScrollArea className="flex-grow max-h-72 no-scrollbar p-1">
                  <div className="space-y-1 p-2">
                     {options.map((option: string, index: number) => {
                         const isSelected = selected.includes(option);
@@ -133,7 +136,7 @@ const InteractiveScrollList = ({ options, buttonText, onConfirm }: { options: st
                         )
                     })}
                 </div>
-            </div>
+            </ScrollArea>
 
             <div className="flex-shrink-0 p-3 border-t border-border">
                 <Button
@@ -252,7 +255,7 @@ const ContactForm = ({ options, onResponse }: { options: any, onResponse: (data:
     )
 }
 
-const ChatView = ({ conversation, userAction, onResponse, isTyping }: ChatViewProps) => {
+const ChatView = ({ conversation, userAction, onResponse, progress }: ChatViewProps) => {
   const [inputValue, setInputValue] = useState("");
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
   const actionsContainerRef = useRef<HTMLDivElement>(null);
@@ -280,7 +283,7 @@ const ChatView = ({ conversation, userAction, onResponse, isTyping }: ChatViewPr
             resizeObserver.unobserve(actionsContainerRef.current);
         }
     };
-  }, [userAction, conversation, isTyping]);
+  }, [userAction, conversation]);
 
 
   const handleSend = () => {
@@ -297,11 +300,10 @@ const ChatView = ({ conversation, userAction, onResponse, isTyping }: ChatViewPr
   };
 
   const renderUserActions = () => {
-    if (isTyping) return null;
     if (!userAction || userAction.type === 'end') {
         if (conversation.length > 0 && conversation[conversation.length -1].author === "Marius") {
             const lastMessageContent = conversation[conversation.length - 1].content;
-            if (typeof lastMessageContent === 'string' && lastMessageContent.includes('Multumesc!')) {
+            if (typeof lastMessageContent === 'string' && lastMessageContent.includes('Mulțumesc!')) {
                  return <div className="text-center w-full" dangerouslySetInnerHTML={{__html: lastMessageContent}} />;
             }
         }
@@ -376,7 +378,7 @@ const ChatView = ({ conversation, userAction, onResponse, isTyping }: ChatViewPr
   };
   
   const renderMessageContent = (content: any, author: 'Marius' | 'user') => {
-    if (author === 'Marius' && typeof content === 'string' && content.includes('Multumesc!')) {
+    if (author === 'Marius' && typeof content === 'string' && content.includes('Mulțumesc!')) {
       return null;
     }
 
@@ -391,8 +393,11 @@ const ChatView = ({ conversation, userAction, onResponse, isTyping }: ChatViewPr
 
   return (
     <>
-    <div id="chat-container" className="w-full h-full flex flex-col rounded-none md:rounded-2xl shadow-none md:shadow-2xl overflow-hidden animate-in fade-in-50">
-        <div id="dialog-flow" className="flex-grow space-y-6 overflow-y-auto p-4 md:p-6 no-scrollbar">
+    <div id="chat-container" className="w-full h-full flex flex-col rounded-none md:rounded-2xl shadow-none md:shadow-2xl overflow-hidden animate-in fade-in-50 relative">
+        <div id="progress-container" className="absolute top-0 left-0 right-0 z-10 h-1.5">
+            <Progress value={progress} className="h-full rounded-none" />
+        </div>
+        <div id="dialog-flow" className="flex-grow space-y-6 overflow-y-auto p-4 md:p-6 no-scrollbar pt-6">
             {conversation.map((message) => {
                  const content = renderMessageContent(message.content, message.author);
                  if (!content) return null;
@@ -425,22 +430,6 @@ const ChatView = ({ conversation, userAction, onResponse, isTyping }: ChatViewPr
                     </div>
                 )
             })}
-            {isTyping && (
-            <div className="flex items-end gap-3 w-full justify-start animate-in fade-in slide-in-from-bottom-5 duration-500">
-                <Avatar className="h-8 w-8 hidden sm:flex self-start flex-shrink-0">
-                    <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
-                    M
-                    </AvatarFallback>
-                </Avatar>
-                <div className="bg-secondary text-secondary-foreground rounded-2xl rounded-bl-none px-4 py-3 shadow-md">
-                    <div className="flex items-center gap-2">
-                        <span className="h-2 w-2 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                        <span className="h-2 w-2 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                        <span className="h-2 w-2 bg-primary rounded-full animate-bounce"></span>
-                    </div>
-                </div>
-            </div>
-            )}
             <div ref={spacerRef} className="flex-shrink-0 transition-height duration-300" />
             <div ref={endOfMessagesRef} />
         </div>
@@ -456,3 +445,4 @@ const ChatView = ({ conversation, userAction, onResponse, isTyping }: ChatViewPr
 };
 
 export default ChatView;
+

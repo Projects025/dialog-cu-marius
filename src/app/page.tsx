@@ -22,7 +22,7 @@ type ConversationStep = {
     handler?: (response: any, data: any) => void;
     nextStep: (response?: any, data?: any) => string;
     autoContinue?: boolean;
-    delay?: number;
+    isProgressStep?: boolean;
 };
 
 type ConversationFlow = {
@@ -36,7 +36,6 @@ const conversationFlows: { [key: string]: ConversationFlow } = {
             actionType: 'buttons',
             options: [],
             autoContinue: true,
-            delay: 1200,
             nextStep: () => 'deces.intro_analysis_2'
         },
         intro_analysis_2: {
@@ -44,7 +43,6 @@ const conversationFlows: { [key: string]: ConversationFlow } = {
             actionType: 'buttons',
             options: [],
             autoContinue: true,
-            delay: 1200,
             nextStep: () => 'deces.intro_analysis_3'
         },
         intro_analysis_3: {
@@ -60,6 +58,7 @@ Dacă ești pregătit/ă, haide să continuăm.`,
         ask_period: {
             message: () => "1. În cazul unui posibil deces, care ar fi perioada de timp în care familia ta ar avea nevoie de susținere financiară pentru a-și menține nivelul de trai fără să fie nevoită să facă ajustări majore în stilul de viață (ex. vânzarea unor bunuri, ore suplimentare / al doilea job etc.)",
             actionType: 'buttons',
+            isProgressStep: true,
             options: ['3 ani', '4 ani', '5 ani'],
             handler: (response, data) => { data.period = parseInt(response); },
             nextStep: () => 'deces.ask_monthly_sum'
@@ -67,6 +66,7 @@ Dacă ești pregătit/ă, haide să continuăm.`,
         ask_monthly_sum: {
             message: () => "Care ar fi suma lunară necesară (în lei) pentru acoperirea cheltuielilor lunare și menținerea actualului standard de viață?",
             actionType: 'input',
+            isProgressStep: true,
             options: { placeholder: 'Ex: 10000', type: 'number' },
             handler: (response, data) => { data.monthlySum = Number(response); },
             nextStep: () => 'deces.show_deficit_1_amount'
@@ -79,7 +79,6 @@ Dacă ești pregătit/ă, haide să continuăm.`,
             actionType: 'buttons',
             options: [],
             autoContinue: true,
-            delay: 1500,
             nextStep: () => 'deces.show_deficit_1_explanation'
         },
         show_deficit_1_explanation: {
@@ -95,12 +94,12 @@ Ești pregătit(ă) să mai facem un pas?`,
             actionType: 'buttons',
             options: [],
             autoContinue: true,
-            delay: 800,
             nextStep: () => 'deces.ask_event_costs_prompt'
         },
         ask_event_costs_prompt: {
             message: () => "Care ar fi această sumă?",
             actionType: 'input',
+            isProgressStep: true,
             options: { placeholder: 'Ex: 25000', type: 'number', defaultValue: 0 },
             handler: (response, data) => { data.eventCosts = Number(response); },
             nextStep: () => 'deces.continue_prompt_1'
@@ -114,6 +113,7 @@ Ești pregătit(ă) să mai facem un pas?`,
         ask_projects: {
             message: () => "3. În cazul unui posibil deces, există anumite proiecte în desfășurare la acest moment care ar avea de suferit (ex. o construcție la stadiu „la roșu” sau un sport de performanță al copiilor sau alte proiecte care sunt susținute din finanțele tale lunare)? \n\n Care ar fi suma totală de bani (în lei) necesară finalizării acestor proiecte?",
             actionType: 'input',
+            isProgressStep: true,
             options: { placeholder: 'Ex: 250000', type: 'number', defaultValue: 0 },
             handler: (response, data) => { data.projects = Number(response); },
             nextStep: () => 'deces.ask_debts'
@@ -121,6 +121,7 @@ Ești pregătit(ă) să mai facem un pas?`,
         ask_debts: {
             message: () => "4. În cazul unui posibil deces, rămân pe umerii familiei anumite responsabilități financiare de tip credite, datorii, obligații financiare etc.?\n\n Care ar fi suma de bani de care ar avea nevoie pentru a stinge aceste obligații (în lei)?",
             actionType: 'input',
+            isProgressStep: true,
             options: { placeholder: 'Ex: 400000', type: 'number', defaultValue: 0 },
             handler: (response, data) => {
                 data.debts = Number(response);
@@ -132,7 +133,6 @@ Ești pregătit(ă) să mai facem un pas?`,
             actionType: 'buttons',
             options: [],
             autoContinue: true,
-            delay: 800,
             nextStep: () => 'deces.show_brute_deficit'
         },
         show_brute_deficit: {
@@ -143,12 +143,12 @@ Ești pregătit(ă) să mai facem un pas?`,
             actionType: 'buttons',
             options: [],
             autoContinue: true,
-            delay: 1500,
             nextStep: () => 'deces.ask_insurance'
         },
         ask_insurance: {
             message: () => "5. În cazul unui posibil deces, familia ta ar beneficia de vreo asigurare de viață pe numele tău? Nu mă refer la acele asigurări care sunt cesionate în favoarea băncii, ci acele asigurări care să aibă ca beneficiar - familia ta.\n\nDacă da, care este suma de bani pe care ai tăi ar încasa-o dintr-o astfel de asigurare de viață (în lei)?",
             actionType: 'input',
+            isProgressStep: true,
             options: { placeholder: 'Ex: 125000', type: 'number', defaultValue: 0 },
             handler: (response, data) => { data.existingInsurance = Number(response); },
             nextStep: () => 'deces.ask_savings'
@@ -156,6 +156,7 @@ Ești pregătit(ă) să mai facem un pas?`,
         ask_savings: {
             message: () => "6. În cazul unui posibil deces, familia ta ar putea accesa anumite economii sau ar putea apela la anumite investiții (ex. chirii, vânzarea unui imobil etc.)?\n\nDacă da, care este suma de bani disponibilă?",
             actionType: 'input',
+            isProgressStep: true,
             options: { placeholder: 'Ex: 75000', type: 'number', defaultValue: 0 },
             handler: (response, data) => { data.savings = Number(response); },
             nextStep: () => 'deces.show_final_deficit_intro'
@@ -182,7 +183,6 @@ Ești pregătit(ă) să mai facem un pas?`,
             actionType: 'buttons',
             options: [],
             autoContinue: true,
-            delay: 1500,
             nextStep: () => 'deces.ask_feeling_intro'
         },
         ask_feeling_intro: {
@@ -190,12 +190,12 @@ Ești pregătit(ă) să mai facem un pas?`,
             actionType: 'buttons',
             options: [],
             autoContinue: true,
-            delay: 800,
             nextStep: () => 'deces.ask_feeling_prompt'
         },
         ask_feeling_prompt: {
             message: () => `Care este sentimentul pe care îl simți acum?`,
             actionType: 'input',
+            isProgressStep: true,
             options: { placeholder: 'Scrie aici...', type: 'text' },
             handler: (response, data) => { data.feeling = response; },
             nextStep: () => 'deces.ask_dramatic_options_intro'
@@ -205,12 +205,12 @@ Ești pregătit(ă) să mai facem un pas?`,
             actionType: 'buttons',
             options: [],
             autoContinue: true,
-            delay: 800,
             nextStep: () => 'deces.ask_dramatic_options_prompt',
         },
         ask_dramatic_options_prompt: {
             message: () => "Bifează opțiunile realiste și cu care tu te simți confortabil pentru ai tăi:",
             actionType: 'interactive_scroll_list',
+            isProgressStep: true,
             options: {
                 options: [
                     'Să se mute cu părinții',
@@ -236,12 +236,14 @@ Ești pregătit(ă) să mai facem un pas?`,
         present_solution: {
             message: () => "Dacă nu ești foarte mulțumit cu opțiunile pe care familia ta le are pentru a menține standardul actual de viață, ai fi interesat să vezi o soluție personalizată care să ofere celor dragi ție o a doua șansă la o viață relativ normală, fără poveri financiare?\n\nPractic, o soluție prin care dragostea ta și grija ta pentru ei va continua chiar și după tine. \n\nPoți crea instant o moștenire care să îi ajute financiar pe cei dragi ție chiar și (mai ales!) în absența ta!",
             actionType: 'buttons',
+            isProgressStep: true,
             options: ['Da', 'Nu'],
             nextStep: (response) => response === 'Da' ? 'deces.ask_contact_details' : 'common.end_dialog_friendly'
         },
         ask_contact_details: {
             message: () => "Am nevoie de datele tale de contact (nume, telefon, email), iar în cel mai scurt timp posibil, consultantul care ți-a dat acest link te va contacta pentru construirea soluției.\n\nDe asemenea, am rugămintea să semnezi și un acord GDPR care să îi permită consultantului să te contacteze într-un cadru legal.",
             actionType: 'form',
+            isProgressStep: true,
             options: {
                 fields: [
                     { name: 'name', placeholder: 'Nume Prenume', type: 'text', required: true },
@@ -257,6 +259,7 @@ Ești pregătit(ă) să mai facem un pas?`,
         thank_you_contact: {
             message: () => "Mulțumesc pentru că mi-ai răspuns la întrebări, te voi contacta în curând!\n\nCând preferi să fii contactat?",
             actionType: 'buttons',
+            isProgressStep: true,
             options: ['Dimineața', 'După-masa', 'Seara'],
             handler: (response, data) => { data.preferredContactTime = response; },
             nextStep: () => 'deces.thank_you_final'
@@ -500,7 +503,6 @@ const introFlow: ConversationFlow = {
         actionType: 'buttons',
         options: [],
         autoContinue: true,
-        delay: 1200,
         nextStep: () => 'intro_2',
     },
     intro_2: {
@@ -508,7 +510,6 @@ const introFlow: ConversationFlow = {
         actionType: 'buttons',
         options: [],
         autoContinue: true,
-        delay: 1200,
         nextStep: () => 'intro_3',
     },
     intro_3: {
@@ -518,7 +519,6 @@ const introFlow: ConversationFlow = {
         actionType: 'buttons',
         options: [],
         autoContinue: true,
-        delay: 1200,
         nextStep: () => 'intro_4',
     },
     intro_4: {
@@ -528,7 +528,6 @@ const introFlow: ConversationFlow = {
         actionType: 'buttons',
         options: [],
         autoContinue: true,
-        delay: 2500,
         nextStep: () => 'ask_priority',
     },
     ask_priority: {
@@ -585,53 +584,48 @@ const getStep = (stepId: string): ConversationStep | null => {
     return null;
 }
 
+const flattenFlows = (flows: { [key: string]: ConversationFlow }): ConversationStep[] => {
+    let steps: ConversationStep[] = [];
+    for (const flowName in flows) {
+        if (flowName !== 'common') { // We can exclude common flows if they are not part of the main progress
+            for (const stepName in flows[flowName]) {
+                const step = flows[flowName][stepName];
+                if(step.isProgressStep){
+                    steps.push(step);
+                }
+            }
+        }
+    }
+    return steps;
+};
+
+const PROGRESS_STEPS = flattenFlows(conversationFlows);
+const TOTAL_STEPS = PROGRESS_STEPS.length;
+
+
 export default function Home() {
     const [view, setView] = useState<"landing" | "chat">("landing");
     const [isFadingOut, setIsFadingOut] = useState(false);
     const [conversation, setConversation] = useState<Message[]>([]);
     const [currentUserAction, setCurrentUserAction] = useState<UserAction | null>(null);
-    const [isTyping, setIsTyping] = useState(false);
+    const [progress, setProgress] = useState(0);
     
     const conversationIdRef = useRef(0);
     const currentStateRef = useRef<string | null>(null);
     const userDataRef = useRef<FinancialData>({});
+    const currentProgressStep = useRef(0);
 
     const addMessage = useCallback((message: Omit<Message, "id" | "content">, content: string = "") => {
         const newMessage = { ...message, id: conversationIdRef.current++, content };
         setConversation((prev) => [...prev, newMessage]);
         return newMessage.id;
     }, []);
-
-    const updateMessage = useCallback((id: number, content: string) => {
-        setConversation(prev => prev.map(msg => msg.id === id ? { ...msg, content } : msg));
-    }, []);
-
-    const typeMessage = useCallback(async (text: string, messageId: number, baseDelay: number = 10) => {
-        let currentText = '';
-        let isTag = false;
-        
-        for (const char of text) {
-            if (char === '<') isTag = true;
-            
-            currentText += char;
-            
-            if (char === '>') isTag = false;
-
-            if (!isTag) {
-                 updateMessage(messageId, currentText);
-                 await new Promise(resolve => setTimeout(resolve, baseDelay));
-            }
-        }
-         // Final update to ensure full content with tags is rendered instantly
-        updateMessage(messageId, text);
-    }, [updateMessage]);
     
     const renderStep = useCallback(async (stepId: string) => {
         currentStateRef.current = stepId;
         const step = getStep(stepId);
 
         if (!step) {
-            setIsTyping(false);
             setCurrentUserAction(null);
             return;
         }
@@ -640,28 +634,18 @@ export default function Home() {
 
         const messageContent = step.message(userDataRef.current);
         if (messageContent) {
-            await new Promise(resolve => setTimeout(resolve, 800));
-            setIsTyping(true);
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            const messageId = addMessage({ author: "Marius", type: "text" });
-            setIsTyping(false);
-
-            const typingDelay = step.delay === 1500 ? 50 : 10;
-            await typeMessage(messageContent, messageId, typingDelay);
+            addMessage({ author: "Marius", type: "text" }, messageContent);
         }
         
         const actionOptions = step.options;
 
         if (step.autoContinue) {
-             const delay = step.delay || 1200;
-             await new Promise(resolve => setTimeout(resolve, delay));
              const nextStepId = step.nextStep();
-             renderStep(nextStepId);
+             await renderStep(nextStepId);
         } else {
             setCurrentUserAction({ type: step.actionType, options: actionOptions });
         }
-    }, [addMessage, typeMessage]);
+    }, [addMessage]);
 
     const processUserResponse = useCallback(async (response: any) => {
         setCurrentUserAction(null);
@@ -673,6 +657,12 @@ export default function Home() {
 
         const step = getStep(currentStateRef.current);
         if (!step) return;
+
+        if (step.isProgressStep) {
+            currentProgressStep.current++;
+            const newProgress = (currentProgressStep.current / TOTAL_STEPS) * 100;
+            setProgress(newProgress);
+        }
         
         const responseValue = (typeof response === 'object' && response !== null && response.label) ? response.label : response;
         
@@ -707,6 +697,8 @@ export default function Home() {
     const startConversation = useCallback(() => {
         userDataRef.current = {};
         conversationIdRef.current = 0;
+        currentProgressStep.current = 0;
+        setProgress(0);
         setConversation([]);
         renderStep('intro_1');
     }, [renderStep]);
@@ -736,9 +728,10 @@ export default function Home() {
                     conversation={conversation}
                     userAction={currentUserAction}
                     onResponse={processUserResponse}
-                    isTyping={isTyping}
+                    progress={progress}
                 />
             )}
         </div>
     );
 }
+
