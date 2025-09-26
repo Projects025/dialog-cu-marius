@@ -391,8 +391,7 @@ const ChatView = ({ conversation, userAction, onResponse, progress }: ChatViewPr
 };
 
   return (
-    <>
-    <div id="chat-container" className="w-full h-full flex flex-col rounded-none md:rounded-2xl shadow-none md:shadow-2xl animate-in fade-in-50 relative">
+    <div id="chat-container" className="relative w-full h-full flex flex-col rounded-none md:rounded-2xl shadow-none md:shadow-2xl animate-in fade-in-50">
         <div id="progress-container" className="fixed top-0 left-0 w-full h-1.5 bg-muted z-50">
             <div id="progress-bar" className="h-full bg-primary transition-all duration-500 ease-in-out" style={{ width: `${progress}%` }}></div>
         </div>
@@ -439,13 +438,9 @@ const ChatView = ({ conversation, userAction, onResponse, progress }: ChatViewPr
             </div>
         </div>
     </div>
-    </>
   );
 };
 
 export default ChatView;
-
-
-    
 
     

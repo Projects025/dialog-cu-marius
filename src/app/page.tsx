@@ -576,6 +576,12 @@ const introFlow: ConversationFlow = {
     },
 };
 
+const allFlows = { ...introFlow, ...conversationFlows.deces, ...conversationFlows.boala_grava, ...conversationFlows.pensionare, ...conversationFlows.studii_copii, ...conversationFlows.common };
+
+const PROGRESS_STEPS = Object.values(allFlows).filter(step => step.isProgressStep);
+const TOTAL_STEPS = PROGRESS_STEPS.length;
+
+
 const getStep = (stepId: string): ConversationStep | null => {
     if (!stepId) return null;
 
@@ -599,25 +605,6 @@ const getStep = (stepId: string): ConversationStep | null => {
     console.error("Invalid stepId:", stepId);
     return null;
 }
-
-const flattenFlows = (flows: { [key: string]: ConversationFlow }): ConversationStep[] => {
-    let steps: ConversationStep[] = [];
-    for (const flowName in flows) {
-        if (flowName !== 'common') { // We can exclude common flows if they are not part of the main progress
-            for (const stepName in flows[flowName]) {
-                const step = flows[flowName][stepName];
-                if(step.isProgressStep){
-                    steps.push(step);
-                }
-            }
-        }
-    }
-    return steps;
-};
-
-const PROGRESS_STEPS = flattenFlows(conversationFlows);
-const TOTAL_STEPS = PROGRESS_STEPS.length;
-
 
 export default function Home() {
     const [view, setView] = useState<"landing" | "chat">("landing");
@@ -680,7 +667,7 @@ export default function Home() {
 
         if (step.isProgressStep) {
             currentProgressStep.current++;
-            const newProgress = (currentProgressStep.current / TOTAL_STEPS) * 100;
+            const newProgress = TOTAL_STEPS > 0 ? (currentProgressStep.current / TOTAL_STEPS) * 100 : 0;
             setProgress(newProgress);
         }
         
@@ -755,3 +742,4 @@ export default function Home() {
     );
 }
 
+    
