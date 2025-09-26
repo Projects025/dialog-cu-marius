@@ -578,29 +578,28 @@ const introFlow: ConversationFlow = {
 
 const allFlows = { ...introFlow, ...conversationFlows.deces, ...conversationFlows.boala_grava, ...conversationFlows.pensionare, ...conversationFlows.studii_copii, ...conversationFlows.common };
 
-const PROGRESS_STEPS = Object.values(allFlows).filter(step => step.isProgressStep);
-const TOTAL_STEPS = PROGRESS_STEPS.length;
+const PROGRESS_STEPS_IDS = Object.keys(allFlows).filter(key => allFlows[key].isProgressStep);
+const TOTAL_STEPS = PROGRESS_STEPS_IDS.length;
 
 
 const getStep = (stepId: string): ConversationStep | null => {
     if (!stepId) return null;
-
-    if (introFlow[stepId]) {
-        return introFlow[stepId];
-    }
     
-    const [flow, step] = stepId.split('.');
-    
-    if (flow && step && conversationFlows[flow] && conversationFlows[flow][step]) {
-        return conversationFlows[flow][step];
-    }
-    
-    // Check common flow last
-    const commonStepId = stepId.includes('.') ? stepId.split('.')[1] : stepId;
-    if (conversationFlows.common[commonStepId]) {
-         return conversationFlows.common[commonStepId];
+    const step = allFlows[stepId];
+    if (step) {
+        return step;
     }
 
+    const [flow, stepKey] = stepId.split('.');
+    
+    if (flow && stepKey && conversationFlows[flow] && conversationFlows[flow][stepKey]) {
+        return conversationFlows[flow][stepKey];
+    }
+    
+    const commonStepKey = stepId.includes('.') ? stepId.split('.')[1] : stepId;
+    if (conversationFlows.common[commonStepKey]) {
+         return conversationFlows.common[commonStepKey];
+    }
 
     console.error("Invalid stepId:", stepId);
     return null;
@@ -718,8 +717,6 @@ export default function Home() {
         }, 500);
     };
 
-
-
     useEffect(() => {
         if (view === 'chat' && conversation.length === 0) {
             startConversation();
@@ -728,15 +725,6 @@ export default function Home() {
 
     return (
         <>
-            {view === "chat" && (
-                <div id="progress-container" className="fixed top-0 left-0 w-full h-1.5 bg-muted z-50">
-                    <div
-                        id="progress-bar"
-                        className="h-full bg-primary transition-all duration-500 ease-in-out"
-                        style={{ width: `${progress}%` }}
-                    ></div>
-                </div>
-            )}
             <div className="container mx-auto h-full max-h-[-webkit-fill-available] p-0 flex flex-col">
                 {view === "landing" ? (
                     <LandingView onStart={handleStart} isFadingOut={isFadingOut} />
@@ -745,11 +733,10 @@ export default function Home() {
                         conversation={conversation}
                         userAction={currentUserAction}
                         onResponse={processUserResponse}
+                        progress={progress}
                     />
                 )}
             </div>
         </>
     );
 }
-
-    

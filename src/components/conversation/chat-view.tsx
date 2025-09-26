@@ -29,6 +29,7 @@ interface ChatViewProps {
   conversation: Message[];
   userAction: UserAction | null;
   onResponse: (response: any) => void;
+  progress: number;
 }
 
 const DateOfBirthPicker = ({ onDateSelect }: { onDateSelect: (date: Date) => void }) => {
@@ -253,7 +254,7 @@ const ContactForm = ({ options, onResponse }: { options: any, onResponse: (data:
     )
 }
 
-const ChatView = ({ conversation, userAction, onResponse }: ChatViewProps) => {
+const ChatView = ({ conversation, userAction, onResponse, progress }: ChatViewProps) => {
   const [inputValue, setInputValue] = useState("");
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
   const actionsContainerRef = useRef<HTMLDivElement>(null);
@@ -262,7 +263,7 @@ const ChatView = ({ conversation, userAction, onResponse }: ChatViewProps) => {
   useEffect(() => {
     const calculateHeightAndScroll = () => {
       if (actionsContainerRef.current && spacerRef.current) {
-        const height = actionsContainerRef.current.offsetHeight;
+        const height = actionsContainerf.current.offsetHeight;
         spacerRef.current.style.height = `${height}px`;
       }
       setTimeout(() => {
@@ -391,7 +392,7 @@ const ChatView = ({ conversation, userAction, onResponse }: ChatViewProps) => {
 
   return (
     <div id="chat-container" className="relative w-full h-full flex flex-col rounded-none md:rounded-2xl shadow-none md:shadow-2xl animate-in fade-in-50">
-        <div id="dialog-flow" className="flex-grow space-y-6 overflow-y-auto p-4 md:p-6 no-scrollbar pt-6">
+        <div id="dialog-flow" className="flex-grow space-y-6 overflow-y-auto p-4 md:p-6 no-scrollbar">
             {conversation.map((message) => {
                  const content = renderMessageContent(message.content, message.author);
                  if (!content) return null;
@@ -428,8 +429,17 @@ const ChatView = ({ conversation, userAction, onResponse }: ChatViewProps) => {
             <div ref={endOfMessagesRef} />
         </div>
       
-        <div ref={actionsContainerRef} id="user-actions-container" className="flex-shrink-0 p-4 bg-background/80 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none fixed bottom-0 left-0 right-0 md:relative">
+        <div ref={actionsContainerRef} id="user-actions-container" className="flex-shrink-0 p-4 bg-background/80 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none fixed bottom-0 left-0 right-0 md:relative flex flex-col">
              <div className="w-full max-w-lg mx-auto flex flex-col justify-center items-center">
+                 {userAction && userAction.type !== 'end' && (
+                    <div id="progress-container" className="w-full h-2.5 bg-muted rounded-full mb-4">
+                        <div
+                            id="progress-bar"
+                            className="h-full bg-primary rounded-full transition-all duration-500 ease-in-out"
+                            style={{ width: `${progress}%` }}
+                        ></div>
+                    </div>
+                )}
                  {renderUserActions()}
             </div>
         </div>
