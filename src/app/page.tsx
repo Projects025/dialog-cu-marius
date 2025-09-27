@@ -586,6 +586,7 @@ const introFlow: ConversationFlow = {
             { label: 'Decesul spontan', id: 'deces', disabled: false },
             { label: 'Protecție în caz de boală gravă', id: 'boala_grava', disabled: true }
         ],
+        handler: (response, data) => { data.priorities = response; },
         nextStep: (response) => {
             if (!response || response.length === 0) return 'common.end_dialog_friendly';
             // Prioritize 'deces'
@@ -705,10 +706,7 @@ export default function Home() {
         
         const actionOptions = step.options;
 
-        if (step.autoContinue && !messageContent) {
-             const nextStepId = step.nextStep();
-             await renderStep(nextStepId);
-        } else if (step.autoContinue && messageContent) {
+        if (step.autoContinue) {
              const nextStepId = step.nextStep();
              await renderStep(nextStepId);
         } else {
@@ -744,7 +742,7 @@ export default function Home() {
 
         if (typeof response === 'number') {
             userMessageContent = response.toLocaleString('ro-RO');
-        } else if (typeof response === 'string') {
+        } else if (typeof response === 'string' && response.trim() !== '') {
             userMessageContent = response;
         } else if (Array.isArray(response) && response.length > 0) {
             const labels = response.map(item => {
@@ -822,4 +820,5 @@ export default function Home() {
         </>
     );
 }
+
 
