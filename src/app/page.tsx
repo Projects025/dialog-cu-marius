@@ -15,6 +15,39 @@ import {
 import type { FinancialData } from "@/lib/calculation";
 import { format } from "date-fns";
 
+// ===================================================================
+// =========== PUNE AICI URL-ul GENERAT DE GOOGLE APPS SCRIPT ===========
+// ===================================================================
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzIUQQTsXrU4Dal8ADZaWtNXEJ2BLyHa5XYk-R4Phqch_ngXnPnOKhVMKhxwmxnu5id/exec";
+// ===================================================================
+
+async function sendDataToGoogleSheet(data: any) {
+    // Creează o copie a datelor pentru a nu modifica originalul
+    const dataToSend = { ...data };
+
+    // Convertește array-urile în string-uri pentru a fi ușor de citit în Google Sheet
+    if (Array.isArray(dataToSend.dramaticOptions)) {
+        dataToSend.dramaticOptions = dataToSend.dramaticOptions.join(', ');
+    }
+    if (Array.isArray(dataToSend.priorities)) {
+        dataToSend.priorities = dataToSend.priorities.join(', ');
+    }
+
+    try {
+        await fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors', // Necesar pentru a evita erorile CORS
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(dataToSend) // Trimitem TOT obiectul de date
+        });
+    } catch (error) {
+        console.error("Eroare la trimiterea datelor către Google Sheet:", error);
+    }
+}
+
+
 type ConversationStep = {
     message: (data: any) => string;
     actionType: UserAction['type'] | 'calculation' | 'sequence' | 'end';
@@ -254,7 +287,10 @@ Ești pregătit(ă) să mai facem un pas?`,
                 gdpr: 'Sunt de acord cu prelucrarea datelor personale.',
                 buttonText: 'Trimite'
             },
-            handler: (response, data) => { data.contact = response; },
+            handler: (response, data) => {
+                data.contact = response;
+                sendDataToGoogleSheet(data);
+            },
             nextStep: () => 'deces.thank_you_contact'
         },
         thank_you_contact: {
@@ -351,7 +387,10 @@ Ești pregătit(ă) să mai facem un pas?`,
                 gdpr: 'Sunt de acord cu prelucrarea datelor personale.',
                 buttonText: 'Trimite'
             },
-            handler: (response, data) => { data.contact = response; },
+            handler: (response, data) => {
+                data.contact = response;
+                sendDataToGoogleSheet(data);
+            },
             nextStep: () => 'common.end_dialog_success'
         },
     },
@@ -418,7 +457,10 @@ Ești pregătit(ă) să mai facem un pas?`,
                 gdpr: 'Sunt de acord cu prelucrarea datelor personale.',
                 buttonText: 'Trimite'
             },
-            handler: (response, data) => { data.contact = response; },
+            handler: (response, data) => {
+                data.contact = response;
+                sendDataToGoogleSheet(data);
+            },
             nextStep: () => 'common.end_dialog_success'
         },
     },
@@ -479,7 +521,10 @@ Ești pregătit(ă) să mai facem un pas?`,
                 gdpr: 'Sunt de acord cu prelucrarea datelor personale.',
                 buttonText: 'Trimite'
             },
-            handler: (response, data) => { data.contact = response; },
+            handler: (response, data) => {
+                data.contact = response;
+                sendDataToGoogleSheet(data);
+            },
             nextStep: () => 'common.end_dialog_success'
         },
     },
@@ -778,4 +823,3 @@ export default function Home() {
     );
 }
 
-    
