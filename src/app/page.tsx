@@ -134,7 +134,7 @@ Ești pregătit(ă) să mai facem un pas?`,
             message: () => "Care ar fi această sumă?",
             actionType: 'input',
             isProgressStep: true,
-            options: { placeholder: 'Ex: 25000', type: 'number', defaultValue: 0 },
+            options: { placeholder: 'Ex: 25000', type: 'number' },
             handler: (response, data) => { data.eventCosts = Number(response); },
             nextStep: () => 'deces.continue_prompt_1'
         },
@@ -148,7 +148,7 @@ Ești pregătit(ă) să mai facem un pas?`,
             message: () => "3. În cazul unui posibil deces, există anumite proiecte în desfășurare la acest moment care ar avea de suferit (ex. o construcție la stadiu „la roșu” sau un sport de performanță al copiilor sau alte proiecte care sunt susținute din finanțele tale lunare)? \n\n Care ar fi suma totală de bani (în lei) necesară finalizării acestor proiecte?",
             actionType: 'input',
             isProgressStep: true,
-            options: { placeholder: 'Ex: 250000', type: 'number', defaultValue: 0 },
+            options: { placeholder: 'Ex: 250000', type: 'number' },
             handler: (response, data) => { data.projects = Number(response); },
             nextStep: () => 'deces.ask_debts'
         },
@@ -156,7 +156,7 @@ Ești pregătit(ă) să mai facem un pas?`,
             message: () => "4. În cazul unui posibil deces, rămân pe umerii familiei anumite responsabilități financiare de tip credite, datorii, obligații financiare etc.?\n\n Care ar fi suma de bani de care ar avea nevoie pentru a stinge aceste obligații (în lei)?",
             actionType: 'input',
             isProgressStep: true,
-            options: { placeholder: 'Ex: 400000', type: 'number', defaultValue: 0 },
+            options: { placeholder: 'Ex: 400000', type: 'number' },
             handler: (response, data) => {
                 data.debts = Number(response);
             },
@@ -183,7 +183,7 @@ Ești pregătit(ă) să mai facem un pas?`,
             message: () => "5. În cazul unui posibil deces, familia ta ar beneficia de vreo asigurare de viață pe numele tău? Nu mă refer la acele asigurări care sunt cesionate în favoarea băncii, ci acele asigurări care să aibă ca beneficiar - familia ta.\n\nDacă da, care este suma de bani pe care ai tăi ar încasa-o dintr-o astfel de asigurare de viață (în lei)?",
             actionType: 'input',
             isProgressStep: true,
-            options: { placeholder: 'Ex: 125000', type: 'number', defaultValue: 0 },
+            options: { placeholder: 'Ex: 125000', type: 'number' },
             handler: (response, data) => { data.existingInsurance = Number(response); },
             nextStep: () => 'deces.ask_savings'
         },
@@ -191,7 +191,7 @@ Ești pregătit(ă) să mai facem un pas?`,
             message: () => "6. În cazul unui posibil deces, familia ta ar putea accesa anumite economii sau ar putea apela la anumite investiții (ex. chirii, vânzarea unui imobil etc.)?\n\nDacă da, care este suma de bani disponibilă?",
             actionType: 'input',
             isProgressStep: true,
-            options: { placeholder: 'Ex: 75000', type: 'number', defaultValue: 0 },
+            options: { placeholder: 'Ex: 75000', type: 'number' },
             handler: (response, data) => { data.savings = Number(response); },
             nextStep: () => 'deces.show_final_deficit_intro'
         },
@@ -339,7 +339,7 @@ Ești pregătit(ă) să mai facem un pas?`,
         ask_existing_savings_health: {
             message: () => "Ai deja o asigurare privată de sănătate sau economii dedicate pentru urgențe medicale? Dacă da, care este suma totală?",
             actionType: 'input',
-            options: { placeholder: 'Ex: 5000', type: 'number', defaultValue: 0 },
+            options: { placeholder: 'Ex: 5000', type: 'number' },
             handler: (response, data) => { data.existingSavings = Number(response); },
             nextStep: () => 'boala_grava.show_health_deficit'
         },
@@ -419,7 +419,7 @@ Ești pregătit(ă) să mai facem un pas?`,
         ask_current_savings_pension: {
             message: () => "Ai deja o sumă economisită special pentru pensie (Pilon 2, Pilon 3, alte investiții)? Dacă da, care este valoarea ei actuală?",
             actionType: 'input',
-            options: { placeholder: 'Ex: 10000', type: 'number', defaultValue: 0 },
+            options: { placeholder: 'Ex: 10000', type: 'number' },
             handler: (response, data) => { data.currentSavings = Number(response); },
             nextStep: () => 'pensionare.ask_dob_pension'
         },
@@ -489,7 +489,7 @@ Ești pregătit(ă) să mai facem un pas?`,
         ask_current_savings_studies: {
             message: () => "Ai deja o sumă economisită special pentru acest scop? Dacă da, care este valoarea ei?",
             actionType: 'input',
-            options: { placeholder: 'Ex: 2000', type: 'number', defaultValue: 0 },
+            options: { placeholder: 'Ex: 2000', type: 'number' },
             handler: (response, data) => { data.currentSavings = Number(response); },
             nextStep: () => 'studii_copii.show_studies_plan'
         },
@@ -639,8 +639,8 @@ const getStep = (stepId: string): ConversationStep | null => {
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 const calculateDynamicDelay = (text: string): number => {
-    const BASE_DELAY = 800; 
-    const WORDS_PER_SECOND = 4; 
+    const BASE_DELAY = 600; 
+    const WORDS_PER_SECOND = 5; 
 
     if (!text) return BASE_DELAY;
 
@@ -649,7 +649,7 @@ const calculateDynamicDelay = (text: string): number => {
 
     const readingTime = (wordCount / WORDS_PER_SECOND) * 1000;
     
-    return Math.min(BASE_DELAY + readingTime, 3000);
+    return Math.min(BASE_DELAY + readingTime, 2500);
 }
 
 
@@ -762,8 +762,12 @@ export default function Home() {
             }
         }
         
-        if (userMessageContent !== null && userMessageContent.trim() !== '') {
-            addMessage({ author: "user", type: "response" }, userMessageContent);
+        if (userMessageContent !== null && (userMessageContent.trim() !== '' || typeof response === 'number')) {
+             if (typeof response === 'number' && response === 0 && (step.options?.type === 'number' && step.options?.placeholder)) {
+                 // Don't show '0' for optional numeric fields, let it be silent
+             } else {
+                 addMessage({ author: "user", type: "response" }, userMessageContent);
+             }
         }
         
         if (step.handler) {
@@ -822,3 +826,5 @@ export default function Home() {
 }
 
 
+
+    

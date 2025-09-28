@@ -36,18 +36,22 @@ interface ChatViewProps {
 }
 
 const UserInput = ({ options, onResponse }: { options: any, onResponse: (value: string | number) => void }) => {
-    const [inputValue, setInputValue] = useState(options?.defaultValue?.toString() || "");
+    const [inputValue, setInputValue] = useState("");
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setInputValue(e.target.value);
     };
 
     const handleSendInput = () => {
-        if (inputValue.trim() || options?.type === 'number') {
-            const valueToSend = options?.type === 'number' ? Number(inputValue) : inputValue.trim();
+        if (options?.type === 'number') {
+            const valueToSend = inputValue.trim() === '' ? 0 : Number(inputValue);
             onResponse(valueToSend);
-            setInputValue("");
+        } else {
+             if (inputValue.trim()) {
+                onResponse(inputValue.trim());
+             }
         }
+        setInputValue("");
     };
 
     const handleInputKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -409,11 +413,12 @@ const ChatView = ({ conversation, userAction, onResponse, progress, isConversati
   };
   
   const renderMessageContent = (content: any) => {
-    if (typeof content !== 'string' || !content.trim()) {
+    if ((typeof content !== 'string' || !content.trim()) && typeof content !== 'number') {
         return null;
     }
     const createMarkup = () => {
-        return { __html: content.replace(/\n/g, '<br />') };
+        const contentString = typeof content === 'number' ? content.toLocaleString('ro-RO') : content;
+        return { __html: contentString.replace(/\n/g, '<br />') };
     };
     return <p className="whitespace-pre-wrap" dangerouslySetInnerHTML={createMarkup()} />;
 };
@@ -434,7 +439,7 @@ const ChatView = ({ conversation, userAction, onResponse, progress, isConversati
         <div id="dialog-flow" className="flex-grow space-y-6 overflow-y-auto p-4 md:p-6 no-scrollbar">
             {conversation.map((message) => {
                  const content = renderMessageContent(message.content);
-                 if (!content) return null;
+                 if (!content && message.content !== 0) return null;
 
                  return (
                     <div
@@ -481,3 +486,6 @@ const ChatView = ({ conversation, userAction, onResponse, progress, isConversati
 };
 
 export default ChatView;
+
+
+    
