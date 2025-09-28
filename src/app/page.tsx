@@ -18,7 +18,7 @@ import { format } from "date-fns";
 // ===================================================================
 // =========== PUNE AICI URL-ul GENERAT DE GOOGLE APPS SCRIPT ===========
 // ===================================================================
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzIUQQTsXrU4Dal8ADZaWtNXEJ2BLyHa5XYk-R4Phqch_ngXnPnOKhVMKhxwmxnu5id/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwUMBzXsWFQ7SwB1whS2DrjBW9QBlWQEn99Z8vivBRpLsnO2SuzhSNh1S4icRdM1fNx/exec";
 // ===================================================================
 
 async function sendDataToGoogleSheet(data: any) {
