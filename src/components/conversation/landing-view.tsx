@@ -81,20 +81,31 @@ const LandingView = ({ onStart, isFadingOut }: LandingViewProps) => {
         </div>
 
         {/* Conținutul principal al paginii */}
-        <main className="relative z-10 text-center p-8 max-w-2xl mx-auto">
-            <h1 className="text-4xl md:text-6xl font-bold mb-4 text-white drop-shadow-lg">Liniștea ta financiară, simplificată.</h1>
-            <p className="text-lg md:text-xl text-gray-300 mb-2 drop-shadow-md">
-                Descoperă care este gradul tău de expunere financiară.
-            </p>
-            <p className="text-lg md:text-xl text-gray-300 mb-8 drop-shadow-md">
-                Fără jargon, fără obligații.
-            </p>
+        <main className="relative z-10 text-center p-8 max-w-2xl mx-auto flex flex-col items-center">
+
+            {/* Titlul Principal */}
+            <h1 className="text-4xl md:text-5xl font-bold text-white drop-shadow-lg">
+                Liniștea ta financiară, simplificată.
+            </h1>
+
+            {/* Grupul de Sub-titluri cu Spațiere Verticală */}
+            <div className="mt-6 mb-10 space-y-2">
+                <p className="text-lg md:text-xl text-gray-300 drop-shadow-md">
+                    Descoperă care este gradul tău de expunere financiară
+                </p>
+                <p className="text-lg md:text-xl text-gray-300 drop-shadow-md">
+                    Fără jargon, fără obligații.
+                </p>
+            </div>
+
+            {/* Butonul de Acțiune */}
             <button 
-                onClick={onStart}
+                onClick={onStart} 
                 className="bg-amber-400 text-gray-900 font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-amber-300 transition-all duration-300 transform hover:scale-105"
             >
                 Începe Analiza Gratuită
             </button>
+
         </main>
     </div>
   );
