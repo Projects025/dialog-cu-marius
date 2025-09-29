@@ -12,6 +12,9 @@ interface LandingViewProps {
 const LandingView = ({ onStart, isFadingOut }: LandingViewProps) => {
 
     useEffect(() => {
+        // Când componenta se încarcă, blochează scroll-ul pe body
+        document.body.classList.add('overflow-hidden');
+
         const handleMouseMove = (e: MouseEvent) => {
             const layers = document.querySelectorAll<HTMLElement>('.scene-layer');
             const { clientX, clientY } = e;
@@ -31,8 +34,10 @@ const LandingView = ({ onStart, isFadingOut }: LandingViewProps) => {
         
         document.addEventListener('mousemove', handleMouseMove);
 
+        // Când componenta dispare, permite din nou scroll-ul
         return () => {
             document.removeEventListener('mousemove', handleMouseMove);
+            document.body.classList.remove('overflow-hidden');
         };
     }, []);
 
@@ -40,7 +45,7 @@ const LandingView = ({ onStart, isFadingOut }: LandingViewProps) => {
   return (
     <div
       className={cn(
-        "min-h-screen w-full flex flex-col justify-center items-center text-center p-6 md:p-8 transition-opacity duration-500 overflow-hidden",
+        "min-h-screen w-full flex flex-col justify-center items-center text-center p-6 md:p-8 transition-opacity duration-500",
         isFadingOut ? "opacity-0" : "opacity-100"
       )}
     >
