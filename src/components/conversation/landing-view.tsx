@@ -83,22 +83,28 @@ const LandingView = ({ onStart, isFadingOut }: LandingViewProps) => {
         {/* Conținutul principal al paginii */}
         <main className="relative z-10 text-center p-8 max-w-2xl mx-auto flex flex-col items-center">
 
-            {/* Titlul Principal */}
+            {/* ======================================================= */}
+            {/* 1. Titlul Principal - Mare și de Impact */}
+            {/* ======================================================= */}
             <h1 className="text-4xl md:text-5xl font-bold text-white drop-shadow-lg">
                 Liniștea ta financiară, simplificată.
             </h1>
 
-            {/* Grupul de Sub-titluri cu Spațiere Verticală */}
-            <div className="mt-6 mb-10 space-y-2">
+            {/* ====================================================================== */}
+            {/* 2. Grupul de Sub-titluri - Unitate vizuală cu spațiere controlată */}
+            {/* ====================================================================== */}
+            <div className="mt-4 mb-8">
                 <p className="text-lg md:text-xl text-gray-300 drop-shadow-md">
                     Descoperă care este gradul tău de expunere financiară
                 </p>
-                <p className="text-lg md:text-xl text-gray-300 drop-shadow-md">
+                <p className="text-lg md:text-xl text-gray-300/80 drop-shadow-md mt-1">
                     Fără jargon, fără obligații.
                 </p>
             </div>
 
-            {/* Butonul de Acțiune */}
+            {/* ====================================================================== */}
+            {/* 3. Butonul de Acțiune - Clar separat de text */}
+            {/* ====================================================================== */}
             <button 
                 onClick={onStart} 
                 className="bg-amber-400 text-gray-900 font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-amber-300 transition-all duration-300 transform hover:scale-105"
