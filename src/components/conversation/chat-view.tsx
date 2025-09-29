@@ -43,14 +43,8 @@ const UserInput = ({ options, onResponse }: { options: any, onResponse: (value: 
     };
 
     const handleSendInput = () => {
-        if (options?.type === 'number') {
-            const valueToSend = inputValue.trim() === '' ? 0 : Number(inputValue);
-            onResponse(valueToSend);
-        } else {
-             if (inputValue.trim()) {
-                onResponse(inputValue.trim());
-             }
-        }
+        const valueToSend = inputValue.trim() === '' ? 0 : Number(inputValue);
+        onResponse(valueToSend);
         setInputValue("");
     };
 
@@ -488,4 +482,5 @@ const ChatView = ({ conversation, userAction, onResponse, progress, isConversati
 export default ChatView;
 
 
+    
     
