@@ -289,7 +289,6 @@ Ești pregătit(ă) să mai facem un pas?`,
             },
             handler: (response, data) => {
                 data.contact = response;
-                sendDataToGoogleSheet(data);
             },
             nextStep: () => 'deces.thank_you_contact'
         },
@@ -298,7 +297,10 @@ Ești pregătit(ă) să mai facem un pas?`,
             actionType: 'buttons',
             isProgressStep: true,
             options: ['Dimineața', 'După-masa', 'Seara'],
-            handler: (response, data) => { data.preferredContactTime = response; },
+            handler: (response, data) => { 
+                data.preferredContactTime = response; 
+                sendDataToGoogleSheet(data);
+            },
             nextStep: () => 'deces.thank_you_final'
         },
         thank_you_final: {
@@ -824,7 +826,5 @@ export default function Home() {
         </>
     );
 }
-
-
 
     
