@@ -84,20 +84,20 @@ const LandingView = ({ onStart, isFadingOut }: LandingViewProps) => {
         <main className="relative z-10 text-center p-8 max-w-2xl mx-auto flex flex-col items-center">
 
             {/* ======================================================= */}
-            {/* 1. Titlul Principal - Mare și de Impact */}
+            {/* 1. Titlul Principal - Mare, de Impact, cu spațiu dedesubt */}
             {/* ======================================================= */}
-            <h1 className="text-4xl md:text-5xl font-bold text-white drop-shadow-lg">
+            <h1 className="text-4xl md:text-5xl font-bold text-white drop-shadow-lg mb-6">
                 Liniștea ta financiară, simplificată.
             </h1>
 
             {/* ====================================================================== */}
             {/* 2. Grupul de Sub-titluri - Unitate vizuală cu spațiere controlată */}
             {/* ====================================================================== */}
-            <div className="mt-4 mb-8">
+            <div className="mb-10">
                 <p className="text-lg md:text-xl text-gray-300 drop-shadow-md">
                     Descoperă care este gradul tău de expunere financiară
                 </p>
-                <p className="text-lg md:text-xl text-gray-300/80 drop-shadow-md mt-1">
+                <p className="text-lg md:text-xl text-gray-300/80 drop-shadow-md mt-2">
                     Fără jargon, fără obligații.
                 </p>
             </div>
