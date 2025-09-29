@@ -83,8 +83,11 @@ const LandingView = ({ onStart, isFadingOut }: LandingViewProps) => {
         {/* Conținutul principal al paginii */}
         <main className="relative z-10 text-center p-8 max-w-2xl mx-auto">
             <h1 className="text-4xl md:text-6xl font-bold mb-4 text-white drop-shadow-lg">Liniștea ta financiară, simplificată.</h1>
+            <p className="text-lg md:text-xl text-gray-300 mb-2 drop-shadow-md">
+                Descoperă care este gradul tău de expunere financiară.
+            </p>
             <p className="text-lg md:text-xl text-gray-300 mb-8 drop-shadow-md">
-                Descoperă care este gradul tău de expunere financiară. Fără jargon, fără obligații.
+                Fără jargon, fără obligații.
             </p>
             <button 
                 onClick={onStart}
