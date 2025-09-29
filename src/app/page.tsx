@@ -742,7 +742,10 @@ export default function Home() {
         
         let userMessageContent: string | null = null;
 
-        if (typeof response === 'number') {
+        if (step.actionType === 'input' && step.options?.type === 'number') {
+            const numValue = Number(response);
+            userMessageContent = isNaN(numValue) ? String(response) : numValue.toLocaleString('ro-RO');
+        } else if (typeof response === 'number') {
             userMessageContent = response.toLocaleString('ro-RO');
         } else if (typeof response === 'string' && response.trim() !== '') {
             userMessageContent = response;
@@ -826,6 +829,8 @@ export default function Home() {
         </>
     );
 }
+
+    
 
     
 

@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { Checkbox } from "../ui/checkbox";
 import { Label } from "../ui/label";
 import TypingIndicator from "./typing-indicator";
+import { ScrollArea } from "../ui/scroll-area";
 
 
 export type Message = {
@@ -183,7 +184,7 @@ const InteractiveScrollList = ({ options, buttonText, onConfirm }: { options: an
     };
 
     return (
-        <div className="flex flex-col w-full max-w-sm rounded-2xl bg-background/80 backdrop-blur-sm border border-border shadow-md animate-in fade-in-50 max-h-[70vh]">
+        <div className="flex flex-col w-full max-w-sm rounded-2xl bg-background/80 backdrop-blur-sm border border-border shadow-md animate-in fade-in-50 max-h-60">
             <div className="flex-grow min-h-0 overflow-y-auto no-scrollbar touch-scroll p-3">
                  <div className="space-y-1">
                     {options.map((option: string, index: number) => {
@@ -488,5 +489,7 @@ export default ChatView;
     
     
 
+
+    
 
     
