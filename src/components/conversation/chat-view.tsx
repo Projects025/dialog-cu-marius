@@ -10,7 +10,6 @@ import { Send, Circle, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "../ui/checkbox";
 import { Label } from "../ui/label";
-import { ScrollArea } from "../ui/scroll-area";
 import TypingIndicator from "./typing-indicator";
 
 
@@ -180,9 +179,9 @@ const InteractiveScrollList = ({ options, buttonText, onConfirm }: { options: an
     };
 
     return (
-        <div className="flex flex-col w-full max-w-sm rounded-2xl bg-background/80 backdrop-blur-sm border border-border shadow-md animate-in fade-in-50">
-            <ScrollArea className="flex-grow max-h-72 no-scrollbar p-1">
-                 <div className="space-y-1 p-2">
+        <div className="flex flex-col w-full max-w-sm rounded-2xl bg-background/80 backdrop-blur-sm border border-border shadow-md animate-in fade-in-50 max-h-[70vh]">
+            <div className="flex-grow min-h-0 overflow-y-auto no-scrollbar touch-scroll p-3">
+                 <div className="space-y-1">
                     {options.map((option: string, index: number) => {
                         const isSelected = selected.includes(option);
                         return (
@@ -204,7 +203,7 @@ const InteractiveScrollList = ({ options, buttonText, onConfirm }: { options: an
                         )
                     })}
                 </div>
-            </ScrollArea>
+            </div>
 
             <div className="flex-shrink-0 p-3 border-t border-border">
                 <Button
@@ -418,7 +417,7 @@ const ChatView = ({ conversation, userAction, onResponse, progress, isConversati
 };
 
   return (
-    <div id="chat-container" className="relative w-full h-full flex flex-col rounded-none md:rounded-2xl shadow-none md:shadow-2xl animate-in fade-in-50 overflow-hidden">
+    <div id="chat-container" className="relative w-full h-full flex flex-col rounded-none md:rounded-2xl shadow-none md:shadow-2xl overflow-hidden animate-in fade-in-50">
         
         <div id="progress-container" className="w-full flex-shrink-0 p-4 pt-6">
             <div className="w-full h-2.5 bg-muted rounded-full">

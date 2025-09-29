@@ -67,6 +67,9 @@
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
   }
+  .touch-scroll {
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 .scene-container {
