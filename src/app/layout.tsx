@@ -36,7 +36,7 @@ export default function RootLayout({
       </head>
       <body
         className={cn(
-          "relative h-full max-h-[-webkit-fill-available] font-sans antialiased dot-background",
+          "relative h-full max-h-[-webkit-fill-available] font-sans antialiased",
           poppins.variable
         )}
       >
