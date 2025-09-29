@@ -418,7 +418,7 @@ const ChatView = ({ conversation, userAction, onResponse, progress, isConversati
 };
 
   return (
-    <div id="chat-container" className="relative w-full h-full flex flex-col rounded-none md:rounded-2xl shadow-none md:shadow-2xl animate-in fade-in-50">
+    <div id="chat-container" className="relative w-full h-full flex flex-col rounded-none md:rounded-2xl shadow-none md:shadow-2xl animate-in fade-in-50 overflow-hidden">
         
         <div id="progress-container" className="w-full flex-shrink-0 p-4 pt-6">
             <div className="w-full h-2.5 bg-muted rounded-full">
