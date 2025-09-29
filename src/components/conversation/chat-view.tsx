@@ -42,8 +42,12 @@ const UserInput = ({ options, onResponse }: { options: any, onResponse: (value: 
     };
 
     const handleSendInput = () => {
-        const valueToSend = inputValue.trim() === '' ? 0 : Number(inputValue);
-        onResponse(valueToSend);
+        if (options?.type === 'number') {
+            const valueToSend = inputValue.trim() === '' ? 0 : Number(inputValue);
+            onResponse(valueToSend);
+        } else {
+            onResponse(inputValue);
+        }
         setInputValue("");
     };
 
@@ -482,4 +486,7 @@ export default ChatView;
 
 
     
+    
+
+
     
