@@ -45,7 +45,7 @@ const LandingView = ({ onStart, isFadingOut }: LandingViewProps) => {
   return (
     <div
       className={cn(
-        "min-h-screen w-full flex flex-col pt-20 md:pt-32 items-center text-center p-6 md:p-8 transition-opacity duration-500",
+        "min-h-screen w-full flex flex-col justify-center items-center p-6 md:p-8 transition-opacity duration-500",
         isFadingOut ? "opacity-0" : "opacity-100"
       )}
     >
@@ -94,7 +94,7 @@ const LandingView = ({ onStart, isFadingOut }: LandingViewProps) => {
             {/* ====================================================================== */}
             {/* 2. Grupul de Sub-titluri - Unitate vizuală cu spațiere controlată */}
             {/* ====================================================================== */}
-            <div className="mb-10">
+            <div className="mb-10 text-center">
                 <p className="text-lg md:text-xl text-gray-300 drop-shadow-md">
                     <span>Fă o scurtă analiză și</span>
                     <span className="block mt-1">descoperă unde ești vulnerabil.</span>
