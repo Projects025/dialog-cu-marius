@@ -68,15 +68,13 @@ const conversationFlows: { [key: string]: ConversationFlow } = {
         intro_analysis_1: {
             message: () => `Un deces afectează negativ pe multiple planuri, două dintre acestea fiind extrem de profunde și de durată - planul existențial (drama care însoțește pierderea persoanei dragi) și planul financiar (dispariția opțiunilor, apariția presiunilor financiare și a necesității de a ajusta nivelul de trai la noile realități).`,
             actionType: 'buttons',
-            options: [],
-            autoContinue: true,
+            options: ['Continuă'],
             nextStep: () => 'deces.intro_analysis_2'
         },
         intro_analysis_2: {
             message: () => `În momentele următoare, vom răspunde la 6 întrebări prin care să stabilim care este suma de bani de care ar avea nevoie familia pentru a ameliora impactul financiar negativ al decesului asupra...`,
             actionType: 'buttons',
-            options: [],
-            autoContinue: true,
+            options: ['Continuă'],
             nextStep: () => 'deces.intro_analysis_3'
         },
         intro_analysis_3: {
@@ -111,8 +109,7 @@ Dacă ești pregătit/ă, haide să continuăm.`,
                 return `<span class="text-2xl font-bold">${deficit1.toLocaleString('ro-RO')} lei</span>`;
             },
             actionType: 'buttons',
-            options: [],
-            autoContinue: true,
+            options: ['Continuă'],
             nextStep: () => 'deces.show_deficit_1_explanation'
         },
         show_deficit_1_explanation: {
@@ -126,8 +123,7 @@ Ești pregătit(ă) să mai facem un pas?`,
         ask_event_costs_intro: {
             message: () => "2. În cazul unui posibil deces, evenimentul în sine este însoțit de anumite cheltuieli (ex. înmormântare, taxe succesorale etc.)",
             actionType: 'buttons',
-            options: [],
-            autoContinue: true,
+            options: ['Continuă'],
             nextStep: () => 'deces.ask_event_costs_prompt'
         },
         ask_event_costs_prompt: {
@@ -165,8 +161,7 @@ Ești pregătit(ă) să mai facem un pas?`,
         brute_deficit_intro: {
             message: () => "Suma deficit totală este:",
             actionType: 'buttons',
-            options: [],
-            autoContinue: true,
+            options: ['Continuă'],
             nextStep: () => 'deces.show_brute_deficit'
         },
         show_brute_deficit: {
@@ -175,8 +170,7 @@ Ești pregătit(ă) să mai facem un pas?`,
                 return `<span class="text-2xl font-bold">${data.bruteDeficit.toLocaleString('ro-RO')} lei</span>`;
             },
             actionType: 'buttons',
-            options: [],
-            autoContinue: true,
+            options: ['Continuă'],
             nextStep: () => 'deces.ask_insurance'
         },
         ask_insurance: {
@@ -198,15 +192,13 @@ Ești pregătit(ă) să mai facem un pas?`,
         show_final_deficit_intro: {
             message: () => "Sumele rezultate din asigurări de viață cu beneficiar familia și sumele de bani rezultate din economii / investiții vor fi scăzute din suma-deficit calculată anterior.",
             actionType: 'buttons',
-            options: [],
-            autoContinue: true,
+            options: ['Continuă'],
             nextStep: () => 'deces.show_final_deficit_context_1'
         },
         show_final_deficit_context_1: {
             message: () => "Deficitul financiar cu care familia ta ar păși în acest viitor sumbru dacă n-ar mai putea conta pe sprijinul tău financiar este:",
              actionType: 'buttons',
-            options: [],
-            autoContinue: true,
+            options: ['Continuă'],
             nextStep: () => 'deces.show_final_deficit_amount'
         },
         show_final_deficit_amount: {
@@ -215,15 +207,13 @@ Ești pregătit(ă) să mai facem un pas?`,
                 return `<span class="text-2xl font-bold">${data.finalDeficit.toLocaleString('ro-RO')} lei</span>`;
             },
             actionType: 'buttons',
-            options: [],
-            autoContinue: true,
+            options: ['Continuă'],
             nextStep: () => 'deces.ask_feeling_intro'
         },
         ask_feeling_intro: {
             message: () => `Cum ți se pare această sumă?`,
             actionType: 'buttons',
-            options: [],
-            autoContinue: true,
+            options: ['Continuă'],
             nextStep: () => 'deces.ask_feeling_prompt'
         },
         ask_feeling_prompt: {
@@ -237,8 +227,7 @@ Ești pregătit(ă) să mai facem un pas?`,
         ask_dramatic_options_intro: {
             message: () => "În acest scenariu de imaginație sumbru, ce opțiuni ar avea cei dragi ai tăi pentru a menține un oarecare echilibru în standardul de viață?",
             actionType: 'buttons',
-            options: [],
-            autoContinue: true,
+            options: ['Continuă'],
             nextStep: () => 'deces.ask_dramatic_options_prompt',
         },
         ask_dramatic_options_prompt: {
@@ -313,8 +302,7 @@ Ești pregătit(ă) să mai facem un pas?`,
         start_flow: {
             message: () => "Am înțeles. Protejarea stabilității tale financiare în fața provocărilor medicale este esențială.",
             actionType: 'buttons',
-            options: [],
-            autoContinue: true,
+            options: ['Continuă'],
             nextStep: () => 'boala_grava.ask_monthly_need_health'
         },
         ask_monthly_need_health: {
@@ -351,15 +339,13 @@ Ești pregătit(ă) să mai facem un pas?`,
                 return `Am calculat. Necesarul financiar pentru a trece peste o perioadă dificilă este de ${data.healthDeficit.toLocaleString('ro-RO')} €.`;
             },
             actionType: 'buttons',
-            options: [],
-            autoContinue: true,
+            options: ['Continuă'],
             nextStep: () => 'boala_grava.show_impact_health'
         },
         show_impact_health: {
             message: () => "A avea această siguranță înseamnă că te poți concentra 100% pe recuperare, fără stresul banilor și fără a afecta economiile familiei.",
             actionType: 'buttons',
-            options: [],
-            autoContinue: true,
+            options: ['Continuă'],
             nextStep: () => 'boala_grava.ask_dob_health'
         },
         ask_dob_health: {
@@ -400,8 +386,7 @@ Ești pregătit(ă) să mai facem un pas?`,
         start_flow: {
             message: () => "Excelentă alegere! Planificarea pensiei este cheia unui viitor liniștit.",
             actionType: 'buttons',
-            options: [],
-            autoContinue: true,
+            options: ['Continuă'],
             nextStep: () => 'pensionare.ask_desired_pension'
         },
         ask_desired_pension: {
@@ -437,8 +422,7 @@ Ești pregătit(ă) să mai facem un pas?`,
                 return `Am calculat. Pentru a atinge obiectivul tău, ar fi necesar să economisești/investești aproximativ ${data.monthlyContribution.toLocaleString('ro-RO')} € pe lună, până la vârsta de pensionare.`;
             },
             actionType: 'buttons',
-            options: [],
-            autoContinue: true,
+            options: ['Continuă'],
             nextStep: () => 'pensionare.ask_solution_pension'
         },
         ask_solution_pension: {
@@ -470,8 +454,7 @@ Ești pregătit(ă) să mai facem un pas?`,
         start_flow: {
             message: () => "O decizie minunată! Investiția în educația copiilor este cel mai de preț cadou.",
             actionType: 'buttons',
-            options: [],
-            autoContinue: true,
+            options: ['Continuă'],
             nextStep: () => 'studii_copii.ask_studies_goal'
         },
         ask_studies_goal: {
@@ -501,8 +484,7 @@ Ești pregătit(ă) să mai facem un pas?`,
                 return `Am calculat. Pentru a atinge obiectivul tău până la majoratul copilului, ar fi necesar să economisești ${data.monthlyContribution.toLocaleString('ro-RO')} € pe lună.`;
             },
             actionType: 'buttons',
-            options: [],
-            autoContinue: true,
+            options: ['Continuă'],
             nextStep: () => 'studii_copii.ask_solution_studies'
         },
         ask_solution_studies: {
@@ -546,18 +528,43 @@ Ești pregătit(ă) să mai facem un pas?`,
 };
 
 const introFlow: ConversationFlow = {
-    intro_1: {
-        message: () => `Viața produce pierderi financiare semnificative în patru situații majore.`,
+    welcome_1: {
+        message: () => `Salut!`,
         actionType: 'buttons',
         options: [],
         autoContinue: true,
+        nextStep: () => 'welcome_2'
+    },
+    welcome_2: {
+        message: () => `Sunt Marius, consultantul tău financiar.`,
+        actionType: 'buttons',
+        options: [],
+        autoContinue: true,
+        nextStep: () => 'welcome_3'
+    },
+    welcome_3: {
+        message: () => `În următoarele 3 minute te invit la un moment de reflecție și de analiză prin care să descoperi care este gradul tău de expunere financiară.`,
+        actionType: 'buttons',
+        options: [],
+        autoContinue: true,
+        nextStep: () => 'welcome_4'
+    },
+    welcome_4: {
+        message: () => `Această analiză nu implică nicio obligație din partea ta.`,
+        actionType: 'buttons',
+        options: ['Continuă'],
+        nextStep: () => 'intro_1'
+    },
+    intro_1: {
+        message: () => `Viața produce pierderi financiare semnificative în patru situații majore.`,
+        actionType: 'buttons',
+        options: ['Continuă'],
         nextStep: () => 'intro_2',
     },
     intro_2: {
         message: () => `Dintre acestea, două situații sunt previzibile, precis așezate pe axa vieții, iar două sunt total imprevizibile.`,
         actionType: 'buttons',
-        options: [],
-        autoContinue: true,
+        options: ['Continuă'],
         nextStep: () => 'intro_3',
     },
     intro_3: {
@@ -565,8 +572,7 @@ const introFlow: ConversationFlow = {
 1. Pensionarea - reducerea drastică a opțiunilor, a demnității și a statutului de susținător al familiei\n\n
 2. Studiile copiilor - cheltuieli complexe, unele neanticipate, care pun presiune pe bugetul familiei`,
         actionType: 'buttons',
-        options: [],
-        autoContinue: true,
+        options: ['Continuă'],
         nextStep: () => 'intro_4',
     },
     intro_4: {
@@ -574,8 +580,7 @@ const introFlow: ConversationFlow = {
 1. Decesul - detonează standardul de viață, proiectele în desfășurare și viitorul copiilor \n\n
 2. Bolile grave - Accident Vascular cerebral, Cancer, Infarct Miocardic, Transplant, etc,`,
         actionType: 'buttons',
-        options: [],
-        autoContinue: true,
+        options: ['Continuă'],
         nextStep: () => 'ask_priority',
     },
     ask_priority: {
@@ -792,7 +797,7 @@ export default function Home() {
         setProgress(0);
         setConversation([]);
         setIsConversationDone(false);
-        renderStep('intro_1');
+        renderStep('welcome_1');
     }, [renderStep]);
 
     const handleStart = () => {
@@ -829,11 +834,3 @@ export default function Home() {
         </>
     );
 }
-
-    
-
-    
-
-    
-
-    

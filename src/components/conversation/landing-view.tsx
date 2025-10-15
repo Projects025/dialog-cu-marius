@@ -45,7 +45,7 @@ const LandingView = ({ onStart, isFadingOut }: LandingViewProps) => {
   return (
     <div
       className={cn(
-        "min-h-screen w-full flex flex-col justify-center items-center text-center p-6 md:p-8 transition-opacity duration-500",
+        "min-h-screen w-full flex flex-col pt-20 md:pt-32 items-center text-center p-6 md:p-8 transition-opacity duration-500",
         isFadingOut ? "opacity-0" : "opacity-100"
       )}
     >
@@ -87,7 +87,8 @@ const LandingView = ({ onStart, isFadingOut }: LandingViewProps) => {
             {/* 1. Titlul Principal - Mare, de Impact, cu spațiu dedesubt */}
             {/* ======================================================= */}
             <h1 className="text-4xl md:text-5xl font-bold text-white drop-shadow-lg mb-6">
-                Liniștea ta financiară, simplificată.
+                <span>Cât ești de pregătit financiar</span>
+                <span className="block mt-2">pentru surprizele vieții?</span>
             </h1>
 
             {/* ====================================================================== */}
@@ -95,10 +96,8 @@ const LandingView = ({ onStart, isFadingOut }: LandingViewProps) => {
             {/* ====================================================================== */}
             <div className="mb-10">
                 <p className="text-lg md:text-xl text-gray-300 drop-shadow-md">
-                    Descoperă care este gradul tău de expunere financiară
-                </p>
-                <p className="text-lg md:text-xl text-gray-300/80 drop-shadow-md mt-2">
-                    Fără jargon, fără obligații.
+                    <span>Fă o scurtă analiză și</span>
+                    <span className="block mt-1">descoperă unde ești vulnerabil.</span>
                 </p>
             </div>
 
