@@ -263,7 +263,7 @@ Ești pregătit(ă) să mai facem un pas?`,
             nextStep: (response) => response === 'Da' ? 'deces.ask_contact_details' : 'common.end_dialog_friendly'
         },
         ask_contact_details: {
-            message: () => "Am nevoie de datele tale de contact (nume, telefon, email), iar în cel mai scurt timp posibil, consultantul care ți-a dat acest link te va contacta pentru construirea soluției.\n\nDe asemenea, am rugămintea să semnezi și un acord GDPR care să îi permită consultantului să te contacteze într-un cadru legal.",
+            message: () => "Am nevoie de datele tale de contact (nume, telefon, email), iar în cel mai scurt timp posibil, consultantul care ți-a dat acest link te va contacta pentru construirea soluției.\n\nDe asemenea, am rugămintea să semnezi și un acord GDPR care să îmi permită să te contactez într-un cadru legal.",
             actionType: 'form',
             isProgressStep: true,
             options: {
