@@ -531,20 +531,26 @@ const introFlow: ConversationFlow = {
     welcome_1: {
         message: () => `Salut!`,
         actionType: 'buttons',
-        options: ['Continuă'],
-        nextStep: () => 'welcome_2'
+        options: [],
+        nextStep: () => 'welcome_2',
+        autoContinue: true,
+        delay: 500,
     },
     welcome_2: {
         message: () => `Sunt Marius, consultantul tău financiar.`,
         actionType: 'buttons',
-        options: ['Continuă'],
-        nextStep: () => 'welcome_3'
+        options: [],
+        nextStep: () => 'welcome_3',
+        autoContinue: true,
+        delay: 1200,
     },
     welcome_3: {
         message: () => `În următoarele 3 minute te invit la un moment de reflecție și de analiză prin care să descoperi care este gradul tău de expunere financiară.`,
         actionType: 'buttons',
-        options: ['Continuă'],
-        nextStep: () => 'welcome_4'
+        options: [],
+        nextStep: () => 'welcome_4',
+        autoContinue: true,
+        delay: 1200,
     },
     welcome_4: {
         message: () => `Această analiză nu implică nicio obligație din partea ta.`,
@@ -643,7 +649,7 @@ const getStep = (stepId: string): ConversationStep | null => {
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 const calculateDynamicDelay = (text: string): number => {
-    const BASE_DELAY = 200; 
+    const BASE_DELAY = 50; 
     const WORDS_PER_SECOND = 4; 
 
     if (!text) return BASE_DELAY;
@@ -653,7 +659,7 @@ const calculateDynamicDelay = (text: string): number => {
 
     const readingTime = (wordCount / WORDS_PER_SECOND) * 1000;
     
-    return Math.max(BASE_DELAY, Math.min(readingTime, 1500));
+    return Math.max(BASE_DELAY, Math.min(readingTime, 400));
 }
 
 
