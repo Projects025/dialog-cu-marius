@@ -74,7 +74,8 @@ const conversationFlows: { [key: string]: ConversationFlow } = {
         intro_analysis_2: {
             message: () => `În momentele următoare, vom răspunde la 6 întrebări prin care să stabilim care este suma de bani de care ar avea nevoie familia pentru a ameliora impactul financiar negativ al decesului asupra...`,
             actionType: 'buttons',
-            options: ['Continuă'],
+            options: [],
+            autoContinue: true,
             nextStep: () => 'deces.intro_analysis_3'
         },
         intro_analysis_3: {
@@ -109,7 +110,8 @@ Dacă ești pregătit/ă, haide să continuăm.`,
                 return `<span class="text-2xl font-bold">${deficit1.toLocaleString('ro-RO')} lei</span>`;
             },
             actionType: 'buttons',
-            options: ['Continuă'],
+            options: [],
+            autoContinue: true,
             nextStep: () => 'deces.show_deficit_1_explanation'
         },
         show_deficit_1_explanation: {
@@ -123,7 +125,8 @@ Ești pregătit(ă) să mai facem un pas?`,
         ask_event_costs_intro: {
             message: () => "2. În cazul unui posibil deces, evenimentul în sine este însoțit de anumite cheltuieli (ex. înmormântare, taxe succesorale etc.)",
             actionType: 'buttons',
-            options: ['Continuă'],
+            options: [],
+            autoContinue: true,
             nextStep: () => 'deces.ask_event_costs_prompt'
         },
         ask_event_costs_prompt: {
@@ -132,12 +135,6 @@ Ești pregătit(ă) să mai facem un pas?`,
             isProgressStep: true,
             options: { placeholder: 'Ex: 25000', type: 'number' },
             handler: (response, data) => { data.eventCosts = Number(response); },
-            nextStep: () => 'deces.continue_prompt_1'
-        },
-        continue_prompt_1: {
-            message: () => "Mergem mai departe?",
-            actionType: 'buttons',
-            options: ['Da'],
             nextStep: () => 'deces.ask_projects'
         },
         ask_projects: {
@@ -161,7 +158,8 @@ Ești pregătit(ă) să mai facem un pas?`,
         brute_deficit_intro: {
             message: () => "Suma deficit totală este:",
             actionType: 'buttons',
-            options: ['Continuă'],
+            options: [],
+            autoContinue: true,
             nextStep: () => 'deces.show_brute_deficit'
         },
         show_brute_deficit: {
@@ -174,7 +172,7 @@ Ești pregătit(ă) să mai facem un pas?`,
             nextStep: () => 'deces.ask_insurance'
         },
         ask_insurance: {
-            message: () => "5. În cazul unui posibil deces, familia ta ar beneficia de vreo asigurare de viață pe numele tău? Nu mă refer la acele asigurări care sunt cesionate în favoarea băncii, ci acele asigurări care să aibă ca beneficiar - familia ta.\n\nDacă da, care este suma de bani pe care ai tăi ar încasa-o dintr-o astfel de asigurare de viață (în lei)?",
+            message: () => "5. În cazul unui posibil deces, familia ta ar beneficia de vreo asigurare de viață pe numele tău?\n\nMă refer la asigurările care au ca beneficiar direct familia ta, nu cele cesionate băncii pentru un credit.\n\nDacă da, care este suma de bani pe care ai tăi ar încasa-o dintr-o astfel de asigurare de viață (în lei)?",
             actionType: 'input',
             isProgressStep: true,
             options: { placeholder: 'Ex: 125000', type: 'number' },
@@ -192,7 +190,8 @@ Ești pregătit(ă) să mai facem un pas?`,
         show_final_deficit_intro: {
             message: () => "Sumele rezultate din asigurări de viață cu beneficiar familia și sumele de bani rezultate din economii / investiții vor fi scăzute din suma-deficit calculată anterior.",
             actionType: 'buttons',
-            options: ['Continuă'],
+            options: [],
+            autoContinue: true,
             nextStep: () => 'deces.show_final_deficit_context_1'
         },
         show_final_deficit_context_1: {
