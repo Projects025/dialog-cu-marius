@@ -531,22 +531,19 @@ const introFlow: ConversationFlow = {
     welcome_1: {
         message: () => `Salut!`,
         actionType: 'buttons',
-        options: [],
-        autoContinue: true,
+        options: ['Continuă'],
         nextStep: () => 'welcome_2'
     },
     welcome_2: {
         message: () => `Sunt Marius, consultantul tău financiar.`,
         actionType: 'buttons',
-        options: [],
-        autoContinue: true,
+        options: ['Continuă'],
         nextStep: () => 'welcome_3'
     },
     welcome_3: {
         message: () => `În următoarele 3 minute te invit la un moment de reflecție și de analiză prin care să descoperi care este gradul tău de expunere financiară.`,
         actionType: 'buttons',
-        options: [],
-        autoContinue: true,
+        options: ['Continuă'],
         nextStep: () => 'welcome_4'
     },
     welcome_4: {
@@ -646,8 +643,8 @@ const getStep = (stepId: string): ConversationStep | null => {
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 const calculateDynamicDelay = (text: string): number => {
-    const BASE_DELAY = 600; 
-    const WORDS_PER_SECOND = 5; 
+    const BASE_DELAY = 200; 
+    const WORDS_PER_SECOND = 4; 
 
     if (!text) return BASE_DELAY;
 
@@ -656,7 +653,7 @@ const calculateDynamicDelay = (text: string): number => {
 
     const readingTime = (wordCount / WORDS_PER_SECOND) * 1000;
     
-    return Math.min(BASE_DELAY + readingTime, 2500);
+    return Math.max(BASE_DELAY, Math.min(readingTime, 1500));
 }
 
 
@@ -703,7 +700,7 @@ export default function Home() {
 
         if (messageContent) {
             setIsTyping(true);
-            await delay(step.delay || 1500);
+            await delay(step.delay || 1000);
             setIsTyping(false);
             addMessage({ author: "Marius", type: "text" }, messageContent);
             

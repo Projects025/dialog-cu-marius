@@ -85,15 +85,19 @@ const ActionButtons = ({ options, onResponse }: { options: any[], onResponse: (v
                 const label = isComplexOption ? option.label : option;
                 const isDisabled = isComplexOption ? !!option.disabled : false;
                 const displayText = isDisabled ? `${label} (în curând)` : label;
+                 const isPrimary = ['Continuă', 'Continuăm', 'Da'].includes(label);
 
                 return (
                     <Button
                         key={index}
                         onClick={() => onResponse(isComplexOption ? option : label)}
-                        variant="outline"
+                        variant={isPrimary ? "default" : "outline"}
                         disabled={isDisabled}
                         className={cn(
-                            "bg-background/80 backdrop-blur-sm border-border text-foreground shadow-md justify-center py-3 min-h-[52px] h-auto text-base hover:bg-accent",
+                            "shadow-md justify-center py-3 min-h-[52px] h-auto text-base",
+                            isPrimary 
+                                ? "bg-amber-400 text-gray-900 font-bold hover:bg-amber-300"
+                                : "bg-background/80 backdrop-blur-sm border-border text-foreground hover:bg-accent",
                             isDisabled && "opacity-50 cursor-not-allowed hover:bg-transparent"
                         )}
                     >
