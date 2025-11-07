@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { User, signOut, onAuthStateChanged } from "firebase/auth";
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
-import { QRCode } from "qrcode.react";
+import QRCode from "qrcode.react";
 
 import { auth, db } from "@/lib/firebaseConfig";
 import { Button } from "@/components/ui/button";
