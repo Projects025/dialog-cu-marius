@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import LandingView from "@/components/conversation/landing-view";
 import ChatView from "@/components/conversation/chat-view";
 import type { Message, UserAction } from "@/components/conversation/chat-view";
@@ -14,14 +15,15 @@ import {
 } from "@/lib/calculation";
 import type { FinancialData } from "@/lib/calculation";
 import { format } from "date-fns";
+import { db } from "@/lib/firebaseConfig";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
-// ===================================================================
-// =========== PUNE AICI URL-ul GENERAT DE GOOGLE APPS SCRIPT ===========
-// ===================================================================
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzqIZZIbWwzeSvAUSrJlJ2ea47xYrA-V30DI-W3chduhknAV6yZ-BOQ176_vToc86pjtQ/exec";
-// ===================================================================
-
-async function sendDataToGoogleSheet(data: any) {
+async function saveLeadToFirestore(data: any, agentId: string | null) {
+    if (!agentId) {
+        console.error("Eroare critică: ID-ul agentului lipsește la trimitere.");
+        return; 
+    }
+    
     // Creează o copie a datelor pentru a nu modifica originalul
     const dataToSend = { ...data };
 
@@ -34,16 +36,13 @@ async function sendDataToGoogleSheet(data: any) {
     }
 
     try {
-        await fetch(SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors', // Necesar pentru a evita erorile CORS
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(dataToSend) // Trimitem TOT obiectul de date
+        await addDoc(collection(db, "leads"), { 
+            ...dataToSend, 
+            agentId: agentId, // Adaugă ID-ul agentului
+            timestamp: serverTimestamp() // Adaugă data
         });
     } catch (error) {
-        console.error("Eroare la trimiterea datelor către Google Sheet:", error);
+        console.error("Eroare la salvarea în Firestore:", error);
     }
 }
 
@@ -287,7 +286,7 @@ Ești pregătit(ă) să mai facem un pas?`,
             options: ['Dimineața', 'După-masa', 'Seara'],
             handler: (response, data) => { 
                 data.preferredContactTime = response; 
-                sendDataToGoogleSheet(data);
+                // This gets called but agentIdRef is not passed yet
             },
             nextStep: () => 'deces.thank_you_final'
         },
@@ -376,7 +375,6 @@ Ești pregătit(ă) să mai facem un pas?`,
             },
             handler: (response, data) => {
                 data.contact = response;
-                sendDataToGoogleSheet(data);
             },
             nextStep: () => 'common.end_dialog_success'
         },
@@ -444,7 +442,6 @@ Ești pregătit(ă) să mai facem un pas?`,
             },
             handler: (response, data) => {
                 data.contact = response;
-                sendDataToGoogleSheet(data);
             },
             nextStep: () => 'common.end_dialog_success'
         },
@@ -506,7 +503,6 @@ Ești pregătit(ă) să mai facem un pas?`,
             },
             handler: (response, data) => {
                 data.contact = response;
-                sendDataToGoogleSheet(data);
             },
             nextStep: () => 'common.end_dialog_success'
         },
@@ -663,6 +659,12 @@ const calculateDynamicDelay = (text: string): number => {
 
 
 export default function Home() {
+    const searchParams = useSearchParams();
+    const agentIdRef = useRef<string | null>(null);
+    useEffect(() => {
+        agentIdRef.current = searchParams.get('agentId');
+    }, [searchParams]);
+
     const [view, setView] = useState<"landing" | "chat">("landing");
     const [isFadingOut, setIsFadingOut] = useState(false);
     const [conversation, setConversation] = useState<Message[]>([]);
@@ -788,11 +790,23 @@ export default function Home() {
         }
 
         const nextStepId = step.nextStep(Array.isArray(response) ? response.map(r => r.id || r) : (response.id || responseValue), userDataRef.current);
+        
+        // Final save logic before ending conversation
+        if (step.nextStep() === 'deces.thank_you_final' || step.nextStep() === 'common.end_dialog_success') {
+            await saveLeadToFirestore(userDataRef.current, agentIdRef.current);
+        }
+
         await renderStep(nextStepId);
 
     }, [addMessage, renderStep]);
 
     const startConversation = useCallback(() => {
+        if (!agentIdRef.current) {
+            addMessage({ author: "Marius", type: "text" }, "Eroare: Link-ul de acces este invalid sau incomplet. Te rog contactează consultantul tău.");
+            setCurrentUserAction({ type: 'end' } as UserAction);
+            return;
+        }
+
         userDataRef.current = {};
         conversationIdRef.current = 0;
         currentProgressStep.current = 0;
@@ -800,7 +814,7 @@ export default function Home() {
         setConversation([]);
         setIsConversationDone(false);
         renderStep('welcome_1');
-    }, [renderStep]);
+    }, [renderStep, addMessage]);
 
     const handleStart = () => {
         setIsFadingOut(true);

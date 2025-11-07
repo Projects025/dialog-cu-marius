@@ -4,13 +4,11 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { User, signOut, onAuthStateChanged } from "firebase/auth";
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
-import QRCode from "qrcode.react";
 
 import { auth, db } from "@/lib/firebaseConfig";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -90,14 +88,9 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="flex flex-col items-center gap-4">
               {userLink && (
-                <>
-                   <div className="p-4 bg-muted rounded-lg w-full flex justify-center">
-                     <QRCode value={userLink} size={180} />
-                   </div>
                    <a href={userLink} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline break-all text-center">
                      {userLink}
                    </a>
-                </>
               )}
             </CardContent>
           </Card>
