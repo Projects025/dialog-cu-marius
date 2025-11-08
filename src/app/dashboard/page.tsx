@@ -211,7 +211,7 @@ export default function DashboardPage() {
                             </div>
                         </div>
                         <DialogFooter>
-                            <Button type="submit" onClick={handleSaveClient}>Salvează Client</Button>
+                            <Button type="button" onClick={handleSaveClient}>Salvează Client</Button>
                         </DialogFooter>
                     </DialogContent>
                  </Dialog>
@@ -276,3 +276,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
