@@ -17,6 +17,8 @@ import type { FinancialData } from "@/lib/calculation";
 import { format } from "date-fns";
 import { db } from "@/lib/firebaseConfig";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/errors";
 
 async function saveLeadToFirestore(data: any, agentId: string | null) {
     if (!agentId) {
@@ -24,10 +26,8 @@ async function saveLeadToFirestore(data: any, agentId: string | null) {
         return; 
     }
     
-    // Creează o copie a datelor pentru a nu modifica originalul
     const dataToSend = { ...data };
 
-    // Convertește array-urile în string-uri pentru a fi ușor de citit în Google Sheet
     if (Array.isArray(dataToSend.dramaticOptions)) {
         dataToSend.dramaticOptions = dataToSend.dramaticOptions.join(', ');
     }
@@ -35,15 +35,20 @@ async function saveLeadToFirestore(data: any, agentId: string | null) {
         dataToSend.priorities = dataToSend.priorities.join(', ');
     }
 
-    try {
-        await addDoc(collection(db, "leads"), { 
-            ...dataToSend, 
-            agentId: agentId, // Adaugă ID-ul agentului
-            timestamp: serverTimestamp() // Adaugă data
-        });
-    } catch (error) {
-        console.error("Eroare la salvarea în Firestore:", error);
-    }
+    const leadsCollection = collection(db, "leads");
+
+    addDoc(leadsCollection, { 
+        ...dataToSend, 
+        agentId: agentId,
+        timestamp: serverTimestamp()
+    }).catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: leadsCollection.path,
+            operation: 'create',
+            requestResourceData: { ...dataToSend, agentId, timestamp: new Date().toISOString() }, // Approximate timestamp
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+    });
 }
 
 
@@ -799,6 +804,8 @@ export default function Home() {
         await renderStep(nextStepId);
 
     }, [addMessage, renderStep]);
+
+
 
     const startConversation = useCallback(() => {
         if (!agentIdRef.current) {

@@ -3,6 +3,7 @@ import { Poppins } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from "@/lib/utils";
+import FirebaseErrorListener from "@/components/FirebaseErrorListener";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -40,6 +41,7 @@ export default function RootLayout({
           poppins.variable
         )}
       >
+        <FirebaseErrorListener />
         <main className="relative z-10 h-full">{children}</main>
         <Toaster />
       </body>

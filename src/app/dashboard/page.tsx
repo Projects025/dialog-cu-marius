@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { User, signOut, onAuthStateChanged } from "firebase/auth";
-import { collection, query, where, getDocs, orderBy, doc, updateDoc, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, query, where, getDocs, orderBy, doc, updateDoc, addDoc, serverTimestamp, Firestore } from "firebase/firestore";
 
 import { auth, db } from "@/lib/firebaseConfig";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/errors";
 
 
 export default function DashboardPage() {
@@ -81,59 +83,61 @@ export default function DashboardPage() {
   };
 
   const handleSaveClient = async () => {
-    // 1. Validare simplă
     if (!newName.trim() || !newPhone.trim()) {
         alert("Numele și telefonul sunt obligatorii.");
         return;
     }
     
-    // 2. Setare stare de "loading"
     setIsSaving(true);
-    try {
-        // 3. Obținere ID Agent
-        const agentId = auth.currentUser?.uid;
-        if (!agentId) {
-            throw new Error("Agentul nu este autentificat.");
-        }
-        // 4. Pregătire document
-        const newClientData = {
-            contact: {
-                name: newName,
-                email: newEmail,
-                phone: newPhone
-            },
-            status: newStatus,
-            agentId: agentId,
-            timestamp: serverTimestamp(),
-            source: 'Manual' // Sursă pentru a ști că a fost adăugat manual
-        };
-
-        // 5. Salvare în Firestore
-        const docRef = await addDoc(collection(db, 'leads'), newClientData);
-
-        // 6. Actualizare instantanee a interfeței (UI)
-        const clientForUI = { 
-            id: docRef.id, 
-            ...newClientData,
-            timestamp: new Date() // Use current date for immediate UI feedback
-        };
-        setLeads(prevLeads => [clientForUI, ...prevLeads]);
-        
-        // 7. Închidere și resetare
-        setIsModalOpen(false);
-        setNewName('');
-        setNewEmail('');
-        setNewPhone('');
-        setNewStatus('Nou');
-
-    } catch (error: any) {
-        // 8. Managementul erorilor
-        console.error("Eroare la salvarea clientului:", error);
-        alert(`A apărut o eroare la salvare: ${error.message}`);
-    } finally {
-        // 9. Oprire stare de "loading"
+    
+    const agentId = auth.currentUser?.uid;
+    if (!agentId) {
+        alert("Agentul nu este autentificat.");
         setIsSaving(false);
+        return;
     }
+    
+    const newClientData = {
+        contact: {
+            name: newName,
+            email: newEmail,
+            phone: newPhone
+        },
+        status: newStatus,
+        agentId: agentId,
+        timestamp: serverTimestamp(),
+        source: 'Manual'
+    };
+
+    const leadsCollection = collection(db, 'leads');
+
+    addDoc(leadsCollection, newClientData)
+        .then(docRef => {
+            const clientForUI = { 
+                id: docRef.id, 
+                ...newClientData,
+                timestamp: new Date()
+            };
+            setLeads(prevLeads => [clientForUI, ...prevLeads]);
+            
+            setIsModalOpen(false);
+            setNewName('');
+            setNewEmail('');
+            setNewPhone('');
+            setNewStatus('Nou');
+        })
+        .catch(async (serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: leadsCollection.path,
+                operation: 'create',
+                requestResourceData: newClientData,
+            } satisfies SecurityRuleContext);
+
+            errorEmitter.emit('permission-error', permissionError);
+        })
+        .finally(() => {
+            setIsSaving(false);
+        });
   };
 
 
@@ -294,6 +298,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-
-    
