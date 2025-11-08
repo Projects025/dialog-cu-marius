@@ -4,13 +4,16 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { User, signOut, onAuthStateChanged } from "firebase/auth";
-import { collection, query, where, getDocs, orderBy, doc, updateDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, orderBy, doc, updateDoc, addDoc, serverTimestamp } from "firebase/firestore";
 
 import { auth, db } from "@/lib/firebaseConfig";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 
 export default function DashboardPage() {
@@ -18,6 +21,14 @@ export default function DashboardPage() {
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  // State for the "Add Client" modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [newPhone, setNewPhone] = useState("");
+  const [newStatus, setNewStatus] = useState("Nou");
+
 
   // Route protection and user fetching
   useEffect(() => {
@@ -32,6 +43,25 @@ export default function DashboardPage() {
     return () => unsubscribe();
   }, [router]);
 
+  const fetchLeads = async (currentUserId: string) => {
+    try {
+      const q = query(
+        collection(db, "leads"),
+        where("agentId", "==", currentUserId),
+        orderBy("timestamp", "desc")
+      );
+      const querySnapshot = await getDocs(q);
+      const leadsData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        timestamp: doc.data().timestamp?.toDate()
+      }));
+      setLeads(leadsData);
+    } catch (error) {
+      console.error("Error fetching leads:", error);
+    }
+  };
+
   const handleStatusChange = async (leadId: string, newStatus: string) => {
     try {
         const leadRef = doc(db, "leads", leadId);
@@ -39,7 +69,6 @@ export default function DashboardPage() {
             status: newStatus
         });
         
-        // Update local state for instant UI feedback
         setLeads(prevLeads => 
             prevLeads.map(lead => 
                 lead.id === leadId ? { ...lead, status: newStatus } : lead
@@ -50,29 +79,46 @@ export default function DashboardPage() {
     }
   };
 
+  const handleSaveClient = async () => {
+    if (!user || !newName.trim()) {
+        alert("Numele este obligatoriu.");
+        return;
+    }
+    
+    const newClient = {
+        contact: {
+            name: newName,
+            email: newEmail,
+            phone: newPhone
+        },
+        status: newStatus,
+        agentId: user.uid,
+        timestamp: serverTimestamp()
+    };
+
+    try {
+        const docRef = await addDoc(collection(db, "leads"), newClient);
+        // Optimistically update the UI
+        setLeads(prevLeads => [{ id: docRef.id, ...newClient, timestamp: new Date() }, ...prevLeads]);
+        
+        // Reset form and close modal
+        setIsModalOpen(false);
+        setNewName("");
+        setNewEmail("");
+        setNewPhone("");
+        setNewStatus("Nou");
+
+    } catch (error) {
+        console.error("Error adding new client:", error);
+        alert("A apărut o eroare la salvarea clientului.");
+    }
+  };
+
 
   // Fetch leads when user is available
   useEffect(() => {
     if (user) {
-      const fetchLeads = async () => {
-        try {
-          const q = query(
-            collection(db, "leads"),
-            where("agentId", "==", user.uid),
-            orderBy("timestamp", "desc")
-          );
-          const querySnapshot = await getDocs(q);
-          const leadsData = querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-            timestamp: doc.data().timestamp?.toDate() // Convert Firestore Timestamp to JS Date
-          }));
-          setLeads(leadsData);
-        } catch (error) {
-          console.error("Error fetching leads:", error);
-        }
-      };
-      fetchLeads();
+      fetchLeads(user.uid);
     }
   }, [user]);
 
@@ -118,7 +164,52 @@ export default function DashboardPage() {
           </Card>
           <Card className="md:col-span-2">
             <CardHeader>
-              <CardTitle>Clienții Tăi</CardTitle>
+               <div className="flex justify-between items-center">
+                 <CardTitle>Clienții Tăi</CardTitle>
+                 <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                    <DialogTrigger asChild>
+                        <Button>Adaugă Client Nou</Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader>
+                            <DialogTitle>Adaugă un Client Nou</DialogTitle>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="name" className="text-right">Nume</Label>
+                                <Input id="name" value={newName} onChange={(e) => setNewName(e.target.value)} className="col-span-3" />
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="email" className="text-right">Email</Label>
+                                <Input id="email" type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} className="col-span-3" />
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="phone" className="text-right">Telefon</Label>
+                                <Input id="phone" type="tel" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} className="col-span-3" />
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="status" className="text-right">Status</Label>
+                                <Select onValueChange={setNewStatus} defaultValue={newStatus}>
+                                    <SelectTrigger className="col-span-3">
+                                        <SelectValue placeholder="Selectează status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Nou">Nou</SelectItem>
+                                        <SelectItem value="De contactat">De contactat</SelectItem>
+                                        <SelectItem value="Contactat">Contactat</SelectItem>
+                                        <SelectItem value="Ofertă trimisă">Ofertă trimisă</SelectItem>
+                                        <SelectItem value="Convertit">Convertit</SelectItem>
+                                        <SelectItem value="Inactiv">Inactiv</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button type="submit" onClick={handleSaveClient}>Salvează Client</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                 </Dialog>
+               </div>
             </CardHeader>
             <CardContent>
                 <div className="border rounded-lg overflow-hidden">
@@ -179,4 +270,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
