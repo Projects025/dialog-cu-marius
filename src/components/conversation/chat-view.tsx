@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Send, Circle, CheckCircle2 } from "lucide-react";
+import { Send, Circle, CheckCircle2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "../ui/checkbox";
 import { Label } from "../ui/label";
@@ -33,6 +33,8 @@ interface ChatViewProps {
   progress: number;
   isConversationDone: boolean;
   isTyping: boolean;
+  isLoading: boolean;
+  errorMessage: string | null;
 }
 
 const UserInput = ({ options, onResponse }: { options: any, onResponse: (value: string | number) => void }) => {
@@ -363,7 +365,7 @@ const EndConversationModal = () => {
     );
 };
 
-const ChatView = ({ conversation, userAction, onResponse, progress, isConversationDone, isTyping }: ChatViewProps) => {
+const ChatView = ({ conversation, userAction, onResponse, progress, isConversationDone, isTyping, isLoading, errorMessage }: ChatViewProps) => {
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
   const actionsContainerRef = useRef<HTMLDivElement>(null);
   const spacerRef = useRef<HTMLDivElement>(null);
@@ -424,6 +426,24 @@ const ChatView = ({ conversation, userAction, onResponse, progress, isConversati
     };
     return <p className="whitespace-pre-wrap" dangerouslySetInnerHTML={createMarkup()} />;
 };
+
+  if (isLoading) {
+    return (
+        <div className="flex flex-col items-center justify-center h-full text-center">
+            <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+            <p className="text-foreground/80">Se încarcă formularul...</p>
+        </div>
+    );
+  }
+
+  if (errorMessage) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full text-center p-4">
+            <h2 className="text-xl font-bold text-destructive mb-2">Eroare de configurare</h2>
+            <p className="text-foreground/80">{errorMessage}</p>
+        </div>
+      );
+  }
 
   return (
     <div id="chat-container" className="relative w-full h-full flex flex-col rounded-none md:rounded-2xl shadow-none md:shadow-2xl overflow-hidden animate-in fade-in-50">
@@ -488,12 +508,3 @@ const ChatView = ({ conversation, userAction, onResponse, progress, isConversati
 };
 
 export default ChatView;
-
-
-    
-    
-
-
-    
-
-    

@@ -16,7 +16,7 @@ import {
 import type { FinancialData } from "@/lib/calculation";
 import { format } from "date-fns";
 import { db } from "@/lib/firebaseConfig";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, doc, getDoc } from "firebase/firestore";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/errors";
 
@@ -67,463 +67,16 @@ type ConversationFlow = {
     [key: string]: ConversationStep;
 };
 
-const conversationFlows: { [key: string]: ConversationFlow } = {
-    deces: {
-        intro_analysis_1: {
-            message: () => `Un deces afectează negativ pe multiple planuri, două dintre acestea fiind extrem de profunde și de durată - planul existențial (drama care însoțește pierderea persoanei dragi) și planul financiar (dispariția opțiunilor, apariția presiunilor financiare și a necesității de a ajusta nivelul de trai la noile realități).`,
-            actionType: 'buttons',
-            options: ['Continuă'],
-            nextStep: () => 'deces.intro_analysis_2'
-        },
-        intro_analysis_2: {
-            message: () => `În momentele următoare, vom răspunde la 6 întrebări prin care să stabilim care este suma de bani de care ar avea nevoie familia pentru a ameliora impactul financiar negativ al decesului asupra...`,
-            actionType: 'buttons',
-            options: [],
-            autoContinue: true,
-            nextStep: () => 'deces.intro_analysis_3'
-        },
-        intro_analysis_3: {
-            message: () => `(1.) standardului de viață,
-(2.) proiectelor în desfășurare și 
-(3.) eventualelor credite / datorii.
-
-Dacă ești pregătit/ă, haide să continuăm.`,
-            actionType: 'buttons',
-            options: ['Continuăm'],
-            nextStep: () => 'deces.ask_period'
-        },
-        ask_period: {
-            message: () => "1. În cazul unui posibil deces, care ar fi perioada de timp în care familia ta ar avea nevoie de susținere financiară pentru a-și menține nivelul de trai fără să fie nevoită să facă ajustări majore în stilul de viață (ex. vânzarea unor bunuri, ore suplimentare / al doilea job etc.)",
-            actionType: 'buttons',
-            isProgressStep: true,
-            options: ['3 ani', '4 ani', '5 ani'],
-            handler: (response, data) => { data.period = parseInt(response); },
-            nextStep: () => 'deces.ask_monthly_sum'
-        },
-        ask_monthly_sum: {
-            message: () => "Care ar fi suma lunară necesară (în lei) pentru acoperirea cheltuielilor lunare și menținerea actualului standard de viață?",
-            actionType: 'input',
-            isProgressStep: true,
-            options: { placeholder: 'Ex: 10000', type: 'number' },
-            handler: (response, data) => { data.monthlySum = Number(response); },
-            nextStep: () => 'deces.show_deficit_1_amount'
-        },
-        show_deficit_1_amount: {
-            message: (data) => {
-                const deficit1 = (data.monthlySum || 0) * (data.period || 0) * 12;
-                return `<span class="text-2xl font-bold">${deficit1.toLocaleString('ro-RO')} lei</span>`;
-            },
-            actionType: 'buttons',
-            options: [],
-            autoContinue: true,
-            nextStep: () => 'deces.show_deficit_1_explanation'
-        },
-        show_deficit_1_explanation: {
-            message: (data) => `Această sumă reprezintă deficitul pentru ${data.period} ani pentru menținerea standardului de viață, respectiv pentru liniștea sufletească și confortul financiar necesar celor dragi care fac mai ușoară acomodarea la noua realitate.
-<br><br>
-Ești pregătit(ă) să mai facem un pas?`,
-            actionType: 'buttons',
-            options: ['Da'],
-            nextStep: () => 'deces.ask_event_costs_intro'
-        },
-        ask_event_costs_intro: {
-            message: () => "2. În cazul unui posibil deces, evenimentul în sine este însoțit de anumite cheltuieli (ex. înmormântare, taxe succesorale etc.)",
-            actionType: 'buttons',
-            options: [],
-            autoContinue: true,
-            nextStep: () => 'deces.ask_event_costs_prompt'
-        },
-        ask_event_costs_prompt: {
-            message: () => "Care ar fi această sumă?",
-            actionType: 'input',
-            isProgressStep: true,
-            options: { placeholder: 'Ex: 25000', type: 'number' },
-            handler: (response, data) => { data.eventCosts = Number(response); },
-            nextStep: () => 'deces.ask_projects'
-        },
-        ask_projects: {
-            message: () => "3. În cazul unui posibil deces, există anumite proiecte în desfășurare la acest moment care ar avea de suferit (ex. o construcție la stadiu „la roșu” sau un sport de performanță al copiilor sau alte proiecte care sunt susținute din finanțele tale lunare)? \n\n Care ar fi suma totală de bani (în lei) necesară finalizării acestor proiecte?",
-            actionType: 'input',
-            isProgressStep: true,
-            options: { placeholder: 'Ex: 250000', type: 'number' },
-            handler: (response, data) => { data.projects = Number(response); },
-            nextStep: () => 'deces.ask_debts'
-        },
-        ask_debts: {
-            message: () => "4. În cazul unui posibil deces, rămân pe umerii familiei anumite responsabilități financiare de tip credite, datorii, obligații financiare etc.?\n\n Care ar fi suma de bani de care ar avea nevoie pentru a stinge aceste obligații (în lei)?",
-            actionType: 'input',
-            isProgressStep: true,
-            options: { placeholder: 'Ex: 400000', type: 'number' },
-            handler: (response, data) => {
-                data.debts = Number(response);
-            },
-            nextStep: () => 'deces.brute_deficit_intro'
-        },
-        brute_deficit_intro: {
-            message: () => "Suma deficit totală este:",
-            actionType: 'buttons',
-            options: [],
-            autoContinue: true,
-            nextStep: () => 'deces.show_brute_deficit'
-        },
-        show_brute_deficit: {
-            message: (data) => {
-                data.bruteDeficit = calculateBruteDeficit(data);
-                return `<span class="text-2xl font-bold">${data.bruteDeficit.toLocaleString('ro-RO')} lei</span>`;
-            },
-            actionType: 'buttons',
-            options: ['Continuă'],
-            nextStep: () => 'deces.ask_insurance'
-        },
-        ask_insurance: {
-            message: () => "5. În cazul unui posibil deces, familia ta ar beneficia de vreo asigurare de viață pe numele tău?\n\nMă refer la asigurările care au ca beneficiar direct familia ta, nu cele cesionate băncii pentru un credit.\n\nDacă da, care este suma de bani pe care ai tăi ar încasa-o dintr-o astfel de asigurare de viață (în lei)?",
-            actionType: 'input',
-            isProgressStep: true,
-            options: { placeholder: 'Ex: 125000', type: 'number' },
-            handler: (response, data) => { data.existingInsurance = Number(response); },
-            nextStep: () => 'deces.ask_savings'
-        },
-        ask_savings: {
-            message: () => "6. În cazul unui posibil deces, familia ta ar putea accesa anumite economii sau ar putea apela la anumite investiții (ex. chirii, vânzarea unui imobil etc.)?\n\nDacă da, care este suma de bani disponibilă?",
-            actionType: 'input',
-            isProgressStep: true,
-            options: { placeholder: 'Ex: 75000', type: 'number' },
-            handler: (response, data) => { data.savings = Number(response); },
-            nextStep: () => 'deces.show_final_deficit_intro'
-        },
-        show_final_deficit_intro: {
-            message: () => "Sumele rezultate din asigurări de viață cu beneficiar familia și sumele de bani rezultate din economii / investiții vor fi scăzute din suma-deficit calculată anterior.",
-            actionType: 'buttons',
-            options: [],
-            autoContinue: true,
-            nextStep: () => 'deces.show_final_deficit_context_1'
-        },
-        show_final_deficit_context_1: {
-            message: () => "Deficitul financiar cu care familia ta ar păși în acest viitor sumbru dacă n-ar mai putea conta pe sprijinul tău financiar este:",
-             actionType: 'buttons',
-            options: ['Continuă'],
-            nextStep: () => 'deces.show_final_deficit_amount'
-        },
-        show_final_deficit_amount: {
-            message: (data) => {
-                data.finalDeficit = calculateFinalDeficit(data);
-                return `<span class="text-2xl font-bold">${data.finalDeficit.toLocaleString('ro-RO')} lei</span>`;
-            },
-            actionType: 'buttons',
-            options: ['Continuă'],
-            nextStep: () => 'deces.ask_feeling_intro'
-        },
-        ask_feeling_intro: {
-            message: () => `Cum ți se pare această sumă?`,
-            actionType: 'buttons',
-            options: ['Continuă'],
-            nextStep: () => 'deces.ask_feeling_prompt'
-        },
-        ask_feeling_prompt: {
-            message: () => `Care este sentimentul pe care îl simți acum?`,
-            actionType: 'input',
-            isProgressStep: true,
-            options: { placeholder: 'Scrie aici...', type: 'text' },
-            handler: (response, data) => { data.feeling = response; },
-            nextStep: () => 'deces.ask_dramatic_options_intro'
-        },
-        ask_dramatic_options_intro: {
-            message: () => "În acest scenariu de imaginație sumbru, ce opțiuni ar avea cei dragi ai tăi pentru a menține un oarecare echilibru în standardul de viață?",
-            actionType: 'buttons',
-            options: ['Continuă'],
-            nextStep: () => 'deces.ask_dramatic_options_prompt',
-        },
-        ask_dramatic_options_prompt: {
-            message: () => "Bifează opțiunile realiste și cu care tu te simți confortabil pentru ai tăi:",
-            actionType: 'interactive_scroll_list',
-            isProgressStep: true,
-            options: {
-                options: [
-                    'Să se mute cu părinții',
-                    'Să se mute în alt oraș',
-                    'Să muncească suplimentar sau la al doilea job (și să dispară din viața copiilor)',
-                    'Să vândă din bunurile personale',
-                    'Să vândă casa / apartamentul',
-                    'Să reducă drastic cheltuieli / să renunțe la hobby-uri',
-                    'Să renunțe la proiecte personale',
-                    'Să amâne educația copiilor sau să se mulțumească cu foarte puțin',
-                    'Să ceară în mod constant ajutor de la familiei și de la prieteni',
-                    'Să renunțe la economiile / investițiile existente',
-                    'Să se mute în locuință mai mică',
-                    'Să accepte orice compromis major pentru a supraviețui financiar',
-                    'Să se căsătorească din obligații financiare',
-                    'Altceva'
-                ],
-                buttonText: "Am bifat"
-            },
-            handler: (response, data) => { data.dramaticOptions = response; },
-            nextStep: () => 'deces.present_solution'
-        },
-        present_solution: {
-            message: () => "Dacă nu ești foarte mulțumit cu opțiunile pe care familia ta le are pentru a menține standardul actual de viață, ai fi interesat să vezi o soluție personalizată care să ofere celor dragi ție o a doua șansă la o viață relativ normală, fără poveri financiare?\n\nPractic, o soluție prin care dragostea ta și grija ta pentru ei va continua chiar și după tine. \n\nPoți crea instant o moștenire care să îi ajute financiar pe cei dragi ție chiar și (mai ales!) în absența ta!",
-            actionType: 'buttons',
-            isProgressStep: true,
-            options: ['Da', 'Nu'],
-            nextStep: (response) => response === 'Da' ? 'deces.ask_contact_details' : 'common.end_dialog_friendly'
-        },
-        ask_contact_details: {
-            message: () => "Am nevoie de datele tale de contact (nume, telefon, email), iar în cel mai scurt timp posibil, consultantul care ți-a dat acest link te va contacta pentru construirea soluției.\n\nDe asemenea, am rugămintea să semnezi și un acord GDPR care să îmi permită să te contactez într-un cadru legal.",
-            actionType: 'form',
-            isProgressStep: true,
-            options: {
-                fields: [
-                    { name: 'name', placeholder: 'Nume Prenume', type: 'text', required: true },
-                    { name: 'email', placeholder: 'Email', type: 'email', required: true },
-                    { name: 'phone', placeholder: 'Telefon', type: 'tel', required: true },
-                ],
-                gdpr: 'Sunt de acord cu prelucrarea datelor personale.',
-                buttonText: 'Trimite'
-            },
-            handler: (response, data) => {
-                data.contact = response;
-            },
-            nextStep: () => 'deces.thank_you_contact'
-        },
-        thank_you_contact: {
-            message: () => "Mulțumesc pentru că mi-ai răspuns la întrebări, te voi contacta în curând!\n\nCând preferi să fii contactat?",
-            actionType: 'buttons',
-            isProgressStep: true,
-            options: ['Dimineața', 'După-masa', 'Seara'],
-            handler: (response, data) => { 
-                data.preferredContactTime = response; 
-                // This gets called but agentIdRef is not passed yet
-            },
-            nextStep: () => 'deces.thank_you_final'
-        },
-        thank_you_final: {
-            message: () => ``,
-            actionType: 'end',
-            nextStep: () => ''
-        }
+const commonFlow: ConversationFlow = {
+    end_dialog_friendly: {
+        message: () => "",
+        actionType: 'end',
+        nextStep: () => ''
     },
-    boala_grava: {
-        start_flow: {
-            message: () => "Am înțeles. Protejarea stabilității tale financiare în fața provocărilor medicale este esențială.",
-            actionType: 'buttons',
-            options: ['Continuă'],
-            nextStep: () => 'boala_grava.ask_monthly_need_health'
-        },
-        ask_monthly_need_health: {
-            message: () => "Mai întâi, care este suma lunară (în €) de care ai avea nevoie pentru a acoperi cheltuielile curente dacă nu ai mai putea genera venit?",
-            actionType: 'input',
-            options: { placeholder: 'Ex: 1500', type: 'number' },
-            handler: (response, data) => { data.monthlyNeed = Number(response); },
-            nextStep: () => 'boala_grava.ask_recovery_period'
-        },
-        ask_recovery_period: {
-            message: () => "Pentru ce perioadă (în luni) estimezi că ai avea nevoie de acest sprijin financiar pentru recuperare?",
-            actionType: 'buttons',
-            options: ['6 luni', '12 luni', '24 luni'],
-            handler: (response, data) => { data.recoveryPeriod = parseInt(response); },
-            nextStep: () => 'boala_grava.ask_medical_costs'
-        },
-        ask_medical_costs: {
-            message: () => "Ce sumă unică (în €) estimezi că ar fi necesară pentru costuri medicale (tratamente, intervenții, medicamente) neacoperite de stat?",
-            actionType: 'input',
-            options: { placeholder: 'Ex: 20000', type: 'number' },
-            handler: (response, data) => { data.medicalCosts = Number(response); },
-            nextStep: () => 'boala_grava.ask_existing_savings_health'
-        },
-        ask_existing_savings_health: {
-            message: () => "Ai deja o asigurare privată de sănătate sau economii dedicate pentru urgențe medicale? Dacă da, care este suma totală?",
-            actionType: 'input',
-            options: { placeholder: 'Ex: 5000', type: 'number' },
-            handler: (response, data) => { data.existingSavings = Number(response); },
-            nextStep: () => 'boala_grava.show_health_deficit'
-        },
-        show_health_deficit: {
-            message: (data) => {
-                data.healthDeficit = calculateHealthDeficit(data);
-                return `Am calculat. Necesarul financiar pentru a trece peste o perioadă dificilă este de ${data.healthDeficit.toLocaleString('ro-RO')} €.`;
-            },
-            actionType: 'buttons',
-            options: ['Continuă'],
-            nextStep: () => 'boala_grava.show_impact_health'
-        },
-        show_impact_health: {
-            message: () => "A avea această siguranță înseamnă că te poți concentra 100% pe recuperare, fără stresul banilor și fără a afecta economiile familiei.",
-            actionType: 'buttons',
-            options: ['Continuă'],
-            nextStep: () => 'boala_grava.ask_dob_health'
-        },
-        ask_dob_health: {
-            message: () => "Pentru a-ți oferi o estimare de cost, mai am nevoie de data nașterii.",
-            actionType: 'date',
-            handler: (response, data) => { data.birthDate = response; },
-            nextStep: () => 'boala_grava.ask_solution_health'
-        },
-        ask_solution_health: {
-            message: (data) => {
-                data.premium = Math.max(25, Math.round(data.healthDeficit / 150)); // Simplified
-                return `O asigurare de sănătate care să acopere un risc de ${data.healthDeficit.toLocaleString('ro-RO')} € ar avea un cost estimat de ${data.premium.toLocaleString('ro-RO')} € pe lună. Dorești să afli mai multe de la un consultant?`;
-            },
-            actionType: 'buttons',
-            options: ['Da, vreau detalii', 'Nu acum'],
-            nextStep: (response) => response === 'Da, vreau detalii' ? 'boala_grava.ask_contact_details' : 'common.end_dialog_friendly'
-        },
-        ask_contact_details: {
-             message: () => "Perfect. Pentru a stabili o discuție cu un consultant, te rog să completezi datele de mai jos. Acestea sunt confidențiale și vor fi folosite exclusiv în acest scop.",
-            actionType: 'form',
-            options: {
-                fields: [
-                    { name: 'name', placeholder: 'Nume', type: 'text', required: true },
-                    { name: 'email', placeholder: 'Email', type: 'email', required: true },
-                    { name: 'phone', placeholder: 'Telefon', type: 'tel', required: true },
-                ],
-                gdpr: 'Sunt de acord cu prelucrarea datelor personale.',
-                buttonText: 'Trimite'
-            },
-            handler: (response, data) => {
-                data.contact = response;
-            },
-            nextStep: () => 'common.end_dialog_success'
-        },
-    },
-    pensionare: {
-        start_flow: {
-            message: () => "Excelentă alegere! Planificarea pensiei este cheia unui viitor liniștit.",
-            actionType: 'buttons',
-            options: ['Continuă'],
-            nextStep: () => 'pensionare.ask_desired_pension'
-        },
-        ask_desired_pension: {
-            message: () => "Mai întâi, ce sumă lunară (în €) ți-ai dori să ai la pensie, în banii de azi?",
-            actionType: 'input',
-            options: { placeholder: 'Ex: 1500', type: 'number' },
-            handler: (response, data) => { data.desiredPension = Number(response); },
-            nextStep: () => 'pensionare.ask_retirement_age'
-        },
-        ask_retirement_age: {
-            message: () => "La ce vârstă ți-ai dori să te pensionezi?",
-            actionType: 'input',
-            options: { placeholder: 'Ex: 65', type: 'number' },
-            handler: (response, data) => { data.retirementAge = Number(response); },
-            nextStep: () => 'pensionare.ask_current_savings_pension'
-        },
-        ask_current_savings_pension: {
-            message: () => "Ai deja o sumă economisită special pentru pensie (Pilon 2, Pilon 3, alte investiții)? Dacă da, care este valoarea ei actuală?",
-            actionType: 'input',
-            options: { placeholder: 'Ex: 10000', type: 'number' },
-            handler: (response, data) => { data.currentSavings = Number(response); },
-            nextStep: () => 'pensionare.ask_dob_pension'
-        },
-        ask_dob_pension: {
-            message: () => "Pentru a-ți oferi un plan, am nevoie și de data ta de naștere.",
-            actionType: 'date',
-            handler: (response, data) => { data.birthDate = response; },
-            nextStep: () => 'pensionare.show_retirement_plan'
-        },
-        show_retirement_plan: {
-            message: (data) => {
-                data.monthlyContribution = calculateRetirementContribution(data);
-                return `Am calculat. Pentru a atinge obiectivul tău, ar fi necesar să economisești/investești aproximativ ${data.monthlyContribution.toLocaleString('ro-RO')} € pe lună, până la vârsta de pensionare.`;
-            },
-            actionType: 'buttons',
-            options: ['Continuă'],
-            nextStep: () => 'pensionare.ask_solution_pension'
-        },
-        ask_solution_pension: {
-            message: () => "Vestea bună este că, prin instrumente de investiții inteligente, poți pune banii la treabă pentru tine. Dorești să discuți cu un consultant despre un plan de acumulare personalizat?",
-            actionType: 'buttons',
-            options: ['Da, vreau detalii', 'Nu acum'],
-            nextStep: (response) => response === 'Da, vreau detalii' ? 'pensionare.ask_contact_details' : 'common.end_dialog_friendly'
-        },
-        ask_contact_details: {
-             message: () => "Perfect. Pentru a stabili o discuție cu un consultant, te rog să completezi datele de mai jos. Acestea sunt confidențiale și vor fi folosite exclusiv în acest scop.",
-            actionType: 'form',
-            options: {
-                fields: [
-                    { name: 'name', placeholder: 'Nume', type: 'text', required: true },
-                    { name: 'email', placeholder: 'Email', type: 'email', required: true },
-                    { name: 'phone', placeholder: 'Telefon', type: 'tel', required: true },
-                ],
-                gdpr: 'Sunt de acord cu prelucrarea datelor personale.',
-                buttonText: 'Trimite'
-            },
-            handler: (response, data) => {
-                data.contact = response;
-            },
-            nextStep: () => 'common.end_dialog_success'
-        },
-    },
-    studii_copii: {
-        start_flow: {
-            message: () => "O decizie minunată! Investiția în educația copiilor este cel mai de preț cadou.",
-            actionType: 'buttons',
-            options: ['Continuă'],
-            nextStep: () => 'studii_copii.ask_studies_goal'
-        },
-        ask_studies_goal: {
-            message: () => "Mai întâi, care este suma totală (în €) pe care estimezi că o vei avea nevoie pentru studiile copilului tău?",
-            actionType: 'input',
-            options: { placeholder: 'Ex: 50000', type: 'number' },
-            handler: (response, data) => { data.studiesGoal = Number(response); },
-            nextStep: () => 'studii_copii.ask_child_age'
-        },
-        ask_child_age: {
-            message: () => "Care este vârsta actuală a copilului?",
-            actionType: 'input',
-            options: { placeholder: 'Ex: 5', type: 'number' },
-            handler: (response, data) => { data.childAge = Number(response); },
-            nextStep: () => 'studii_copii.ask_current_savings_studies'
-        },
-        ask_current_savings_studies: {
-            message: () => "Ai deja o sumă economisită special pentru acest scop? Dacă da, care este valoarea ei?",
-            actionType: 'input',
-            options: { placeholder: 'Ex: 2000', type: 'number' },
-            handler: (response, data) => { data.currentSavings = Number(response); },
-            nextStep: () => 'studii_copii.show_studies_plan'
-        },
-        show_studies_plan: {
-            message: (data) => {
-                data.monthlyContribution = calculateStudiesContribution(data);
-                return `Am calculat. Pentru a atinge obiectivul tău până la majoratul copilului, ar fi necesar să economisești ${data.monthlyContribution.toLocaleString('ro-RO')} € pe lună.`;
-            },
-            actionType: 'buttons',
-            options: ['Continuă'],
-            nextStep: () => 'studii_copii.ask_solution_studies'
-        },
-        ask_solution_studies: {
-            message: () => "Prin produse dedicate, cum ar fi asigurările de studii, poți asigura acest viitor chiar și în situații neprevăzute. Dorești să afli mai multe de la un consultant?",
-            actionType: 'buttons',
-            options: ['Da, vreau detalii', 'Nu acum'],
-            nextStep: (response) => response === 'Da, vreau detalii' ? 'studii_copii.ask_contact_details' : 'common.end_dialog_friendly'
-        },
-        ask_contact_details: {
-             message: () => "Perfect. Pentru a stabili o discuție cu un consultant, te rog să completezi datele de mai jos. Acestea sunt confidențiale și vor fi folosite exclusiv în acest scop.",
-            actionType: 'form',
-            options: {
-                fields: [
-                    { name: 'name', placeholder: 'Nume', type: 'text', required: true },
-                    { name: 'email', placeholder: 'Email', type: 'email', required: true },
-                    { name: 'phone', placeholder: 'Telefon', type: 'tel', required: true },
-                ],
-                gdpr: 'Sunt de acord cu prelucrarea datelor personale.',
-                buttonText: 'Trimite'
-            },
-            handler: (response, data) => {
-                data.contact = response;
-            },
-            nextStep: () => 'common.end_dialog_success'
-        },
-    },
-    // Common steps
-    common: {
-        end_dialog_friendly: {
-            message: () => "",
-            actionType: 'end',
-            nextStep: () => ''
-        },
-        end_dialog_success: {
-            message: () => "",
-            actionType: 'end',
-            nextStep: () => ''
-        }
+    end_dialog_success: {
+        message: () => "",
+        actionType: 'end',
+        nextStep: () => ''
     }
 };
 
@@ -599,52 +152,12 @@ const introFlow: ConversationFlow = {
         handler: (response, data) => { data.priorities = response; },
         nextStep: (response) => {
             if (!response || response.length === 0) return 'common.end_dialog_friendly';
-            // Prioritize 'deces'
             const selectedId = response.find((r: string) => r === 'deces') || response[0];
-            
-            switch (selectedId) {
-                case 'deces':
-                    return 'deces.intro_analysis_1';
-                case 'boala_grava':
-                    return 'boala_grava.start_flow';
-                case 'pensionare':
-                    return 'pensionare.start_flow';
-                case 'studii_copii':
-                    return 'studii_copii.start_flow';
-                default:
-                    return 'common.end_dialog_friendly';
-            }
+            return `${selectedId}.intro_analysis_1`;
         }
     },
 };
 
-const allFlows = { ...introFlow, ...conversationFlows.deces, ...conversationFlows.boala_grava, ...conversationFlows.pensionare, ...conversationFlows.studii_copii, ...conversationFlows.common };
-
-const PROGRESS_STEPS_IDS = Object.keys(allFlows).filter(key => allFlows[key].isProgressStep);
-const TOTAL_STEPS = PROGRESS_STEPS_IDS.length;
-
-const getStep = (stepId: string): ConversationStep | null => {
-    if (!stepId) return null;
-    
-    const step = allFlows[stepId];
-    if (step) {
-        return step;
-    }
-
-    const [flow, stepKey] = stepId.split('.');
-    
-    if (flow && stepKey && conversationFlows[flow] && conversationFlows[flow][stepKey]) {
-        return conversationFlows[flow][stepKey];
-    }
-    
-    const commonStepKey = stepId.includes('.') ? stepId.split('.')[1] : stepId;
-    if (conversationFlows.common[commonStepKey]) {
-         return conversationFlows.common[commonStepKey];
-    }
-
-    console.error("Invalid stepId:", stepId);
-    return null;
-}
 
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
@@ -678,6 +191,42 @@ export default function Home() {
     const [isConversationDone, setIsConversationDone] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
     
+    const [loadedFlow, setLoadedFlow] = useState<ConversationFlow | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    
+    const allFlows = { 
+        ...introFlow, 
+        ...(loadedFlow || {}),
+        ...commonFlow
+    };
+
+    const PROGRESS_STEPS_IDS = Object.keys(allFlows).filter(key => allFlows[key]?.isProgressStep);
+    const TOTAL_STEPS = PROGRESS_STEPS_IDS.length;
+    
+    const getStep = (stepId: string): ConversationStep | null => {
+        if (!stepId) return null;
+        
+        const step = allFlows[stepId];
+        if (step) {
+            return step;
+        }
+
+        const [flow, stepKey] = stepId.split('.');
+        
+        if (flow && stepKey && loadedFlow && loadedFlow[stepId]) {
+            return loadedFlow[stepId];
+        }
+        
+        const commonStepKey = stepId.includes('.') ? stepId.split('.')[1] : stepId;
+        if (commonFlow[commonStepKey]) {
+             return commonFlow[commonStepKey];
+        }
+
+        console.error("Invalid stepId:", stepId);
+        return null;
+    }
+
     const conversationIdRef = useRef(0);
     const currentStateRef = useRef<string | null>(null);
     const userDataRef = useRef<FinancialData>({});
@@ -703,6 +252,9 @@ export default function Home() {
             setIsTyping(false);
             setIsConversationDone(true);
             setCurrentUserAction(null);
+            if (Object.keys(userDataRef.current).length > 1) { // more than just priorities
+                await saveLeadToFirestore(userDataRef.current, agentIdRef.current);
+            }
             return;
         }
 
@@ -728,7 +280,7 @@ export default function Home() {
         } else {
             setCurrentUserAction({ type: step.actionType, options: actionOptions });
         }
-    }, [addMessage]);
+    }, [addMessage, getStep]);
 
     const processUserResponse = useCallback(async (response: any) => {
         setCurrentUserAction(null);
@@ -741,11 +293,6 @@ export default function Home() {
         const step = getStep(currentStateRef.current);
         if (!step) return;
         
-        if (step.actionType === 'end') {
-            setIsConversationDone(true);
-            return;
-        }
-
         if (step.isProgressStep) {
             currentProgressStep.current++;
             const newProgress = TOTAL_STEPS > 0 ? (currentProgressStep.current / TOTAL_STEPS) * 100 : 0;
@@ -793,35 +340,84 @@ export default function Home() {
             const handlerResponse = Array.isArray(response) ? response.map(r => r.id || r) : (response.id || responseValue);
             step.handler(handlerResponse, userDataRef.current);
         }
+        
+        const isFinalStepBeforeEnd = step.nextStep(response) === 'common.end_dialog_success' || step.nextStep(response) === 'common.end_dialog_friendly';
+        if (isFinalStepBeforeEnd) {
+             await saveLeadToFirestore(userDataRef.current, agentIdRef.current);
+        }
 
         const nextStepId = step.nextStep(Array.isArray(response) ? response.map(r => r.id || r) : (response.id || responseValue), userDataRef.current);
         
-        // Final save logic before ending conversation
-        if (step.nextStep() === 'deces.thank_you_final' || step.nextStep() === 'common.end_dialog_success') {
-            await saveLeadToFirestore(userDataRef.current, agentIdRef.current);
-        }
-
         await renderStep(nextStepId);
 
-    }, [addMessage, renderStep]);
+    }, [addMessage, renderStep, getStep, TOTAL_STEPS]);
 
-
-
-    const startConversation = useCallback(() => {
-        if (!agentIdRef.current) {
-            addMessage({ author: "Marius", type: "text" }, "Eroare: Link-ul de acces este invalid sau incomplet. Te rog contactează consultantul tău.");
-            setCurrentUserAction({ type: 'end' } as UserAction);
-            return;
-        }
-
-        userDataRef.current = {};
-        conversationIdRef.current = 0;
-        currentProgressStep.current = 0;
-        setProgress(0);
+    const startConversation = useCallback(async () => {
+        setIsLoading(true);
+        setErrorMessage(null);
         setConversation([]);
-        setIsConversationDone(false);
-        renderStep('welcome_1');
-    }, [renderStep, addMessage]);
+        
+        try {
+            const agentId = agentIdRef.current;
+            if (!agentId) {
+                throw new Error("Link invalid sau incomplet. Te rog contactează consultantul tău.");
+            }
+
+            const agentRef = doc(db, "agents", agentId);
+            const agentDoc = await getDoc(agentRef);
+            if (!agentDoc.exists()) {
+                throw new Error("Agentul nu a fost găsit.");
+            }
+
+            const activeFormId = agentDoc.data().activeFormId;
+            if (!activeFormId) {
+                throw new Error("Acest agent nu are un formular activ configurat.");
+            }
+
+            const formRef = doc(db, "formTemplates", activeFormId);
+            const formDoc = await getDoc(formRef);
+            if (!formDoc.exists()) {
+                throw new Error("Formularul configurat nu a fost găsit.");
+            }
+            
+            const flowData = formDoc.data().flow as ConversationFlow;
+            
+            // Re-hydrate functions from string definitions if needed
+            Object.keys(flowData).forEach(stepKey => {
+                const step = flowData[stepKey] as any;
+                if (step.message && typeof step.message === 'string') {
+                    try {
+                        step.message = new Function('data', `return \`${step.message}\``);
+                    } catch (e) { console.error(`Error hydrating message for ${stepKey}:`, e); }
+                }
+                if (step.handler && typeof step.handler === 'string') {
+                     try {
+                        step.handler = new Function('response', 'data', step.handler);
+                     } catch (e) { console.error(`Error hydrating handler for ${stepKey}:`, e); }
+                }
+                if (step.nextStep && typeof step.nextStep === 'string') {
+                     try {
+                        step.nextStep = new Function('response', 'data', step.nextStep);
+                     } catch (e) { console.error(`Error hydrating nextStep for ${stepKey}:`, e); }
+                }
+            });
+            
+            setLoadedFlow(flowData);
+            
+            userDataRef.current = {};
+            conversationIdRef.current = 0;
+            currentProgressStep.current = 0;
+            setProgress(0);
+            setIsConversationDone(false);
+            
+            await renderStep('welcome_1');
+
+        } catch (error: any) {
+            setErrorMessage(error.message);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [renderStep]);
 
     const handleStart = () => {
         setIsFadingOut(true);
@@ -850,8 +446,9 @@ export default function Home() {
                         progress={progress}
                         isConversationDone={isConversationDone}
                         isTyping={isTyping}
+                        isLoading={isLoading}
+                        errorMessage={errorMessage}
                     />
-
                 )}
             </div>
         </>
