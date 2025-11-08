@@ -1,14 +1,17 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { User, signOut, onAuthStateChanged } from "firebase/auth";
-import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
+import { collection, query, where, getDocs, orderBy, doc, updateDoc } from "firebase/firestore";
 
 import { auth, db } from "@/lib/firebaseConfig";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -28,6 +31,25 @@ export default function DashboardPage() {
     });
     return () => unsubscribe();
   }, [router]);
+
+  const handleStatusChange = async (leadId: string, newStatus: string) => {
+    try {
+        const leadRef = doc(db, "leads", leadId);
+        await updateDoc(leadRef, {
+            status: newStatus
+        });
+        
+        // Update local state for instant UI feedback
+        setLeads(prevLeads => 
+            prevLeads.map(lead => 
+                lead.id === leadId ? { ...lead, status: newStatus } : lead
+            )
+        );
+    } catch (error) {
+        console.error("Error updating status:", error);
+    }
+  };
+
 
   // Fetch leads when user is available
   useEffect(() => {
@@ -107,6 +129,7 @@ export default function DashboardPage() {
                             <TableHead>Nume</TableHead>
                             <TableHead>Email</TableHead>
                             <TableHead>Telefon</TableHead>
+                            <TableHead>Status</TableHead>
                         </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -119,11 +142,29 @@ export default function DashboardPage() {
                                 <TableCell>{lead.contact?.name || "N/A"}</TableCell>
                                 <TableCell>{lead.contact?.email || "N/A"}</TableCell>
                                 <TableCell>{lead.contact?.phone || "N/A"}</TableCell>
+                                <TableCell>
+                                    <Select 
+                                        value={lead.status || "Nou"}
+                                        onValueChange={(newStatus) => handleStatusChange(lead.id, newStatus)}
+                                    >
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="Nou">Nou</SelectItem>
+                                            <SelectItem value="De contactat">De contactat</SelectItem>
+                                            <SelectItem value="Contactat">Contactat</SelectItem>
+                                            <SelectItem value="Ofertă trimisă">Ofertă trimisă</SelectItem>
+                                            <SelectItem value="Convertit">Convertit</SelectItem>
+                                            <SelectItem value="Inactiv">Inactiv</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </TableCell>
                             </TableRow>
                             ))
                         ) : (
                             <TableRow>
-                            <TableCell colSpan={4} className="text-center">
+                            <TableCell colSpan={5} className="text-center">
                                 Nu ai niciun client momentan.
                             </TableCell>
                             </TableRow>
@@ -138,3 +179,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
