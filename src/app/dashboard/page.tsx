@@ -111,33 +111,34 @@ export default function DashboardPage() {
 
     const leadsCollection = collection(db, 'leads');
 
-    addDoc(leadsCollection, newClientData)
-        .then(docRef => {
-            const clientForUI = { 
-                id: docRef.id, 
-                ...newClientData,
-                timestamp: new Date()
-            };
-            setLeads(prevLeads => [clientForUI, ...prevLeads]);
-            
-            setIsModalOpen(false);
-            setNewName('');
-            setNewEmail('');
-            setNewPhone('');
-            setNewStatus('Nou');
-        })
-        .catch(async (serverError) => {
-            const permissionError = new FirestorePermissionError({
-                path: leadsCollection.path,
-                operation: 'create',
-                requestResourceData: newClientData,
-            } satisfies SecurityRuleContext);
+    try {
+        const docRef = await addDoc(leadsCollection, newClientData);
 
-            errorEmitter.emit('permission-error', permissionError);
-        })
-        .finally(() => {
-            setIsSaving(false);
-        });
+        const clientForUI = {
+            id: docRef.id,
+            ...newClientData,
+            timestamp: new Date() 
+        };
+        setLeads(prevLeads => [clientForUI, ...prevLeads]);
+
+        setIsModalOpen(false);
+        setNewName('');
+        setNewEmail('');
+        setNewPhone('');
+        setNewStatus('Nou');
+
+    } catch (serverError: any) {
+        const permissionError = new FirestorePermissionError({
+            path: leadsCollection.path,
+            operation: 'create',
+            requestResourceData: newClientData,
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+        alert(`A apărut o eroare la salvare: ${serverError.message}`);
+
+    } finally {
+        setIsSaving(false);
+    }
   };
 
 
@@ -298,3 +299,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    

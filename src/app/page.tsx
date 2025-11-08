@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import LandingView from "@/components/conversation/landing-view";
 import ChatView from "@/components/conversation/chat-view";
@@ -195,16 +195,16 @@ export default function Home() {
     const [isLoading, setIsLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     
-    const allFlows = { 
-        ...introFlow, 
+    const allFlows = useMemo(() => ({
+        ...introFlow,
         ...(loadedFlow || {}),
         ...commonFlow
-    };
+    }), [loadedFlow]);
 
     const PROGRESS_STEPS_IDS = Object.keys(allFlows).filter(key => allFlows[key]?.isProgressStep);
     const TOTAL_STEPS = PROGRESS_STEPS_IDS.length;
-    
-    const getStep = (stepId: string): ConversationStep | null => {
+
+    const getStep = useCallback((stepId: string): ConversationStep | null => {
         if (!stepId) return null;
         
         const step = allFlows[stepId];
@@ -212,20 +212,9 @@ export default function Home() {
             return step;
         }
 
-        const [flow, stepKey] = stepId.split('.');
-        
-        if (flow && stepKey && loadedFlow && loadedFlow[stepId]) {
-            return loadedFlow[stepId];
-        }
-        
-        const commonStepKey = stepId.includes('.') ? stepId.split('.')[1] : stepId;
-        if (commonFlow[commonStepKey]) {
-             return commonFlow[commonStepKey];
-        }
-
         console.error("Invalid stepId:", stepId);
         return null;
-    }
+    }, [allFlows]);
 
     const conversationIdRef = useRef(0);
     const currentStateRef = useRef<string | null>(null);
@@ -454,3 +443,5 @@ export default function Home() {
         </>
     );
 }
+
+    
