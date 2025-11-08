@@ -98,8 +98,14 @@ export default function DashboardPage() {
 
     try {
         const docRef = await addDoc(collection(db, "leads"), newClient);
+        
         // Optimistically update the UI
-        setLeads(prevLeads => [{ id: docRef.id, ...newClient, timestamp: new Date() }, ...prevLeads]);
+        const clientForUI = { 
+            id: docRef.id, 
+            ...newClient, 
+            timestamp: new Date() // Use current date for immediate UI feedback
+        };
+        setLeads(prevLeads => [clientForUI, ...prevLeads]);
         
         // Reset form and close modal
         setIsModalOpen(false);
