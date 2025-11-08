@@ -28,6 +28,7 @@ export default function DashboardPage() {
   const [newEmail, setNewEmail] = useState("");
   const [newPhone, setNewPhone] = useState("");
   const [newStatus, setNewStatus] = useState("Nou");
+  const [isSaving, setIsSaving] = useState(false);
 
 
   // Route protection and user fetching
@@ -80,43 +81,58 @@ export default function DashboardPage() {
   };
 
   const handleSaveClient = async () => {
-    if (!user || !newName.trim()) {
-        alert("Numele este obligatoriu.");
+    // 1. Validare simplă
+    if (!newName.trim() || !newPhone.trim()) {
+        alert("Numele și telefonul sunt obligatorii.");
         return;
     }
     
-    const newClient = {
-        contact: {
-            name: newName,
-            email: newEmail,
-            phone: newPhone
-        },
-        status: newStatus,
-        agentId: user.uid,
-        timestamp: serverTimestamp()
-    };
-
+    // 2. Setare stare de "loading"
+    setIsSaving(true);
     try {
-        const docRef = await addDoc(collection(db, "leads"), newClient);
-        
-        // Optimistically update the UI
+        // 3. Obținere ID Agent
+        const agentId = auth.currentUser?.uid;
+        if (!agentId) {
+            throw new Error("Agentul nu este autentificat.");
+        }
+        // 4. Pregătire document
+        const newClientData = {
+            contact: {
+                name: newName,
+                email: newEmail,
+                phone: newPhone
+            },
+            status: newStatus,
+            agentId: agentId,
+            timestamp: serverTimestamp(),
+            source: 'Manual' // Sursă pentru a ști că a fost adăugat manual
+        };
+
+        // 5. Salvare în Firestore
+        const docRef = await addDoc(collection(db, 'leads'), newClientData);
+
+        // 6. Actualizare instantanee a interfeței (UI)
         const clientForUI = { 
             id: docRef.id, 
-            ...newClient, 
+            ...newClientData,
             timestamp: new Date() // Use current date for immediate UI feedback
         };
         setLeads(prevLeads => [clientForUI, ...prevLeads]);
         
-        // Reset form and close modal
+        // 7. Închidere și resetare
         setIsModalOpen(false);
-        setNewName("");
-        setNewEmail("");
-        setNewPhone("");
-        setNewStatus("Nou");
+        setNewName('');
+        setNewEmail('');
+        setNewPhone('');
+        setNewStatus('Nou');
 
-    } catch (error) {
-        console.error("Error adding new client:", error);
-        alert("A apărut o eroare la salvarea clientului.");
+    } catch (error: any) {
+        // 8. Managementul erorilor
+        console.error("Eroare la salvarea clientului:", error);
+        alert(`A apărut o eroare la salvare: ${error.message}`);
+    } finally {
+        // 9. Oprire stare de "loading"
+        setIsSaving(false);
     }
   };
 
@@ -211,7 +227,9 @@ export default function DashboardPage() {
                             </div>
                         </div>
                         <DialogFooter>
-                            <Button type="button" onClick={handleSaveClient}>Salvează Client</Button>
+                            <Button onClick={handleSaveClient} disabled={isSaving}>
+                                {isSaving ? "Se salvează..." : "Salvează Client"}
+                            </Button>
                         </DialogFooter>
                     </DialogContent>
                  </Dialog>
@@ -276,3 +294,6 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+
+    
