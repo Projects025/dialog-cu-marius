@@ -8,11 +8,12 @@ import { User, signOut, onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebaseConfig";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Users, FileText, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, FileText, LogOut, FilePlus2 } from "lucide-react";
 
 const NavLink = ({ href, children, icon: Icon }: { href: string; children: ReactNode; icon: React.ElementType }) => {
     const pathname = usePathname();
-    const isActive = pathname === href;
+    const isActive = pathname.startsWith(href) && (href !== '/dashboard' || pathname === '/dashboard');
+
 
     return (
         <Link href={href}>
@@ -79,6 +80,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                             <NavLink href="/dashboard" icon={LayoutDashboard}>Sumar</NavLink>
                             <NavLink href="/dashboard/leads" icon={Users}>Clienții Tăi</NavLink>
                             <NavLink href="/dashboard/forms" icon={FileText}>Formulare</NavLink>
+                            <NavLink href="/dashboard/form-editor" icon={FilePlus2}>Editor Formular</NavLink>
+
                         </nav>
                     </div>
                     <div className="mt-auto p-4 border-t">
