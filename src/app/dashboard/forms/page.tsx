@@ -3,13 +3,18 @@
 
 import { useState, useEffect } from "react";
 import { onAuthStateChanged, type User } from "firebase/auth";
-import { collection, doc, getDoc, getDocs, updateDoc, setDoc, serverTimestamp, query } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, updateDoc, setDoc, serverTimestamp, query, addDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebaseConfig";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { FilePlus2, Edit, Copy } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 
 export default function FormsPage() {
     const [user, setUser] = useState<User | null>(null);
@@ -19,6 +24,13 @@ export default function FormsPage() {
     const [loading, setLoading] = useState(true);
     const [cloning, setCloning] = useState<string | null>(null);
     const router = useRouter();
+    const { toast } = useToast();
+
+    // State for the new form creation modal
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [newFormTitle, setNewFormTitle] = useState("");
+    const [sourceTemplateId, setSourceTemplateId] = useState<string>("");
+    const [isCreating, setIsCreating] = useState(false);
 
 
     useEffect(() => {
@@ -49,12 +61,14 @@ export default function FormsPage() {
                 const querySnapshot = await getDocs(q);
                 const templatesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 
-                // Filter on the client
                 const personal = templatesList.filter(form => form.ownerId === user.uid).sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
                 const standard = templatesList.filter(form => !form.ownerId);
                 
                 setUserForms(personal);
                 setTemplateForms(standard);
+                if (standard.length > 0) {
+                    setSourceTemplateId(standard[0].id);
+                }
 
             } catch (error) {
                 console.error("Error fetching form templates:", error);
@@ -67,6 +81,75 @@ export default function FormsPage() {
             fetchTemplates();
         }
     }, [user]);
+    
+    const handleCreateForm = async () => {
+        if (!user || !newFormTitle.trim() || !sourceTemplateId) {
+            toast({
+                variant: "destructive",
+                title: "Eroare",
+                description: "Te rog completează numele formularului și selectează un șablon.",
+            });
+            return;
+        }
+
+        setIsCreating(true);
+        try {
+            let flow = {};
+            // If it's not a blank template, fetch the flow from the selected template
+            if (sourceTemplateId !== 'blank') {
+                const templateRef = doc(db, "formTemplates", sourceTemplateId);
+                const templateDoc = await getDoc(templateRef);
+
+                if (!templateDoc.exists()) {
+                    throw new Error("Șablonul selectat nu a fost găsit.");
+                }
+                flow = templateDoc.data().flow;
+            } else {
+                // Define a minimal flow for a blank form
+                flow = {
+                    welcome_1: {
+                        message: "Salut! Acesta este începutul conversației tale.",
+                        actionType: 'buttons',
+                        options: ['Continuă'],
+                        nextStep: 'end_dialog_friendly',
+                    },
+                };
+            }
+            
+            const newFormDoc = await addDoc(collection(db, "formTemplates"), {
+                title: newFormTitle,
+                ownerId: user.uid,
+                isTemplate: false,
+                createdAt: serverTimestamp(),
+                flow: flow,
+            });
+
+            setUserForms(prev => [{ id: newFormDoc.id, title: newFormTitle, createdAt: new Date() }, ...prev]);
+            
+            toast({
+                title: "Succes!",
+                description: "Formularul a fost creat. Acum poți să-l editezi.",
+            });
+
+            // Close modal and reset state
+            setIsCreateModalOpen(false);
+            setNewFormTitle("");
+            if (templateForms.length > 0) setSourceTemplateId(templateForms[0].id);
+
+            router.push(`/dashboard/form-editor?id=${newFormDoc.id}`);
+
+        } catch (error) {
+            console.error("Error creating form:", error);
+            toast({
+                variant: "destructive",
+                title: "Eroare la Creare",
+                description: "Nu s-a putut crea formularul.",
+            });
+        } finally {
+            setIsCreating(false);
+        }
+    };
+
 
     const handleSetActiveForm = async (formId: string) => {
         if (!user) return;
@@ -74,54 +157,56 @@ export default function FormsPage() {
             const agentRef = doc(db, "agents", user.uid);
             await updateDoc(agentRef, { activeFormId: formId });
             setActiveFormId(formId);
+             toast({
+                title: "Formular Activat",
+                description: "Link-ul tău de client va folosi acum acest formular.",
+            });
         } catch (error) {
             console.error("Error setting active form:", error);
-            alert("A apărut o eroare la setarea formularului activ.");
+            toast({
+                variant: "destructive",
+                title: "Eroare",
+                description: "Nu s-a putut seta formularul activ.",
+            });
         }
     };
     
-    const handleCloneAndEdit = async (templateId: string) => {
+    const handleClone = async (templateId: string) => {
         if (!user) return;
-        if (!templateId && templateForms.length > 0) {
-            templateId = templateForms[0].id;
-        } else if (!templateId) {
-            alert("Nu există șabloane disponibile pentru a crea un formular nou.");
-            return;
-        }
-
+        
         setCloning(templateId);
         try {
             const templateRef = doc(db, "formTemplates", templateId);
             const templateDoc = await getDoc(templateRef);
 
-            if (!templateDoc.exists()) {
-                throw new Error("Șablonul nu a fost găsit.");
-            }
+            if (!templateDoc.exists()) throw new Error("Șablonul nu a fost găsit.");
+            
             const templateData = templateDoc.data();
+            const newTitle = `${templateData.title} (Copie)`;
             
-            const newFormId = doc(collection(db, "formTemplates")).id;
-
-            const newFormRef = doc(db, "formTemplates", newFormId);
-            const newFormData = {
+            const newFormDoc = await addDoc(collection(db, "formTemplates"), {
                 ...templateData,
-                title: `${templateData.title} (Copie)`,
+                title: newTitle,
                 ownerId: user.uid,
-                isTemplate: false, // Explicitly mark as not a template
+                isTemplate: false,
                 createdAt: serverTimestamp(),
-            };
-            await setDoc(newFormRef, newFormData);
-            
-            setUserForms(prev => [{id: newFormId, ...newFormData, createdAt: new Date() }, ...prev]);
+            });
 
-            const agentRef = doc(db, "agents", user.uid);
-            await updateDoc(agentRef, { activeFormId: newFormId });
-            setActiveFormId(newFormId);
+            setUserForms(prev => [{id: newFormDoc.id, title: newTitle, createdAt: new Date() }, ...prev]);
+             toast({
+                title: "Formular Clonat",
+                description: `O copie a formularului "${templateData.title}" a fost adăugată în lista ta.`,
+            });
             
-            router.push(`/dashboard/form-editor?id=${newFormId}`);
+            router.push(`/dashboard/form-editor?id=${newFormDoc.id}`);
 
         } catch (error) {
             console.error("Error cloning form:", error);
-            alert("A apărut o eroare la clonarea formularului.");
+            toast({
+                variant: "destructive",
+                title: "Eroare la Clonare",
+                description: "Nu s-a putut clona formularul.",
+            });
         } finally {
             setCloning(null);
         }
@@ -133,17 +218,17 @@ export default function FormsPage() {
                 <div className="flex justify-between items-start">
                     <CardTitle className="text-lg">{form.title}</CardTitle>
                      <Badge variant={isTemplate ? "secondary" : "outline"}>
-                        {isTemplate ? "Standard" : "Personalizat"}
+                        {isTemplate ? "Șablon" : "Personalizat"}
                     </Badge>
                 </div>
                  <CardDescription>
-                    Creat la: {form.createdAt?.toDate ? form.createdAt.toDate().toLocaleDateString('ro-RO') : 'Dată necunoscută'}
+                    {form.createdAt?.toDate ? `Creat la: ${form.createdAt.toDate().toLocaleDateString('ro-RO')}` : 'Dată necunoscută'}
                 </CardDescription>
             </CardHeader>
             <CardContent className="flex-grow">
                  {activeFormId === form.id && !isTemplate && (
                     <div className="flex items-center gap-2 font-semibold text-sm mb-4">
-                        <Badge variant="secondary" className="bg-green-100 text-green-700">Activ pe Link</Badge>
+                        <Badge variant="default" className="bg-green-600 text-white hover:bg-green-700">Activ pe Link</Badge>
                     </div>
                 )}
             </CardContent>
@@ -152,7 +237,7 @@ export default function FormsPage() {
                     <Button 
                         size="sm" 
                         variant="outline"
-                        onClick={() => handleCloneAndEdit(form.id)}
+                        onClick={() => handleClone(form.id)}
                         disabled={cloning === form.id}
                     >
                         <Copy className="mr-2 h-4 w-4" />
@@ -177,13 +262,13 @@ export default function FormsPage() {
         <>
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold md:text-3xl">Management Formulare</h1>
-                 <Button onClick={() => handleCloneAndEdit(templateForms.length > 0 ? templateForms[0].id : '')} disabled={loading || templateForms.length === 0}>
+                 <Button onClick={() => setIsCreateModalOpen(true)} disabled={loading}>
                     <FilePlus2 className="mr-2 h-4 w-4" />
                     Creează Formular Nou
                 </Button>
             </div>
              <p className="text-muted-foreground mt-2">
-                Clonează un șablon standard pentru a-l personaliza sau administrează formularele tale deja create.
+                Creează formulare noi de la zero, clonează un șablon standard pentru a-l personaliza sau administrează formularele tale deja create.
             </p>
 
             <div className="mt-8">
@@ -207,6 +292,53 @@ export default function FormsPage() {
                     <p className="text-muted-foreground">Nu există șabloane disponibile.</p>
                 )}
             </div>
+
+            <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+                <DialogContent className="sm:max-w-[480px]">
+                    <DialogHeader>
+                        <DialogTitle>Configurează Noul Formular</DialogTitle>
+                        <DialogDescription>
+                            Dă un nume noului tău formular și alege cum vrei să începi.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-6 py-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="form-title">Numele Formularului</Label>
+                            <Input
+                                id="form-title"
+                                placeholder="Ex: Analiză Protecție Familie"
+                                value={newFormTitle}
+                                onChange={(e) => setNewFormTitle(e.target.value)}
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="source-template">Punct de plecare</Label>
+                            <Select onValueChange={setSourceTemplateId} value={sourceTemplateId}>
+                                <SelectTrigger id="source-template">
+                                    <SelectValue placeholder="Selectează o opțiune" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="blank">Formular Gol (de la zero)</SelectItem>
+                                    {templateForms.map(template => (
+                                        <SelectItem key={template.id} value={template.id}>
+                                            Șablon: {template.title}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>Anulează</Button>
+                        <Button onClick={handleCreateForm} disabled={isCreating || !newFormTitle.trim() || !sourceTemplateId}>
+                            {isCreating ? "Se creează..." : "Creează și Editează"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
         </>
     );
 }
+
+    
