@@ -508,6 +508,3 @@ const ChatView = ({ conversation, userAction, onResponse, progress, isConversati
 };
 
 export default ChatView;
-
-
-    
