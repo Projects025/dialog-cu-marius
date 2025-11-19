@@ -400,6 +400,9 @@ export default function Home() {
         setTimeout(() => {
             setView("chat");
             setIsFadingOut(false);
+            // We set isLoading to true here to show the loading screen
+            // before the conversation starts fetching data.
+            setIsLoading(true);
         }, 500);
     };
 
@@ -427,7 +430,7 @@ export default function Home() {
                 {view === "landing" ? (
                     <LandingView onStart={handleStart} isFadingOut={isFadingOut} />
                 ) : (
-                    <ChatView
+                     <ChatView
                         conversation={conversation}
                         userAction={currentUserAction}
                         onResponse={processUserResponse}
@@ -442,5 +445,7 @@ export default function Home() {
         </>
     );
 }
+
+    
 
     
