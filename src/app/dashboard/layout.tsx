@@ -12,12 +12,12 @@ import { LayoutDashboard, Users, FileText, LogOut } from "lucide-react";
 
 const NavLink = ({ href, children, icon: Icon }: { href: string; children: ReactNode; icon: React.ElementType }) => {
     const pathname = usePathname();
-    const isActive = pathname.startsWith(href) && (href !== '/dashboard' || pathname === '/dashboard');
+    const isActive = pathname.startsWith(href);
 
 
     return (
-        <Link href={href}>
-            <span
+        <Link href={href} legacyBehavior passHref>
+            <a
                 className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
                     isActive && "bg-muted text-primary"
@@ -25,7 +25,7 @@ const NavLink = ({ href, children, icon: Icon }: { href: string; children: React
             >
                 <Icon className="h-4 w-4" />
                 {children}
-            </span>
+            </a>
         </Link>
     );
 };

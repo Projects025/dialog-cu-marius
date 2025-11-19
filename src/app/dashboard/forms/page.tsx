@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { collection, doc, getDoc, getDocs, updateDoc, setDoc, serverTimestamp, query, addDoc, deleteDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebaseConfig";
@@ -104,54 +104,49 @@ export default function FormsPage() {
     const [isCreating, setIsCreating] = useState(false);
 
 
+    const fetchForms = useCallback(async (currentUser: User) => {
+        setLoading(true);
+        try {
+            const agentRef = doc(db, "agents", currentUser.uid);
+            const agentDoc = await getDoc(agentRef);
+            if (agentDoc.exists()) {
+                setActiveFormId(agentDoc.data().activeFormId);
+            }
+            
+            const q = query(collection(db, "formTemplates"));
+            const querySnapshot = await getDocs(q);
+            const templatesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            const personal = templatesList.filter(form => form.ownerId === currentUser.uid).sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
+            const standard = templatesList.filter(form => !form.ownerId);
+            
+            setUserForms(personal);
+            setTemplateForms(standard);
+
+            if (standard.length > 0 && !sourceTemplateId) {
+                setSourceTemplateId(standard[0].id);
+            }
+
+        } catch (error) {
+            console.error("Error fetching form templates:", error);
+            toast({ variant: "destructive", title: "Eroare", description: "Nu s-au putut încărca formularele." });
+        } finally {
+            setLoading(false);
+        }
+    }, [sourceTemplateId, toast]);
+
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             if (currentUser) {
                 setUser(currentUser);
-                const agentRef = doc(db, "agents", currentUser.uid);
-                const agentDoc = await getDoc(agentRef);
-                if (agentDoc.exists()) {
-                    setActiveFormId(agentDoc.data().activeFormId);
-                }
+                fetchForms(currentUser);
             } else {
                  router.push("/login");
             }
         });
         return () => unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [router]);
-
-    useEffect(() => {
-        const fetchTemplates = async () => {
-            if (!user) {
-                setLoading(false);
-                return;
-            }
-            setLoading(true);
-            try {
-                const q = query(collection(db, "formTemplates"));
-                const querySnapshot = await getDocs(q);
-                const templatesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                
-                const personal = templatesList.filter(form => form.ownerId === user.uid).sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
-                const standard = templatesList.filter(form => !form.ownerId);
-                
-                setUserForms(personal);
-                setTemplateForms(standard);
-                if (standard.length > 0 && !sourceTemplateId) {
-                    setSourceTemplateId(standard[0].id);
-                }
-
-            } catch (error) {
-                console.error("Error fetching form templates:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        
-        if (user) {
-            fetchTemplates();
-        }
-    }, [user, sourceTemplateId]);
     
     const handleCreateForm = async () => {
         if (!user || !newFormTitle.trim() || !sourceTemplateId) {
@@ -190,7 +185,6 @@ export default function FormsPage() {
             const newFormPayload = {
                 title: newFormTitle,
                 ownerId: user.uid,
-                isTemplate: false,
                 createdAt: serverTimestamp(),
                 flow: flow,
             };
@@ -243,6 +237,10 @@ export default function FormsPage() {
             });
             // If the deleted form was the active one, clear it
             if (activeFormId === formId) {
+                // You might want to unset it in the agent's document as well
+                if(user) {
+                     await updateDoc(doc(db, "agents", user.uid), { activeFormId: null });
+                }
                 setActiveFormId(null);
             }
         } catch (error) {
@@ -293,9 +291,10 @@ export default function FormsPage() {
                 ...templateData,
                 title: newTitle,
                 ownerId: user.uid,
-                isTemplate: false,
                 createdAt: serverTimestamp(),
             };
+            // remove isTemplate if it exists
+            delete newFormPayload.isTemplate;
 
             const newFormDoc = await addDoc(collection(db, "formTemplates"), newFormPayload);
             
