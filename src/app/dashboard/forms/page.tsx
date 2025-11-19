@@ -237,7 +237,6 @@ export default function FormsPage() {
             });
             // If the deleted form was the active one, clear it
             if (activeFormId === formId) {
-                // You might want to unset it in the agent's document as well
                 if(user) {
                      await updateDoc(doc(db, "agents", user.uid), { activeFormId: null });
                 }
