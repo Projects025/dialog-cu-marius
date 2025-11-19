@@ -105,6 +105,7 @@ export default function FormsPage() {
 
 
     const fetchForms = useCallback(async (currentUser: User) => {
+        if (!currentUser) return;
         setLoading(true);
         try {
             const agentRef = doc(db, "agents", currentUser.uid);
@@ -115,10 +116,10 @@ export default function FormsPage() {
             
             const q = query(collection(db, "formTemplates"));
             const querySnapshot = await getDocs(q);
-            const templatesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const allForms = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             
-            const personal = templatesList.filter(form => form.ownerId === currentUser.uid).sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
-            const standard = templatesList.filter(form => !form.ownerId);
+            const personal = allForms.filter(form => form.ownerId === currentUser.uid).sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
+            const standard = allForms.filter(form => !form.ownerId);
             
             setUserForms(personal);
             setTemplateForms(standard);
@@ -139,14 +140,14 @@ export default function FormsPage() {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             if (currentUser) {
                 setUser(currentUser);
-                fetchForms(currentUser);
+                await fetchForms(currentUser);
             } else {
                  router.push("/login");
             }
         });
         return () => unsubscribe();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [router]);
+    }, [router, fetchForms]);
     
     const handleCreateForm = async () => {
         if (!user || !newFormTitle.trim() || !sourceTemplateId) {
@@ -161,7 +162,6 @@ export default function FormsPage() {
         setIsCreating(true);
         try {
             let flow = {};
-            // If it's not a blank template, fetch the flow from the selected template
             if (sourceTemplateId !== 'blank') {
                 const templateRef = doc(db, "formTemplates", sourceTemplateId);
                 const templateDoc = await getDoc(templateRef);
@@ -171,7 +171,6 @@ export default function FormsPage() {
                 }
                 flow = templateDoc.data().flow;
             } else {
-                // Define a minimal flow for a blank form
                 flow = {
                     welcome_1: {
                         message: "Salut! Acesta este începutul conversației tale.",
@@ -190,21 +189,14 @@ export default function FormsPage() {
             };
 
             const newFormDoc = await addDoc(collection(db, "formTemplates"), newFormPayload);
-
-            const newFormForUI = {
-                id: newFormDoc.id, 
-                ...newFormPayload,
-                createdAt: new Date() // Approximate timestamp for UI
-            };
-
-            setUserForms(prev => [newFormForUI, ...prev]);
+            
+            await fetchForms(user);
             
             toast({
                 title: "Succes!",
                 description: "Formularul a fost creat. Acum poți să-l editezi.",
             });
 
-            // Close modal and reset state
             setIsCreateModalOpen(false);
             setNewFormTitle("");
             if (templateForms.length > 0) setSourceTemplateId(templateForms[0].id);
@@ -224,23 +216,20 @@ export default function FormsPage() {
     };
 
     const handleDelete = async (formId: string) => {
-        if (!user) {
-            alert("Utilizatorul nu este autentificat.");
-            return;
-        }
+        if (!user) return;
         if (!window.confirm("Sigur vrei să ștergi acest formular? Acțiunea este ireversibilă.")) return;
     
         try {
             const formRef = doc(db, "formTemplates", formId);
             await deleteDoc(formRef);
     
-            setUserForms(prev => prev.filter(f => f.id !== formId));
-    
             if (activeFormId === formId) {
                 const agentRef = doc(db, "agents", user.uid);
                 await updateDoc(agentRef, { activeFormId: null });
                 setActiveFormId(null);
             }
+            
+            await fetchForms(user);
     
             toast({ title: "Succes", description: "Formularul a fost șters." });
     
@@ -294,18 +283,11 @@ export default function FormsPage() {
                 ownerId: user.uid,
                 createdAt: serverTimestamp(),
             };
-            // remove isTemplate if it exists
             delete newFormPayload.isTemplate;
 
             const newFormDoc = await addDoc(collection(db, "formTemplates"), newFormPayload);
             
-            const newFormForUI = {
-                id: newFormDoc.id,
-                ...newFormPayload,
-                createdAt: new Date() // Approximate timestamp for UI
-            };
-
-            setUserForms(prev => [newFormForUI, ...prev]);
+            await fetchForms(user);
 
              toast({
                 title: "Formular Clonat",
@@ -433,6 +415,5 @@ export default function FormsPage() {
         </>
     );
 }
-
 
     
