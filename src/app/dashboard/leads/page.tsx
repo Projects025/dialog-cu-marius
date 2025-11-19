@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { onAuthStateChanged, type User } from "firebase/auth";
-import { collection, query, where, getDocs, orderBy, doc, updateDoc, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, query, where, getDocs, orderBy, doc, updateDoc, addDoc, serverTimestamp, setDoc, getDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 
 import { auth, db } from "@/lib/firebaseConfig";
@@ -16,12 +16,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/errors";
+import { Badge } from "@/components/ui/badge";
+
 
 export default function LeadsPage() {
   const [user, setUser] = useState<User | null>(null);
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  
+  const router = useRouter();
+
   // State for the "Add Client" modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newName, setNewName] = useState("");
@@ -195,13 +198,14 @@ export default function LeadsPage() {
                           <TableHead>Nume</TableHead>
                           <TableHead>Email</TableHead>
                           <TableHead>Telefon</TableHead>
+                          <TableHead>Sursă</TableHead>
                           <TableHead>Status</TableHead>
                       </TableRow>
                       </TableHeader>
                       <TableBody>
                       {loading ? (
                           <TableRow>
-                            <TableCell colSpan={5} className="text-center">Se încarcă clienții...</TableCell>
+                            <TableCell colSpan={6} className="text-center">Se încarcă clienții...</TableCell>
                           </TableRow>
                       ) : leads.length > 0 ? (
                           leads.map((lead) => (
@@ -212,6 +216,11 @@ export default function LeadsPage() {
                               <TableCell>{lead.contact?.name || "N/A"}</TableCell>
                               <TableCell>{lead.contact?.email || "N/A"}</TableCell>
                               <TableCell>{lead.contact?.phone || "N/A"}</TableCell>
+                               <TableCell>
+                                {lead.source === 'Manual' 
+                                    ? <Badge variant="secondary">Manual</Badge> 
+                                    : <Badge variant="default">Link Client</Badge>}
+                              </TableCell>
                               <TableCell>
                                   <Select 
                                       value={lead.status || "Nou"}
@@ -234,7 +243,7 @@ export default function LeadsPage() {
                           ))
                       ) : (
                           <TableRow>
-                          <TableCell colSpan={5} className="text-center">
+                          <TableCell colSpan={6} className="text-center">
                               Nu ai niciun client momentan.
                           </TableCell>
                           </TableRow>
