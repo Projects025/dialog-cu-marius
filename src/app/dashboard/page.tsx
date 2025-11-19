@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { User, signOut, onAuthStateChanged } from "firebase/auth";
-import { collection, query, where, getDocs, orderBy, doc, updateDoc, addDoc, serverTimestamp, Firestore } from "firebase/firestore";
+import { collection, query, where, getDocs, orderBy, doc, updateDoc, addDoc, serverTimestamp, Firestore, getDoc } from "firebase/firestore";
 
 import { auth, db } from "@/lib/firebaseConfig";
 import { Button } from "@/components/ui/button";
@@ -32,12 +32,22 @@ export default function DashboardPage() {
   const [newStatus, setNewStatus] = useState("Nou");
   const [isSaving, setIsSaving] = useState(false);
 
+  // State for Form Templates
+  const [formTemplates, setFormTemplates] = useState<any[]>([]);
+  const [activeFormId, setActiveFormId] = useState<string | null>(null);
+
 
   // Route protection and user fetching
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
+        // Fetch agent specific data
+        const agentRef = doc(db, "agents", currentUser.uid);
+        const agentDoc = await getDoc(agentRef);
+        if (agentDoc.exists()) {
+          setActiveFormId(agentDoc.data().activeFormId);
+        }
         setLoading(false);
       } else {
         router.push("/login");
@@ -45,6 +55,21 @@ export default function DashboardPage() {
     });
     return () => unsubscribe();
   }, [router]);
+
+  // Fetch form templates once
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      try {
+        const templatesCollection = collection(db, "formTemplates");
+        const templatesSnapshot = await getDocs(templatesCollection);
+        const templatesList = templatesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setFormTemplates(templatesList);
+      } catch (error) {
+        console.error("Error fetching form templates:", error);
+      }
+    };
+    fetchTemplates();
+  }, []);
 
   const fetchLeads = async (currentUserId: string) => {
     try {
@@ -141,6 +166,19 @@ export default function DashboardPage() {
     }
   };
 
+  const handleSetActiveForm = async (formId: string) => {
+    if (!user) return;
+    try {
+        const agentRef = doc(db, "agents", user.uid);
+        await updateDoc(agentRef, {
+            activeFormId: formId
+        });
+        setActiveFormId(formId);
+    } catch (error) {
+        console.error("Error setting active form:", error);
+        alert("A apărut o eroare la setarea formularului activ.");
+    }
+  };
 
   // Fetch leads when user is available
   useEffect(() => {
@@ -190,6 +228,29 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
           <Card className="md:col-span-2">
+            <CardHeader>
+                <CardTitle>Formularele Mele</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="space-y-4">
+                    {formTemplates.map(form => (
+                        <div key={form.id} className="flex items-center justify-between p-3 bg-secondary rounded-lg">
+                            <p className="font-medium">{form.title || "Formular fără titlu"}</p>
+                            {activeFormId === form.id ? (
+                                <span className="text-sm font-semibold text-primary">ACTIV</span>
+                            ) : (
+                                <Button size="sm" onClick={() => handleSetActiveForm(form.id)}>
+                                    Setează ca Activ
+                                </Button>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card>
             <CardHeader>
                <div className="flex justify-between items-center">
                  <CardTitle>Clienții Tăi</CardTitle>
@@ -294,7 +355,6 @@ export default function DashboardPage() {
                 </div>
             </CardContent>
           </Card>
-        </div>
       </div>
     </div>
   );
