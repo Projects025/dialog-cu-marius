@@ -1,10 +1,11 @@
+
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 // Adaugă aici configurația ta Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyDr-L6H2TCScpkSxkV9mY5fIac4yF_uY9s",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: "chatasigurare.firebaseapp.com",
   projectId: "chatasigurare",
   storageBucket: "chatasigurare.firebasestorage.app",

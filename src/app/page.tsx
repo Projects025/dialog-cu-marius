@@ -339,7 +339,6 @@ export default function Home() {
     const startConversation = useCallback(async () => {
         setIsLoading(true);
         setErrorMessage(null);
-        setConversation([]);
         
         try {
             const agentId = agentIdRef.current;
@@ -400,17 +399,9 @@ export default function Home() {
         setTimeout(() => {
             setView("chat");
             setIsFadingOut(false);
-            // We set isLoading to true here to show the loading screen
-            // before the conversation starts fetching data.
-            setIsLoading(true);
+            startConversation();
         }, 500);
     };
-
-    useEffect(() => {
-        if (view === 'chat' && conversation.length === 0 && !loadedFlow && isLoading) {
-            startConversation();
-        }
-    }, [view, startConversation, conversation.length, loadedFlow, isLoading]);
 
     useEffect(() => {
         if (loadedFlow && view === 'chat' && conversation.length === 0) {
