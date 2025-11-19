@@ -3,13 +3,13 @@
 
 import { useState, useEffect } from "react";
 import { onAuthStateChanged, type User } from "firebase/auth";
-import { collection, doc, getDoc, getDocs, updateDoc, setDoc, serverTimestamp, query, addDoc } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, updateDoc, setDoc, serverTimestamp, query, addDoc, deleteDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebaseConfig";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import { FilePlus2, Edit, Copy } from "lucide-react";
+import { FilePlus2, Edit, Copy, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -116,15 +116,17 @@ export default function FormsPage() {
                 };
             }
             
-            const newFormDoc = await addDoc(collection(db, "formTemplates"), {
+            const newFormPayload = {
                 title: newFormTitle,
                 ownerId: user.uid,
                 isTemplate: false,
                 createdAt: serverTimestamp(),
                 flow: flow,
-            });
+            };
 
-            setUserForms(prev => [{ id: newFormDoc.id, title: newFormTitle, createdAt: new Date() }, ...prev]);
+            const newFormDoc = await addDoc(collection(db, "formTemplates"), newFormPayload);
+
+            setUserForms(prev => [{ id: newFormDoc.id, ...newFormPayload, createdAt: new Date() }, ...prev]);
             
             toast({
                 title: "Succes!",
@@ -147,6 +149,32 @@ export default function FormsPage() {
             });
         } finally {
             setIsCreating(false);
+        }
+    };
+
+    const handleDelete = async (formId: string) => {
+        if (!window.confirm("Ești sigur că vrei să ștergi acest formular? Acțiunea este ireversibilă.")) {
+            return;
+        }
+
+        try {
+            await deleteDoc(doc(db, "formTemplates", formId));
+            setUserForms(prev => prev.filter(form => form.id !== formId));
+            toast({
+                title: "Formular Șters",
+                description: "Formularul a fost eliminat cu succes.",
+            });
+            // If the deleted form was the active one, clear it
+            if (activeFormId === formId) {
+                setActiveFormId(null);
+            }
+        } catch (error) {
+            console.error("Error deleting form:", error);
+            toast({
+                variant: "destructive",
+                title: "Eroare la Ștergere",
+                description: "Nu s-a putut șterge formularul.",
+            });
         }
     };
 
@@ -184,15 +212,17 @@ export default function FormsPage() {
             const templateData = templateDoc.data();
             const newTitle = `${templateData.title} (Copie)`;
             
-            const newFormDoc = await addDoc(collection(db, "formTemplates"), {
+            const newFormPayload = {
                 ...templateData,
                 title: newTitle,
                 ownerId: user.uid,
                 isTemplate: false,
                 createdAt: serverTimestamp(),
-            });
+            };
 
-            setUserForms(prev => [{id: newFormDoc.id, title: newTitle, createdAt: new Date() }, ...prev]);
+            const newFormDoc = await addDoc(collection(db, "formTemplates"), newFormPayload);
+
+            setUserForms(prev => [{id: newFormDoc.id, ...newFormPayload, createdAt: new Date() }, ...prev]);
              toast({
                 title: "Formular Clonat",
                 description: `O copie a formularului "${templateData.title}" a fost adăugată în lista ta.`,
@@ -245,6 +275,10 @@ export default function FormsPage() {
                     </Button>
                 ) : (
                     <>
+                        <Button size="sm" variant="destructive" onClick={() => handleDelete(form.id)}>
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Șterge
+                        </Button>
                         <Button size="sm" variant="outline" onClick={() => router.push(`/dashboard/form-editor?id=${form.id}`)}>
                             <Edit className="mr-2 h-4 w-4" />
                             Editează
