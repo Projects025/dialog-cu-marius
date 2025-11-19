@@ -16,16 +16,15 @@ const NavLink = ({ href, children, icon: Icon }: { href: string; children: React
 
 
     return (
-        <Link href={href} legacyBehavior passHref>
-            <a
-                className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-                    isActive && "bg-muted text-primary"
-                )}
-            >
-                <Icon className="h-4 w-4" />
-                {children}
-            </a>
+        <Link 
+            href={href}
+            className={cn(
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
+                isActive && "bg-muted text-primary"
+            )}
+        >
+            <Icon className="h-4 w-4" />
+            {children}
         </Link>
     );
 };
