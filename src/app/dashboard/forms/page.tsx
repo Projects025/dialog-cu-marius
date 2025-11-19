@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { onAuthStateChanged, type User } from "firebase/auth";
-import { collection, doc, getDoc, getDocs, updateDoc, setDoc } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, updateDoc, setDoc, serverTimestamp, query } from "firebase/firestore";
 import { auth, db } from "@/lib/firebaseConfig";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -12,7 +12,9 @@ import { Badge } from "@/components/ui/badge";
 
 export default function FormsPage() {
     const [user, setUser] = useState<User | null>(null);
-    const [formTemplates, setFormTemplates] = useState<any[]>([]);
+    const [allForms, setAllForms] = useState<any[]>([]);
+    const [userForms, setUserForms] = useState<any[]>([]);
+    const [templateForms, setTemplateForms] = useState<any[]>([]);
     const [activeFormId, setActiveFormId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [cloning, setCloning] = useState<string | null>(null);
@@ -37,12 +39,26 @@ export default function FormsPage() {
 
     useEffect(() => {
         const fetchTemplates = async () => {
+            if (!user) {
+                setLoading(false);
+                return;
+            }
             setLoading(true);
             try {
-                const templatesCollection = collection(db, "formTemplates");
-                const templatesSnapshot = await getDocs(templatesCollection);
-                const templatesList = templatesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                setFormTemplates(templatesList);
+                const q = query(collection(db, "formTemplates"));
+                const querySnapshot = await getDocs(q);
+                const templatesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                console.log("Templates fetched:", templatesList);
+                setAllForms(templatesList);
+
+                // Filter on the client
+                const personal = templatesList.filter(form => form.ownerId === user.uid);
+                const standard = templatesList.filter(form => !form.ownerId);
+                
+                setUserForms(personal);
+                setTemplateForms(standard);
+
             } catch (error) {
                 console.error("Error fetching form templates:", error);
             } finally {
@@ -50,12 +66,7 @@ export default function FormsPage() {
             }
         };
         
-        if(user) {
-            fetchTemplates();
-        } else {
-            // Așteaptă autentificarea
-            setLoading(false);
-        }
+        fetchTemplates();
     }, [user]);
 
     const handleSetActiveForm = async (formId: string) => {
@@ -85,20 +96,23 @@ export default function FormsPage() {
             const newFormId = `${user.uid}_custom_${Date.now()}`;
 
             const newFormRef = doc(db, "formTemplates", newFormId);
-            await setDoc(newFormRef, {
+            const newFormData = {
                 ...templateData,
                 title: `${templateData.title} (Copie)`,
                 ownerId: user.uid,
-                isTemplate: false,
-                createdAt: new Date(),
-            });
+                isTemplate: false, // Explicitly mark as not a template
+                createdAt: serverTimestamp(),
+            };
+            await setDoc(newFormRef, newFormData);
+            
+            // Add new form to local state to avoid re-fetching
+            setUserForms(prev => [...prev, {id: newFormId, ...newFormData, createdAt: new Date() }]);
 
+            // Set it as active
             const agentRef = doc(db, "agents", user.uid);
             await updateDoc(agentRef, { activeFormId: newFormId });
             setActiveFormId(newFormId);
             
-            setFormTemplates(prev => [...prev, {id: newFormId, ...templateData, title: `${templateData.title} (Copie)`, ownerId: user.uid, isTemplate: false}]);
-
             router.push(`/dashboard/form-editor?id=${newFormId}`);
 
         } catch (error) {
@@ -109,9 +123,6 @@ export default function FormsPage() {
         }
     };
     
-    const userForms = formTemplates.filter(form => form.ownerId === user?.uid);
-    const templateForms = formTemplates.filter(form => form.isTemplate);
-
     return (
         <>
             <div className="flex items-center">
@@ -179,4 +190,5 @@ export default function FormsPage() {
             </Card>
         </>
     );
-}
+
+    
