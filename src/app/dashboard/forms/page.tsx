@@ -6,7 +6,7 @@ import { onAuthStateChanged, type User } from "firebase/auth";
 import { collection, doc, getDoc, getDocs, updateDoc, setDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebaseConfig";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 
@@ -28,10 +28,12 @@ export default function FormsPage() {
                 if (agentDoc.exists()) {
                     setActiveFormId(agentDoc.data().activeFormId);
                 }
+            } else {
+                 router.push("/login");
             }
         });
         return () => unsubscribe();
-    }, []);
+    }, [router]);
 
     useEffect(() => {
         const fetchTemplates = async () => {
@@ -47,8 +49,14 @@ export default function FormsPage() {
                 setLoading(false);
             }
         };
-        fetchTemplates();
-    }, []);
+        
+        if(user) {
+            fetchTemplates();
+        } else {
+            // Așteaptă autentificarea
+            setLoading(false);
+        }
+    }, [user]);
 
     const handleSetActiveForm = async (formId: string) => {
         if (!user) return;
@@ -66,7 +74,6 @@ export default function FormsPage() {
         if (!user) return;
         setCloning(templateId);
         try {
-            // 1. Read the template
             const templateRef = doc(db, "formTemplates", templateId);
             const templateDoc = await getDoc(templateRef);
 
@@ -75,28 +82,23 @@ export default function FormsPage() {
             }
             const templateData = templateDoc.data();
             
-            // 2. Create a new unique ID
             const newFormId = `${user.uid}_custom_${Date.now()}`;
 
-            // 3. Create the copy with ownerId
             const newFormRef = doc(db, "formTemplates", newFormId);
             await setDoc(newFormRef, {
                 ...templateData,
                 title: `${templateData.title} (Copie)`,
                 ownerId: user.uid,
-                isTemplate: false, // Marcam ca fiind o copie
+                isTemplate: false,
                 createdAt: new Date(),
             });
 
-            // 4. Update agent's activeFormId
             const agentRef = doc(db, "agents", user.uid);
             await updateDoc(agentRef, { activeFormId: newFormId });
             setActiveFormId(newFormId);
             
-            // Add the new form to the local state to see it immediately
             setFormTemplates(prev => [...prev, {id: newFormId, ...templateData, title: `${templateData.title} (Copie)`, ownerId: user.uid, isTemplate: false}]);
 
-            // 5. Redirect to the editor
             router.push(`/dashboard/form-editor?id=${newFormId}`);
 
         } catch (error) {
@@ -106,63 +108,72 @@ export default function FormsPage() {
             setCloning(null);
         }
     };
+    
+    const userForms = formTemplates.filter(form => form.ownerId === user?.uid);
+    const templateForms = formTemplates.filter(form => form.isTemplate);
 
     return (
         <>
             <div className="flex items-center">
-                <h1 className="text-lg font-semibold md:text-2xl">Formularele Mele</h1>
+                <h1 className="text-lg font-semibold md:text-2xl">Formulare</h1>
             </div>
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Selectează Formularul Activ</CardTitle>
+                    <CardTitle>Formularele Tale Personalizate</CardTitle>
+                    <CardDescription>Acestea sunt formularele pe care le-ai clonat și pe care le poți edita. Alege unul pentru a-l activa.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {loading ? (
-                        <p>Se încarcă formularele...</p>
-                    ) : formTemplates.length > 0 ? (
+                    {loading ? <p>Se încarcă...</p> : userForms.length > 0 ? (
                         <div className="space-y-4">
-                            {formTemplates
-                                .filter(form => form.isTemplate || form.ownerId === user?.uid) // Show templates and user's own forms
-                                .map(form => (
+                            {userForms.map(form => (
                                 <div key={form.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-secondary rounded-lg shadow-sm gap-4">
                                     <div className="flex items-center gap-3">
-                                        <p className="font-medium text-secondary-foreground">{form.title || "Formular fără titlu"}</p>
-                                        {form.isTemplate && <Badge variant="outline">Șablon</Badge>}
-                                        {form.ownerId === user?.uid && <Badge variant="default">Personalizat</Badge>}
+                                        <p className="font-medium text-secondary-foreground">{form.title}</p>
                                     </div>
                                     <div className="flex items-center gap-2 self-end sm:self-center">
                                         {activeFormId === form.id ? (
-                                            <Badge variant="secondary" className="bg-primary/20 text-primary font-bold">
-                                                ACTIV
-                                            </Badge>
+                                            <Badge variant="secondary" className="bg-primary/20 text-primary font-bold">ACTIV</Badge>
                                         ) : (
-                                            <Button size="sm" onClick={() => handleSetActiveForm(form.id)}>
-                                                Setează Activ
-                                            </Button>
+                                            <Button size="sm" onClick={() => handleSetActiveForm(form.id)}>Setează Activ</Button>
                                         )}
-                                        
-                                        {form.isTemplate && (
-                                             <Button 
-                                                size="sm" 
-                                                variant="outline"
-                                                onClick={() => handleCloneAndEdit(form.id)}
-                                                disabled={cloning === form.id}
-                                            >
-                                                {cloning === form.id ? "Se clonează..." : "Clonare & Personalizare"}
-                                            </Button>
-                                        )}
-                                        {form.ownerId === user?.uid && (
-                                             <Button size="sm" variant="outline" onClick={() => router.push(`/dashboard/form-editor?id=${form.id}`)}>
-                                                Editează
-                                            </Button>
-                                        )}
+                                        <Button size="sm" variant="outline" onClick={() => router.push(`/dashboard/form-editor?id=${form.id}`)}>Editează</Button>
                                     </div>
                                 </div>
                             ))}
                         </div>
                     ) : (
-                        <p>Nu există formulare disponibile.</p>
+                        <p>Nu ai niciun formular personalizat. Clonează un șablon pentru a începe.</p>
+                    )}
+                </CardContent>
+            </Card>
+
+            <Card className="mt-8">
+                <CardHeader>
+                    <CardTitle>Șabloane Standard</CardTitle>
+                     <CardDescription>Acestea sunt șabloane predefinite. Le poți clona pentru a le personaliza.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                     {loading ? <p>Se încarcă...</p> : templateForms.length > 0 ? (
+                        <div className="space-y-4">
+                             {templateForms.map(form => (
+                                <div key={form.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-secondary rounded-lg shadow-sm gap-4">
+                                    <p className="font-medium text-secondary-foreground">{form.title}</p>
+                                    <div className="flex items-center gap-2 self-end sm:self-center">
+                                         <Button 
+                                            size="sm" 
+                                            variant="outline"
+                                            onClick={() => handleCloneAndEdit(form.id)}
+                                            disabled={cloning === form.id}
+                                        >
+                                            {cloning === form.id ? "Se clonează..." : "Clonează & Personalizează"}
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p>Nu există șabloane disponibile.</p>
                     )}
                 </CardContent>
             </Card>

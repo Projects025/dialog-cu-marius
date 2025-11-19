@@ -3,12 +3,12 @@
 
 import { useState, useEffect } from "react";
 import { onAuthStateChanged, type User } from "firebase/auth";
-import { collection, query, where, getDocs, orderBy, doc, updateDoc, addDoc, serverTimestamp, setDoc, getDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, orderBy, doc, updateDoc, addDoc, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 
 import { auth, db } from "@/lib/firebaseConfig";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
@@ -25,7 +25,6 @@ export default function LeadsPage() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // State for the "Add Client" modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newName, setNewName] = useState("");
   const [newEmail, setNewEmail] = useState("");
@@ -34,13 +33,15 @@ export default function LeadsPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-      }
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        if (currentUser) {
+            setUser(currentUser);
+        } else {
+            router.push('/login');
+        }
     });
     return () => unsubscribe();
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     const fetchLeads = async (currentUserId: string) => {
@@ -85,18 +86,16 @@ export default function LeadsPage() {
   };
 
   const handleSaveClient = async () => {
-    if (!newName.trim() || !newPhone.trim()) {
+    if (!user) {
+        alert("Agentul nu este autentificat.");
+        return;
+    }
+     if (!newName.trim() || !newPhone.trim()) {
         alert("Numele și telefonul sunt obligatorii.");
         return;
     }
     
     setIsSaving(true);
-    
-    if (!user) {
-        alert("Agentul nu este autentificat.");
-        setIsSaving(false);
-        return;
-    }
     
     const newClientData = {
         contact: { name: newName, email: newEmail, phone: newPhone },
@@ -152,7 +151,7 @@ export default function LeadsPage() {
                   <div className="grid gap-4 py-4">
                       <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="name" className="text-right">Nume</Label>
-                          <Input id="name" value={newName} onChange={(e) => setNewName(e.target.value)} className="col-span-3" />
+                          <Input id="name" value={newName} onChange={(e) => setNewName(e.target.value)} className="col-span-3" required />
                       </div>
                       <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="email" className="text-right">Email</Label>
@@ -160,7 +159,7 @@ export default function LeadsPage() {
                       </div>
                       <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="phone" className="text-right">Telefon</Label>
-                          <Input id="phone" type="tel" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} className="col-span-3" />
+                          <Input id="phone" type="tel" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} className="col-span-3" required/>
                       </div>
                       <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="status" className="text-right">Status</Label>
@@ -244,7 +243,7 @@ export default function LeadsPage() {
                       ) : (
                           <TableRow>
                           <TableCell colSpan={6} className="text-center">
-                              Nu ai niciun client momentan.
+                              Nu ai niciun client momentan. Poți adăuga unul manual.
                           </TableCell>
                           </TableRow>
                       )}
