@@ -2,362 +2,134 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { User, signOut, onAuthStateChanged } from "firebase/auth";
-import { collection, query, where, getDocs, orderBy, doc, updateDoc, addDoc, serverTimestamp, Firestore, getDoc } from "firebase/firestore";
-
+import { User, onAuthStateChanged } from "firebase/auth";
+import { collection, query, where, getDocs } from "firebase/firestore";
 import { auth, db } from "@/lib/firebaseConfig";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { errorEmitter } from "@/firebase/error-emitter";
-import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/errors";
+import { Users, Target, ShieldCheck, AreaChart } from 'lucide-react';
 
-
-export default function DashboardPage() {
-  const [user, setUser] = useState<User | null>(null);
-  const [leads, setLeads] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
-
-  // State for the "Add Client" modal
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [newEmail, setNewEmail] = useState("");
-  const [newPhone, setNewPhone] = useState("");
-  const [newStatus, setNewStatus] = useState("Nou");
-  const [isSaving, setIsSaving] = useState(false);
-
-  // State for Form Templates
-  const [formTemplates, setFormTemplates] = useState<any[]>([]);
-  const [activeFormId, setActiveFormId] = useState<string | null>(null);
-
-
-  // Route protection and user fetching
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-        // Fetch agent specific data
-        const agentRef = doc(db, "agents", currentUser.uid);
-        const agentDoc = await getDoc(agentRef);
-        if (agentDoc.exists()) {
-          setActiveFormId(agentDoc.data().activeFormId);
-        }
-        setLoading(false);
-      } else {
-        router.push("/login");
-      }
-    });
-    return () => unsubscribe();
-  }, [router]);
-
-  // Fetch form templates once
-  useEffect(() => {
-    const fetchTemplates = async () => {
-      try {
-        const templatesCollection = collection(db, "formTemplates");
-        const templatesSnapshot = await getDocs(templatesCollection);
-        const templatesList = templatesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setFormTemplates(templatesList);
-      } catch (error) {
-        console.error("Error fetching form templates:", error);
-      }
-    };
-    fetchTemplates();
-  }, []);
-
-  const fetchLeads = async (currentUserId: string) => {
-    try {
-      const q = query(
-        collection(db, "leads"),
-        where("agentId", "==", currentUserId),
-        orderBy("timestamp", "desc")
-      );
-      const querySnapshot = await getDocs(q);
-      const leadsData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        timestamp: doc.data().timestamp?.toDate()
-      }));
-      setLeads(leadsData);
-    } catch (error) {
-      console.error("Error fetching leads:", error);
-    }
-  };
-
-  const handleStatusChange = async (leadId: string, newStatus: string) => {
-    try {
-        const leadRef = doc(db, "leads", leadId);
-        await updateDoc(leadRef, {
-            status: newStatus
-        });
-        
-        setLeads(prevLeads => 
-            prevLeads.map(lead => 
-                lead.id === leadId ? { ...lead, status: newStatus } : lead
-            )
-        );
-    } catch (error) {
-        console.error("Error updating status:", error);
-    }
-  };
-
-  const handleSaveClient = async () => {
-    if (!newName.trim() || !newPhone.trim()) {
-        alert("Numele și telefonul sunt obligatorii.");
-        return;
-    }
-    
-    setIsSaving(true);
-    
-    const agentId = auth.currentUser?.uid;
-    if (!agentId) {
-        alert("Agentul nu este autentificat.");
-        setIsSaving(false);
-        return;
-    }
-    
-    const newClientData = {
-        contact: {
-            name: newName,
-            email: newEmail,
-            phone: newPhone
-        },
-        status: newStatus,
-        agentId: agentId,
-        timestamp: serverTimestamp(),
-        source: 'Manual'
-    };
-
-    const leadsCollection = collection(db, 'leads');
-
-    try {
-        const docRef = await addDoc(leadsCollection, newClientData);
-
-        const clientForUI = {
-            id: docRef.id,
-            ...newClientData,
-            timestamp: new Date() 
-        };
-        setLeads(prevLeads => [clientForUI, ...prevLeads]);
-
-        setIsModalOpen(false);
-        setNewName('');
-        setNewEmail('');
-        setNewPhone('');
-        setNewStatus('Nou');
-
-    } catch (serverError: any) {
-        const permissionError = new FirestorePermissionError({
-            path: leadsCollection.path,
-            operation: 'create',
-            requestResourceData: newClientData,
-        } satisfies SecurityRuleContext);
-        errorEmitter.emit('permission-error', permissionError);
-        alert(`A apărut o eroare la salvare: ${serverError.message}`);
-
-    } finally {
-        setIsSaving(false);
-    }
-  };
-
-  const handleSetActiveForm = async (formId: string) => {
-    if (!user) return;
-    try {
-        const agentRef = doc(db, "agents", user.uid);
-        await updateDoc(agentRef, {
-            activeFormId: formId
-        });
-        setActiveFormId(formId);
-    } catch (error) {
-        console.error("Error setting active form:", error);
-        alert("A apărut o eroare la setarea formularului activ.");
-    }
-  };
-
-  // Fetch leads when user is available
-  useEffect(() => {
-    if (user) {
-      fetchLeads(user.uid);
-    }
-  }, [user]);
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      router.push("/login");
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
-  };
-
-  const userLink = user ? `https://dialog-cu-marius.netlify.app/?agentId=${user.uid}` : "";
-
-  if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Se încarcă...</div>;
-  }
-
-  return (
-    <div className="min-h-screen bg-background text-foreground p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
-        <header className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold">
-            Panoul tău, {user?.displayName || user?.email}
-          </h1>
-          <Button onClick={handleLogout} variant="outline">
-            Logout
-          </Button>
-        </header>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-          <Card className="md:col-span-1">
-            <CardHeader>
-              <CardTitle>Link-ul tău de Client</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center gap-4">
-              {userLink && (
-                   <a href={userLink} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline break-all text-center">
-                     {userLink}
-                   </a>
-              )}
-            </CardContent>
-          </Card>
-          <Card className="md:col-span-2">
-            <CardHeader>
-                <CardTitle>Formularele Mele</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <div className="space-y-4">
-                    {formTemplates.map(form => (
-                        <div key={form.id} className="flex items-center justify-between p-3 bg-secondary rounded-lg">
-                            <p className="font-medium">{form.title || "Formular fără titlu"}</p>
-                            {activeFormId === form.id ? (
-                                <span className="text-sm font-semibold text-primary">ACTIV</span>
-                            ) : (
-                                <Button size="sm" onClick={() => handleSetActiveForm(form.id)}>
-                                    Setează ca Activ
-                                </Button>
-                            )}
-                        </div>
-                    ))}
-                </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card>
-            <CardHeader>
-               <div className="flex justify-between items-center">
-                 <CardTitle>Clienții Tăi</CardTitle>
-                 <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                    <DialogTrigger asChild>
-                        <Button>Adaugă Client Nou</Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px]">
-                        <DialogHeader>
-                            <DialogTitle>Adaugă un Client Nou</DialogTitle>
-                        </DialogHeader>
-                        <div className="grid gap-4 py-4">
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="name" className="text-right">Nume</Label>
-                                <Input id="name" value={newName} onChange={(e) => setNewName(e.target.value)} className="col-span-3" />
-                            </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="email" className="text-right">Email</Label>
-                                <Input id="email" type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} className="col-span-3" />
-                            </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="phone" className="text-right">Telefon</Label>
-                                <Input id="phone" type="tel" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} className="col-span-3" />
-                            </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="status" className="text-right">Status</Label>
-                                <Select onValueChange={setNewStatus} defaultValue={newStatus}>
-                                    <SelectTrigger className="col-span-3">
-                                        <SelectValue placeholder="Selectează status" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="Nou">Nou</SelectItem>
-                                        <SelectItem value="De contactat">De contactat</SelectItem>
-                                        <SelectItem value="Contactat">Contactat</SelectItem>
-                                        <SelectItem value="Ofertă trimisă">Ofertă trimisă</SelectItem>
-                                        <SelectItem value="Convertit">Convertit</SelectItem>
-                                        <SelectItem value="Inactiv">Inactiv</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                        <DialogFooter>
-                            <Button onClick={handleSaveClient} disabled={isSaving}>
-                                {isSaving ? "Se salvează..." : "Salvează Client"}
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                 </Dialog>
-               </div>
-            </CardHeader>
-            <CardContent>
-                <div className="border rounded-lg overflow-hidden">
-                    <Table>
-                        <TableHeader>
-                        <TableRow>
-                            <TableHead>Dată</TableHead>
-                            <TableHead>Nume</TableHead>
-                            <TableHead>Email</TableHead>
-                            <TableHead>Telefon</TableHead>
-                            <TableHead>Status</TableHead>
-                        </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                        {leads.length > 0 ? (
-                            leads.map((lead) => (
-                            <TableRow key={lead.id}>
-                                <TableCell>
-                                    {lead.timestamp ? new Date(lead.timestamp).toLocaleDateString('ro-RO') : 'N/A'}
-                                </TableCell>
-                                <TableCell>{lead.contact?.name || "N/A"}</TableCell>
-                                <TableCell>{lead.contact?.email || "N/A"}</TableCell>
-                                <TableCell>{lead.contact?.phone || "N/A"}</TableCell>
-                                <TableCell>
-                                    <Select 
-                                        value={lead.status || "Nou"}
-                                        onValueChange={(newStatus) => handleStatusChange(lead.id, newStatus)}
-                                    >
-                                        <SelectTrigger className="w-full">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="Nou">Nou</SelectItem>
-                                            <SelectItem value="De contactat">De contactat</SelectItem>
-                                            <SelectItem value="Contactat">Contactat</SelectItem>
-                                            <SelectItem value="Ofertă trimisă">Ofertă trimisă</SelectItem>
-                                            <SelectItem value="Convertit">Convertit</SelectItem>
-                                            <SelectItem value="Inactiv">Inactiv</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </TableCell>
-                            </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                            <TableCell colSpan={5} className="text-center">
-                                Nu ai niciun client momentan.
-                            </TableCell>
-                            </TableRow>
-                        )}
-                        </TableBody>
-                    </Table>
-                </div>
-            </CardContent>
-          </Card>
-      </div>
-    </div>
-  );
+interface Stats {
+    totalClients: number;
+    convertedClients: number;
+    totalDeficit: number;
+    conversionRate: number;
 }
 
+const StatCard = ({ title, value, icon: Icon, formatAsCurrency = false, formatAsPercent=false }: { title: string, value: string | number, icon: React.ElementType, formatAsCurrency?: boolean, formatAsPercent?: boolean }) => {
     
+    let displayValue = value;
+    if (formatAsCurrency) {
+        displayValue = `${Number(value).toLocaleString('ro-RO')} RON`;
+    }
+     if (formatAsPercent) {
+        displayValue = `${value}%`;
+    }
+
+    return (
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{title}</CardTitle>
+                <Icon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+                <div className="text-2xl font-bold">{displayValue}</div>
+            </CardContent>
+        </Card>
+    )
+}
+
+export default function DashboardSummaryPage() {
+    const [user, setUser] = useState<User | null>(null);
+    const [stats, setStats] = useState<Stats | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            if (currentUser) {
+                setUser(currentUser);
+            } else {
+                // Handled by layout
+            }
+        });
+        return () => unsubscribe();
+    }, []);
+
+    useEffect(() => {
+        if (user) {
+            const fetchStats = async () => {
+                setLoading(true);
+                try {
+                    const leadsQuery = query(
+                        collection(db, "leads"),
+                        where("agentId", "==", user.uid)
+                    );
+                    const querySnapshot = await getDocs(leadsQuery);
+                    
+                    let totalClients = 0;
+                    let convertedClients = 0;
+                    let totalDeficit = 0;
+
+                    querySnapshot.forEach(doc => {
+                        const lead = doc.data();
+                        totalClients++;
+                        if (lead.status === 'Convertit') {
+                            convertedClients++;
+                        }
+                        if (lead.finalDeficit && typeof lead.finalDeficit === 'number') {
+                             totalDeficit += lead.finalDeficit;
+                        }
+                    });
+
+                    const conversionRate = totalClients > 0 ? (convertedClients / totalClients) * 100 : 0;
+                    
+                    setStats({
+                        totalClients,
+                        convertedClients,
+                        totalDeficit,
+                        conversionRate: Math.round(conversionRate * 100) / 100, // round to 2 decimals
+                    });
+
+                } catch (error) {
+                    console.error("Error fetching stats:", error);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            fetchStats();
+        }
+    }, [user]);
+
+    return (
+        <>
+            <div className="flex items-center">
+                <h1 className="text-lg font-semibold md:text-2xl">Sumar & Statistici</h1>
+            </div>
+            {loading ? (
+                <p>Se încarcă statisticile...</p>
+            ) : stats ? (
+                <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
+                   <StatCard title="Total Clienți" value={stats.totalClients} icon={Users} />
+                   <StatCard title="Total Deficit Asigurat" value={stats.totalDeficit} icon={ShieldCheck} formatAsCurrency={true} />
+                   <StatCard title="Clienți Convertiți" value={stats.convertedClients} icon={Target} />
+                   <StatCard title="Rata de Conversie" value={stats.conversionRate} icon={AreaChart} formatAsPercent={true} />
+                </div>
+            ) : (
+                <p>Nu s-au putut încărca statisticile.</p>
+            )}
+             <div className="grid gap-4 md:gap-8 mt-8">
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>Link-ul tău de Client</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex flex-col items-center gap-4">
+                        {user && (
+                            <a href={`/?agentId=${user.uid}`} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline break-all text-center">
+                                {`${window.location.origin}/?agentId=${user.uid}`}
+                            </a>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
+        </>
+    );
+}
