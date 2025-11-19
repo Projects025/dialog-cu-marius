@@ -6,19 +6,13 @@ import { useSearchParams } from "next/navigation";
 import LandingView from "@/components/conversation/landing-view";
 import ChatView from "@/components/conversation/chat-view";
 import type { Message, UserAction } from "@/components/conversation/chat-view";
-import { 
-    calculateBruteDeficit,
-    calculateFinalDeficit,
-    calculateHealthDeficit,
-    calculateRetirementContribution,
-    calculateStudiesContribution
-} from "@/lib/calculation";
-import type { FinancialData } from "@/lib/calculation";
 import { format } from "date-fns";
 import { db } from "@/lib/firebaseConfig";
 import { collection, addDoc, serverTimestamp, doc, getDoc } from "firebase/firestore";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/errors";
+import type { FinancialData } from "@/lib/calculation";
+
 
 async function saveLeadToFirestore(data: any, agentId: string | null) {
     if (!agentId) {
@@ -54,7 +48,7 @@ async function saveLeadToFirestore(data: any, agentId: string | null) {
 
 type ConversationStep = {
     message: (data: any) => string;
-    actionType: UserAction['type'] | 'calculation' | 'sequence' | 'end';
+    actionType: UserAction['type'] | 'end';
     options?: any;
     handler?: (response: any, data: any) => void;
     nextStep: (response?: any, data?: any) => string;
@@ -153,7 +147,8 @@ const introFlow: ConversationFlow = {
         nextStep: (response) => {
             if (!response || response.length === 0) return 'common.end_dialog_friendly';
             const selectedId = response.find((r: string) => r === 'deces') || response[0];
-            return `${selectedId}.intro_analysis_1`;
+            const firstStepKey = Object.keys(loadedFlow || {}).find(key => key.startsWith(`${selectedId}.`));
+            return firstStepKey || 'common.end_dialog_friendly';
         }
     },
 };
@@ -201,9 +196,6 @@ export default function Home() {
         ...commonFlow
     }), [loadedFlow]);
 
-    const PROGRESS_STEPS_IDS = Object.keys(allFlows).filter(key => allFlows[key]?.isProgressStep);
-    const TOTAL_STEPS = PROGRESS_STEPS_IDS.length;
-
     const getStep = useCallback((stepId: string): ConversationStep | null => {
         if (!stepId) return null;
         
@@ -215,6 +207,9 @@ export default function Home() {
         console.error("Invalid stepId:", stepId);
         return null;
     }, [allFlows]);
+
+    const PROGRESS_STEPS_IDS = Object.keys(allFlows).filter(key => allFlows[key]?.isProgressStep);
+    const TOTAL_STEPS = PROGRESS_STEPS_IDS.length;
 
     const conversationIdRef = useRef(0);
     const currentStateRef = useRef<string | null>(null);
@@ -386,27 +381,19 @@ export default function Home() {
                 }
                 if (step.nextStep && typeof step.nextStep === 'string') {
                      try {
-                        step.nextStep = new Function('response', 'data', step.nextStep);
+                        step.nextStep = new Function('response', 'data', `return ${step.nextStep}`);
                      } catch (e) { console.error(`Error hydrating nextStep for ${stepKey}:`, e); }
                 }
             });
             
             setLoadedFlow(flowData);
             
-            userDataRef.current = {};
-            conversationIdRef.current = 0;
-            currentProgressStep.current = 0;
-            setProgress(0);
-            setIsConversationDone(false);
-            
-            await renderStep('welcome_1');
-
         } catch (error: any) {
             setErrorMessage(error.message);
         } finally {
             setIsLoading(false);
         }
-    }, [renderStep]);
+    }, []);
 
     const handleStart = () => {
         setIsFadingOut(true);
@@ -417,10 +404,22 @@ export default function Home() {
     };
 
     useEffect(() => {
-        if (view === 'chat' && conversation.length === 0) {
+        if (view === 'chat' && conversation.length === 0 && !loadedFlow) {
             startConversation();
         }
-    }, [view, startConversation, conversation.length]);
+    }, [view, startConversation, conversation.length, loadedFlow]);
+
+    useEffect(() => {
+        if (loadedFlow && view === 'chat' && conversation.length === 0) {
+            userDataRef.current = {};
+            conversationIdRef.current = 0;
+            currentProgressStep.current = 0;
+            setProgress(0);
+            setIsConversationDone(false);
+            renderStep('welcome_1');
+        }
+    }, [loadedFlow, view, conversation.length, renderStep]);
+
 
     return (
         <>
@@ -443,5 +442,3 @@ export default function Home() {
         </>
     );
 }
-
-    
