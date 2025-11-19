@@ -50,7 +50,7 @@ export default function FormsPage() {
                 const templatesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 
                 // Filter on the client
-                const personal = templatesList.filter(form => form.ownerId === user.uid);
+                const personal = templatesList.filter(form => form.ownerId === user.uid).sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
                 const standard = templatesList.filter(form => !form.ownerId);
                 
                 setUserForms(personal);
@@ -63,7 +63,9 @@ export default function FormsPage() {
             }
         };
         
-        fetchTemplates();
+        if (user) {
+            fetchTemplates();
+        }
     }, [user]);
 
     const handleSetActiveForm = async (formId: string) => {
@@ -97,7 +99,7 @@ export default function FormsPage() {
             }
             const templateData = templateDoc.data();
             
-            const newFormId = `${user.uid}_custom_${Date.now()}`;
+            const newFormId = doc(collection(db, "formTemplates")).id;
 
             const newFormRef = doc(db, "formTemplates", newFormId);
             const newFormData = {
@@ -109,7 +111,7 @@ export default function FormsPage() {
             };
             await setDoc(newFormRef, newFormData);
             
-            setUserForms(prev => [...prev, {id: newFormId, ...newFormData, createdAt: new Date() }]);
+            setUserForms(prev => [{id: newFormId, ...newFormData, createdAt: new Date() }, ...prev]);
 
             const agentRef = doc(db, "agents", user.uid);
             await updateDoc(agentRef, { activeFormId: newFormId });
@@ -140,7 +142,7 @@ export default function FormsPage() {
             </CardHeader>
             <CardContent className="flex-grow">
                  {activeFormId === form.id && !isTemplate && (
-                    <div className="flex items-center gap-2 text-green-500 font-semibold text-sm mb-4">
+                    <div className="flex items-center gap-2 font-semibold text-sm mb-4">
                         <Badge variant="secondary" className="bg-green-100 text-green-700">Activ pe Link</Badge>
                     </div>
                 )}

@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 function FormEditor() {
     const searchParams = useSearchParams();
@@ -26,6 +26,7 @@ function FormEditor() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [editedMessages, setEditedMessages] = useState<{ [key: string]: string }>({});
+    const { toast } = useToast();
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -64,7 +65,18 @@ function FormEditor() {
                 const initialMessages: { [key: string]: string } = {};
                 if (formData.flow) {
                     Object.keys(formData.flow).forEach(stepKey => {
-                        initialMessages[stepKey] = formData.flow[stepKey].message;
+                        // The message can be a function or a string, we want the string representation for editing
+                        const messageSource = formData.flow[stepKey].message;
+                         if (typeof messageSource === 'string') {
+                            initialMessages[stepKey] = messageSource;
+                        } else if (typeof messageSource === 'function') {
+                            // This is a simple way to extract template literals. Might not cover all cases.
+                            const funcString = messageSource.toString();
+                            const match = funcString.match(/return\s*`([^`]*)`/);
+                            initialMessages[stepKey] = match ? match[1] : '';
+                        } else {
+                            initialMessages[stepKey] = '';
+                        }
                     });
                 }
                 setEditedMessages(initialMessages);
@@ -119,7 +131,7 @@ function FormEditor() {
         return <p>Selectează un formular pentru a-l edita din secțiunea "Formulare".</p>;
     }
     
-    const flowSteps = form.flow ? Object.entries(form.flow) : [];
+    const flowSteps = form.flow ? Object.entries(form.flow).sort(([keyA], [keyB]) => keyA.localeCompare(keyB)) : [];
 
     return (
         <Card>
@@ -142,7 +154,7 @@ function FormEditor() {
                                         rows={5}
                                         className="mt-1 bg-secondary"
                                     />
-                                    <p className="text-xs text-muted-foreground mt-1">Poți folosi tag-uri HTML simple precum {"<strong>"}, {"<br>"}, sau {"<em>"} pentru formatare.</p>
+                                    <p className="text-xs text-muted-foreground mt-1">Poți folosi tag-uri HTML simple precum {"<strong>"}, {"<br>"}, sau {"<em>"} și variabile precum {"${data.numeClient}"} pentru formatare.</p>
                                 </div>
                                 <Button size="sm" onClick={() => handleSave(stepKey)}>Salvează Pasul</Button>
                             </AccordionContent>
@@ -164,4 +176,3 @@ export default function FormEditorPage() {
         </Suspense>
     );
 }
-
