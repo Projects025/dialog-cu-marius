@@ -145,10 +145,10 @@ const introFlow: ConversationFlow = {
         ],
         handler: (response, data) => { data.priorities = response; },
         nextStep: (response) => {
-            if (!response || response.length === 0) return 'common.end_dialog_friendly';
+            if (!response || response.length === 0) return 'end_dialog_friendly';
             const selectedId = response.find((r: string) => r === 'deces') || response[0];
-            const firstStepKey = Object.keys(loadedFlow || {}).find(key => key.startsWith(`${selectedId}.`));
-            return firstStepKey || 'common.end_dialog_friendly';
+            const firstStepKey = loadedFlow ? Object.keys(loadedFlow).find(key => key.startsWith(`${selectedId}.`)) : null;
+            return firstStepKey || 'end_dialog_friendly';
         }
     },
 };
@@ -187,7 +187,7 @@ export default function Home() {
     const [isTyping, setIsTyping] = useState(false);
     
     const [loadedFlow, setLoadedFlow] = useState<ConversationFlow | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     
     const allFlows = useMemo(() => ({
@@ -208,7 +208,7 @@ export default function Home() {
         return null;
     }, [allFlows]);
 
-    const PROGRESS_STEPS_IDS = Object.keys(allFlows).filter(key => allFlows[key]?.isProgressStep);
+    const PROGRESS_STEPS_IDS = useMemo(() => Object.keys(allFlows).filter(key => allFlows[key]?.isProgressStep), [allFlows]);
     const TOTAL_STEPS = PROGRESS_STEPS_IDS.length;
 
     const conversationIdRef = useRef(0);
@@ -407,10 +407,10 @@ export default function Home() {
     };
 
     useEffect(() => {
-        if (view === 'chat' && conversation.length === 0 && !loadedFlow) {
+        if (view === 'chat' && conversation.length === 0 && !loadedFlow && isLoading) {
             startConversation();
         }
-    }, [view, startConversation, conversation.length, loadedFlow]);
+    }, [view, startConversation, conversation.length, loadedFlow, isLoading]);
 
     useEffect(() => {
         if (loadedFlow && view === 'chat' && conversation.length === 0) {
@@ -445,7 +445,3 @@ export default function Home() {
         </>
     );
 }
-
-    
-
-    
