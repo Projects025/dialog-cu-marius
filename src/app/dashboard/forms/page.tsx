@@ -224,30 +224,32 @@ export default function FormsPage() {
     };
 
     const handleDelete = async (formId: string) => {
-        if (!window.confirm("Ești sigur că vrei să ștergi acest formular? Acțiunea este ireversibilă.")) {
+        if (!user) {
+            alert("Utilizatorul nu este autentificat.");
             return;
         }
-
+        if (!window.confirm("Sigur vrei să ștergi acest formular? Acțiunea este ireversibilă.")) return;
+    
         try {
-            await deleteDoc(doc(db, "formTemplates", formId));
-            setUserForms(prev => prev.filter(form => form.id !== formId));
-            toast({
-                title: "Formular Șters",
-                description: "Formularul a fost eliminat cu succes.",
-            });
-            // If the deleted form was the active one, clear it
+            const formRef = doc(db, "formTemplates", formId);
+            await deleteDoc(formRef);
+    
+            setUserForms(prev => prev.filter(f => f.id !== formId));
+    
             if (activeFormId === formId) {
-                if(user) {
-                     await updateDoc(doc(db, "agents", user.uid), { activeFormId: null });
-                }
+                const agentRef = doc(db, "agents", user.uid);
+                await updateDoc(agentRef, { activeFormId: null });
                 setActiveFormId(null);
             }
-        } catch (error) {
-            console.error("Error deleting form:", error);
+    
+            toast({ title: "Succes", description: "Formularul a fost șters." });
+    
+        } catch (error: any) {
+            console.error("Eroare critică la ștergere:", error);
             toast({
                 variant: "destructive",
-                title: "Eroare la Ștergere",
-                description: "Nu s-a putut șterge formularul.",
+                title: "Eroare la ștergere",
+                description: `Nu s-a putut șterge formularul. Eroare: ${error.message}`,
             });
         }
     };
@@ -431,3 +433,5 @@ export default function FormsPage() {
         </>
     );
 }
+
+    
