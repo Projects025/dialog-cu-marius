@@ -20,6 +20,7 @@ async function saveLeadToFirestore(data: any, agentId: string | null) {
         return; 
     }
     
+    console.log("Încerc salvare lead...", data);
     const dataToSend = { ...data, source: 'Link Client' };
 
     if (Array.isArray(dataToSend.dramaticOptions)) {
@@ -262,11 +263,8 @@ export default function ChatAppClient() {
 
         if (step.actionType === 'end') {
             setIsTyping(false);
+            setCurrentUserAction({ type: 'end' });
             setIsConversationDone(true);
-            setCurrentUserAction(null);
-            if (Object.keys(userDataRef.current).length > 1) { // more than just priorities
-                await saveLeadToFirestore(userDataRef.current, agentIdRef.current);
-            }
             return;
         }
         
@@ -342,6 +340,11 @@ export default function ChatAppClient() {
                  // String handlers are deprecated due to security and complexity
             }
         }
+
+        if (step.actionType === 'form') {
+            userDataRef.current.contact = response;
+            await saveLeadToFirestore(userDataRef.current, agentIdRef.current);
+        }
         
         let nextStepId;
         if (typeof step.nextStep === 'function') {
@@ -352,10 +355,6 @@ export default function ChatAppClient() {
         } else {
             console.error("Eroare critică: nextStep nu este nici funcție, nici string valid.", step);
             return; 
-        }
-
-        if (nextStepId === 'common.end_dialog_success' || nextStepId === 'common.end_dialog_friendly') {
-            await saveLeadToFirestore(userDataRef.current, agentIdRef.current);
         }
         
         await renderStep(nextStepId);
