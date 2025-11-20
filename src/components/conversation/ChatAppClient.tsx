@@ -235,22 +235,23 @@ export default function ChatAppClient() {
     const renderStep = useCallback(async (stepId: string) => {
         currentStateRef.current = stepId;
         const step = getStep(stepId);
-
+    
         if (!step) {
             setIsTyping(false);
             setCurrentUserAction(null);
             return;
         }
-
+    
         setCurrentUserAction(null);
-
+    
         let messageContent = "";
         if (typeof step.message === 'function') {
             messageContent = step.message(userDataRef.current);
         } else {
             messageContent = step.message;
         }
-
+    
+        // Afișează mesajul dacă există
         if (messageContent) {
             setIsTyping(true);
             await delay(step.delay || 1000);
@@ -260,16 +261,17 @@ export default function ChatAppClient() {
             const dynamicDelay = calculateDynamicDelay(messageContent);
             await delay(dynamicDelay);
         }
-
+    
+        // Procesează acțiunea
         if (step.actionType === 'end') {
             setIsTyping(false);
             setCurrentUserAction({ type: 'end' });
             setIsConversationDone(true);
-            return;
+            return; // Oprește aici, dar după ce mesajul a fost deja adăugat
         }
         
         const actionOptions = step.options;
-
+    
         if (step.autoContinue) {
              const nextStepId = typeof step.nextStep === 'function' ? step.nextStep() : step.nextStep;
              await renderStep(nextStepId);
@@ -281,12 +283,13 @@ export default function ChatAppClient() {
     const processUserResponse = useCallback(async (response: any) => {
         setCurrentUserAction(null);
 
-        if (!currentStateRef.current) {
+        const currentStepId = currentStateRef.current;
+        if (!currentStepId) {
             console.error("Cannot process response without a current state.");
             return;
         }
 
-        const step = getStep(currentStateRef.current);
+        const step = getStep(currentStepId);
         if (!step) return;
         
         if (step.isProgressStep) {
@@ -295,50 +298,48 @@ export default function ChatAppClient() {
             setProgress(newProgress);
         }
         
-        const responseValue = (typeof response === 'object' && response !== null && response.label) ? response.label : response;
+        const rawResponseValue = Array.isArray(response) ? response.map(r => r.id || r) : (response.id || response);
+        const displayResponseValue = (typeof response === 'object' && response !== null && response.label) ? response.label : response;
         
         let userMessageContent: string | null = null;
-
+    
         if (step.actionType === 'input' && step.options?.type === 'number') {
-            const numValue = Number(response);
-            userMessageContent = isNaN(numValue) ? String(response) : numValue.toLocaleString('ro-RO');
-        } else if (typeof response === 'number') {
-            userMessageContent = response.toLocaleString('ro-RO');
-        } else if (typeof response === 'string' && response.trim() !== '') {
-            userMessageContent = response;
+            const numValue = Number(displayResponseValue);
+            userMessageContent = isNaN(numValue) ? String(displayResponseValue) : numValue.toLocaleString('ro-RO');
+        } else if (typeof displayResponseValue === 'number') {
+            userMessageContent = displayResponseValue.toLocaleString('ro-RO');
+        } else if (typeof displayResponseValue === 'string' && displayResponseValue.trim() !== '') {
+            userMessageContent = displayResponseValue;
         } else if (Array.isArray(response) && response.length > 0) {
-            const labels = response.map(item => {
-                if (typeof item === 'object' && item !== null && item.label) {
-                    return item.label;
-                }
-                return item;
-            });
-            userMessageContent = labels.join(', ');
-        } else if (response instanceof Date) {
-            userMessageContent = format(response, "dd/MM/yyyy");
-        } else if (typeof response === 'object' && response !== null) {
-            if (response.name) { // Contact form
-                userMessageContent = `Nume: ${response.name}, Email: ${response.email}, Telefon: ${response.phone}`;
-            } else if (response.label) { // Single choice from button list
-                userMessageContent = response.label;
-            }
+            userMessageContent = response.map(item => (item.label || item)).join(', ');
+        } else if (displayResponseValue instanceof Date) {
+            userMessageContent = format(displayResponseValue, "dd/MM/yyyy");
+        } else if (typeof response === 'object' && response !== null && response.name) { // Contact form
+            userMessageContent = `Datele au fost trimise.`;
         }
         
-        if (userMessageContent !== null && (userMessageContent.trim() !== '' || typeof response === 'number')) {
-             if (typeof response === 'number' && response === 0 && (step.options?.type === 'number' && step.options?.placeholder)) {
+        if (userMessageContent !== null && (userMessageContent.trim() !== '' || typeof displayResponseValue === 'number')) {
+             if (typeof displayResponseValue === 'number' && displayResponseValue === 0 && (step.options?.type === 'number' && step.options?.placeholder)) {
                  // Don't show '0' for optional numeric fields, let it be silent
              } else {
                  addMessage({ author: "user", type: "response" }, userMessageContent);
              }
         }
         
-        if (step.handler) {
-            const handlerResponse = Array.isArray(response) ? response.map(r => r.id || r) : (response.id || responseValue);
-            if (typeof step.handler === 'function') {
-                step.handler(handlerResponse, userDataRef.current);
-            } else {
-                 // String handlers are deprecated due to security and complexity
-            }
+        // --- LOGICĂ NOUĂ DE CAPTARE UNIVERSALĂ ---
+        const isNavigationButton = 
+            step.actionType === 'buttons' && 
+            (typeof rawResponseValue === 'string') &&
+            ['Continuă', 'Start', 'Da, continuăm', 'Sunt gata', 'Continuam'].includes(rawResponseValue);
+    
+        if (!isNavigationButton) {
+            userDataRef.current[currentStepId] = rawResponseValue;
+            console.log(`[Data Capture] Saved ${currentStepId}:`, rawResponseValue);
+        }
+        // -----------------------------------------
+
+        if (step.handler && typeof step.handler === 'function') {
+            step.handler(rawResponseValue, userDataRef.current);
         }
 
         if (step.actionType === 'form') {
@@ -348,8 +349,7 @@ export default function ChatAppClient() {
         
         let nextStepId;
         if (typeof step.nextStep === 'function') {
-            const processedResponse = Array.isArray(response) ? response.map(r => r.id || r) : (response.id || responseValue);
-            nextStepId = step.nextStep(processedResponse, userDataRef.current, loadedFlow);
+            nextStepId = step.nextStep(rawResponseValue, userDataRef.current, loadedFlow);
         } else if (typeof step.nextStep === 'string') {
             nextStepId = step.nextStep;
         } else {
@@ -391,6 +391,7 @@ export default function ChatAppClient() {
             const formData = formDoc.data();
             setLoadedFlow(formData.flow as ConversationFlow);
             
+            // Prioritize new startStepId field, with fallback to old logic
             setStartStepId(formData.startStepId || 'welcome_1');
 
         } catch (error: any) {
@@ -460,5 +461,7 @@ export default function ChatAppClient() {
         </>
     );
 }
+
+    
 
     
