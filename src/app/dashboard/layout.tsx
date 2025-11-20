@@ -12,7 +12,7 @@ import { LayoutDashboard, Users, FileText, LogOut } from "lucide-react";
 
 const NavLink = ({ href, children, icon: Icon }: { href: string; children: ReactNode; icon: React.ElementType }) => {
     const pathname = usePathname();
-    const isActive = pathname.startsWith(href);
+    const isActive = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
 
 
     return (

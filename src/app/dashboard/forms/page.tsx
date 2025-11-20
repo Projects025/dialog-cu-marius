@@ -24,7 +24,7 @@ const FormCard = ({
     activeFormId,
     cloning,
     handleClone,
-    handleDelete,
+    handleDeleteClick,
     router,
     handleSetActiveForm
 }: {
@@ -33,7 +33,7 @@ const FormCard = ({
     activeFormId: string | null,
     cloning: string | null,
     handleClone: (id: string) => void,
-    handleDelete: (id: string) => void,
+    handleDeleteClick: (id: string) => void,
     router: NextRouter,
     handleSetActiveForm: (id: string) => void,
 }) => (
@@ -69,7 +69,7 @@ const FormCard = ({
                 </Button>
             ) : (
                 <>
-                    <Button size="sm" variant="destructive" onClick={() => handleDelete(form.id)}>
+                    <Button size="sm" variant="destructive" onClick={() => handleDeleteClick(form.id)}>
                         <Trash2 className="mr-2 h-4 w-4" />
                         Șterge
                     </Button>
@@ -102,6 +102,10 @@ export default function FormsPage() {
     const [newFormTitle, setNewFormTitle] = useState("");
     const [sourceTemplateId, setSourceTemplateId] = useState<string>("");
     const [isCreating, setIsCreating] = useState(false);
+
+    // State for the delete confirmation modal
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [formToDelete, setFormToDelete] = useState<string | null>(null);
 
 
     const fetchForms = useCallback(async (currentUser: User) => {
@@ -147,7 +151,7 @@ export default function FormsPage() {
         });
         return () => unsubscribe();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [router, fetchForms]);
+    }, [router]);
     
     const handleCreateForm = async () => {
         if (!user || !newFormTitle.trim() || !sourceTemplateId) {
@@ -215,15 +219,19 @@ export default function FormsPage() {
         }
     };
 
-    const handleDelete = async (formId: string) => {
-        if (!user) return;
-        if (!window.confirm("Sigur vrei să ștergi acest formular? Acțiunea este ireversibilă.")) return;
-    
+    const handleDeleteClick = (formId: string) => {
+        setFormToDelete(formId);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!formToDelete || !user) return;
+        
         try {
-            const formRef = doc(db, "formTemplates", formId);
+            const formRef = doc(db, "formTemplates", formToDelete);
             await deleteDoc(formRef);
-    
-            if (activeFormId === formId) {
+
+            if (activeFormId === formToDelete) {
                 const agentRef = doc(db, "agents", user.uid);
                 await updateDoc(agentRef, { activeFormId: null });
                 setActiveFormId(null);
@@ -240,6 +248,9 @@ export default function FormsPage() {
                 title: "Eroare la ștergere",
                 description: `Nu s-a putut șterge formularul. Eroare: ${error.message}`,
             });
+        } finally {
+            setIsDeleteModalOpen(false);
+            setFormToDelete(null);
         }
     };
 
@@ -334,7 +345,7 @@ export default function FormsPage() {
                                 activeFormId={activeFormId}
                                 cloning={cloning}
                                 handleClone={handleClone}
-                                handleDelete={handleDelete}
+                                handleDeleteClick={handleDeleteClick}
                                 router={router}
                                 handleSetActiveForm={handleSetActiveForm}
                             />
@@ -357,7 +368,7 @@ export default function FormsPage() {
                                 activeFormId={activeFormId}
                                 cloning={cloning}
                                 handleClone={handleClone}
-                                handleDelete={handleDelete}
+                                handleDeleteClick={handleDeleteClick}
                                 router={router}
                                 handleSetActiveForm={handleSetActiveForm}
                             />
@@ -412,8 +423,21 @@ export default function FormsPage() {
                 </DialogContent>
             </Dialog>
 
+             <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Ștergere Formular</DialogTitle>
+                        <DialogDescription>
+                           Ești sigur că vrei să ștergi acest formular? Această acțiune este ireversibilă și va șterge toate datele asociate.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>Anulează</Button>
+                        <Button variant="destructive" onClick={confirmDelete}>Șterge Definitiv</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
         </>
     );
 }
-
-    
