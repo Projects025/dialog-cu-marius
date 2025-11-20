@@ -47,11 +47,11 @@ async function saveLeadToFirestore(data: any, agentId: string | null) {
 
 
 type ConversationStep = {
-    message: (data: any) => string;
+    message: ((data: any) => string) | string;
     actionType: UserAction['type'] | 'end';
     options?: any;
-    handler?: (response: any, data: any) => void;
-    nextStep: (response?: any, data?: any) => string;
+    handler?: ((response: any, data: any) => void) | string;
+    nextStep: ((response?: any, data?: any, loadedFlow?: any) => string) | string;
     autoContinue?: boolean;
     isProgressStep?: boolean;
     delay?: number;
@@ -144,7 +144,7 @@ const introFlow: ConversationFlow = {
             { label: 'Protecție în caz de boală gravă', id: 'boala_grava', disabled: true }
         ],
         handler: (response, data) => { data.priorities = response; },
-        nextStep: (response, loadedFlow) => { // Modified to accept loadedFlow
+        nextStep: (response, data, loadedFlow) => {
             if (!response || response.length === 0) return 'end_dialog_friendly';
             const selectedId = response.find((r: string) => r === 'deces') || response[0];
             if (loadedFlow) {
@@ -247,7 +247,12 @@ export default function ChatAppClient() {
 
         setCurrentUserAction(null);
 
-        const messageContent = step.message(userDataRef.current);
+        let messageContent = "";
+        if (typeof step.message === 'function') {
+            messageContent = step.message(userDataRef.current);
+        } else {
+            messageContent = step.message; 
+        }
 
         if (messageContent) {
             setIsTyping(true);
@@ -262,7 +267,7 @@ export default function ChatAppClient() {
         const actionOptions = step.options;
 
         if (step.autoContinue) {
-             const nextStepId = step.nextStep();
+             const nextStepId = typeof step.nextStep === 'function' ? step.nextStep() : step.nextStep;
              await renderStep(nextStepId);
         } else {
             setCurrentUserAction({ type: step.actionType, options: actionOptions });
@@ -325,15 +330,32 @@ export default function ChatAppClient() {
         
         if (step.handler) {
             const handlerResponse = Array.isArray(response) ? response.map(r => r.id || r) : (response.id || responseValue);
-            step.handler(handlerResponse, userDataRef.current);
+            if (typeof step.handler === 'function') {
+                step.handler(handlerResponse, userDataRef.current);
+            } else {
+                try {
+                    const handlerFunc = new Function('response', 'data', step.handler);
+                    handlerFunc(handlerResponse, userDataRef.current);
+                } catch (e) {
+                    console.error("Error executing string handler:", e);
+                }
+            }
         }
         
-        const isFinalStepBeforeEnd = step.nextStep(response, loadedFlow) === 'common.end_dialog_success' || step.nextStep(response, loadedFlow) === 'common.end_dialog_friendly';
-        if (isFinalStepBeforeEnd) {
-             await saveLeadToFirestore(userDataRef.current, agentIdRef.current);
+        let nextStepId;
+        if (typeof step.nextStep === 'function') {
+            const processedResponse = Array.isArray(response) ? response.map(r => r.id || r) : (response.id || responseValue);
+            nextStepId = step.nextStep(processedResponse, userDataRef.current, loadedFlow);
+        } else if (typeof step.nextStep === 'string') {
+            nextStepId = step.nextStep;
+        } else {
+            console.error("Eroare critică: nextStep nu este nici funcție, nici string valid.", step);
+            return; 
         }
 
-        const nextStepId = step.nextStep(Array.isArray(response) ? response.map(r => r.id || r) : (response.id || responseValue), loadedFlow);
+        if (nextStepId === 'common.end_dialog_success' || nextStepId === 'common.end_dialog_friendly') {
+            await saveLeadToFirestore(userDataRef.current, agentIdRef.current);
+        }
         
         await renderStep(nextStepId);
 
@@ -367,27 +389,6 @@ export default function ChatAppClient() {
             }
             
             const flowData = formDoc.data().flow as ConversationFlow;
-            
-            // Re-hydrate functions from string definitions if needed
-            Object.keys(flowData).forEach(stepKey => {
-                const step = flowData[stepKey] as any;
-                if (step.message && typeof step.message === 'string') {
-                    try {
-                        step.message = new Function('data', `return \`${step.message}\``);
-                    } catch (e) { console.error(`Error hydrating message for ${stepKey}:`, e); }
-                }
-                if (step.handler && typeof step.handler === 'string') {
-                     try {
-                        step.handler = new Function('response', 'data', step.handler);
-                     } catch (e) { console.error(`Error hydrating handler for ${stepKey}:`, e); }
-                }
-                if (step.nextStep && typeof step.nextStep === 'string') {
-                     try {
-                        step.nextStep = new Function('response', 'data', 'loadedFlow', `return ${step.nextStep}`);
-                     } catch (e) { console.error(`Error hydrating nextStep for ${stepKey}:`, e); }
-                }
-            });
-            
             setLoadedFlow(flowData);
             
         } catch (error: any) {
@@ -457,4 +458,3 @@ export default function ChatAppClient() {
         </>
     );
 }
-
