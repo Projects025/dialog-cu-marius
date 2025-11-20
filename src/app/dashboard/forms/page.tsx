@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { onAuthStateChanged, type User } from "firebase/auth";
-import { collection, doc, getDoc, getDocs, updateDoc, setDoc, serverTimestamp, query, addDoc, deleteDoc } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, updateDoc, setDoc, serverTimestamp, query, addDoc, deleteField, deleteDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebaseConfig";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -45,7 +45,7 @@ const FormCard = ({
                     {isTemplate ? "Șablon" : "Personalizat"}
                 </Badge>
             </div>
-             <CardDescription>
+             <CardDescription className="text-sm">
                 {form.createdAt?.toDate ? `Creat la: ${form.createdAt.toDate().toLocaleDateString('ro-RO')}` : 'Dată necunoscută'}
             </CardDescription>
         </CardHeader>
@@ -139,7 +139,7 @@ export default function FormsPage() {
         } finally {
             setLoading(false);
         }
-    }, [sourceTemplateId, toast]);
+    }, [toast]); // removed sourceTemplateId from dependencies
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -166,6 +166,7 @@ export default function FormsPage() {
         setIsCreating(true);
         try {
             let flow = {};
+            let startStepId = 'welcome_1';
             if (sourceTemplateId !== 'blank') {
                 const templateRef = doc(db, "formTemplates", sourceTemplateId);
                 const templateDoc = await getDoc(templateRef);
@@ -173,7 +174,9 @@ export default function FormsPage() {
                 if (!templateDoc.exists()) {
                     throw new Error("Șablonul selectat nu a fost găsit.");
                 }
-                flow = templateDoc.data().flow;
+                const templateData = templateDoc.data();
+                flow = templateData.flow;
+                startStepId = templateData.startStepId || startStepId;
             } else {
                 flow = {
                     welcome_1: {
@@ -190,6 +193,7 @@ export default function FormsPage() {
                 ownerId: user.uid,
                 createdAt: serverTimestamp(),
                 flow: flow,
+                startStepId: startStepId,
             };
 
             const newFormDoc = await addDoc(collection(db, "formTemplates"), newFormPayload);
@@ -259,7 +263,7 @@ export default function FormsPage() {
         if (!user) return;
         try {
             const agentRef = doc(db, "agents", user.uid);
-            await updateDoc(agentRef, { activeFormId: formId });
+            await setDoc(agentRef, { activeFormId: formId }, { merge: true });
             setActiveFormId(formId);
              toast({
                 title: "Formular Activat",
@@ -324,19 +328,19 @@ export default function FormsPage() {
         <>
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold md:text-3xl">Management Formulare</h1>
-                 <Button onClick={() => setIsCreateModalOpen(true)} disabled={loading}>
+                 <Button onClick={() => setIsCreateModalOpen(true)} disabled={loading} size="sm">
                     <FilePlus2 className="mr-2 h-4 w-4" />
                     Creează Formular Nou
                 </Button>
             </div>
-             <p className="text-muted-foreground mt-2">
+             <p className="text-muted-foreground mt-2 text-sm">
                 Creează formulare noi de la zero, clonează un șablon standard pentru a-l personaliza sau administrează formularele tale deja create.
             </p>
 
             <div className="mt-8">
                 <h2 className="text-xl font-semibold mb-4">Formularele Tale Personalizate</h2>
                 {loading ? <p>Se încarcă...</p> : userForms.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {userForms.map(form => (
                             <FormCard 
                                 key={form.id}
@@ -352,14 +356,14 @@ export default function FormsPage() {
                         ))}
                     </div>
                 ) : (
-                    <p className="text-muted-foreground">Nu ai niciun formular personalizat. Apasă pe "Creează Formular Nou" pentru a începe.</p>
+                    <p className="text-muted-foreground text-sm">Nu ai niciun formular personalizat. Apasă pe "Creează Formular Nou" pentru a începe.</p>
                 )}
             </div>
 
             <div className="mt-12">
                 <h2 className="text-xl font-semibold mb-4">Șabloane Standard</h2>
                  {loading ? <p>Se încarcă...</p> : templateForms.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {templateForms.map(form => (
                              <FormCard 
                                 key={form.id}
@@ -375,7 +379,7 @@ export default function FormsPage() {
                         ))}
                     </div>
                 ) : (
-                    <p className="text-muted-foreground">Nu există șabloane disponibile.</p>
+                    <p className="text-muted-foreground text-sm">Nu există șabloane disponibile.</p>
                 )}
             </div>
 
@@ -441,5 +445,3 @@ export default function FormsPage() {
         </>
     );
 }
-
-    

@@ -139,10 +139,10 @@ export default function LeadsPage() {
   return (
     <>
       <div className="flex items-center justify-between">
-          <h1 className="text-lg font-semibold md:text-2xl">Clienții Tăi</h1>
+          <h1 className="text-2xl font-bold md:text-3xl">Clienții Tăi</h1>
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
               <DialogTrigger asChild>
-                  <Button>Adaugă Client Nou</Button>
+                  <Button size="sm">Adaugă Client Nou</Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[425px]">
                   <DialogHeader>
@@ -193,39 +193,39 @@ export default function LeadsPage() {
                   <Table>
                       <TableHeader>
                       <TableRow>
-                          <TableHead>Dată</TableHead>
-                          <TableHead>Nume</TableHead>
-                          <TableHead>Email</TableHead>
-                          <TableHead>Telefon</TableHead>
-                          <TableHead>Sursă</TableHead>
-                          <TableHead>Status</TableHead>
+                          <TableHead className="text-xs">Dată</TableHead>
+                          <TableHead className="text-xs">Nume</TableHead>
+                          <TableHead className="text-xs">Email</TableHead>
+                          <TableHead className="text-xs">Telefon</TableHead>
+                          <TableHead className="text-xs">Sursă</TableHead>
+                          <TableHead className="text-xs">Status</TableHead>
                       </TableRow>
                       </TableHeader>
                       <TableBody>
                       {loading ? (
                           <TableRow>
-                            <TableCell colSpan={6} className="text-center">Se încarcă clienții...</TableCell>
+                            <TableCell colSpan={6} className="text-center text-sm py-4">Se încarcă clienții...</TableCell>
                           </TableRow>
                       ) : leads.length > 0 ? (
                           leads.map((lead) => (
                           <TableRow key={lead.id}>
-                              <TableCell>
+                              <TableCell className="text-sm py-2">
                                   {lead.timestamp ? new Date(lead.timestamp).toLocaleDateString('ro-RO') : 'N/A'}
                               </TableCell>
-                              <TableCell>{lead.contact?.name || "N/A"}</TableCell>
-                              <TableCell>{lead.contact?.email || "N/A"}</TableCell>
-                              <TableCell>{lead.contact?.phone || "N/A"}</TableCell>
-                               <TableCell>
+                              <TableCell className="text-sm py-2">{lead.contact?.name || "N/A"}</TableCell>
+                              <TableCell className="text-sm py-2">{lead.contact?.email || "N/A"}</TableCell>
+                              <TableCell className="text-sm py-2">{lead.contact?.phone || "N/A"}</TableCell>
+                               <TableCell className="py-2">
                                 {lead.source === 'Manual' 
                                     ? <Badge variant="secondary">Manual</Badge> 
                                     : <Badge variant="default">Link Client</Badge>}
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="text-sm py-2">
                                   <Select 
                                       value={lead.status || "Nou"}
                                       onValueChange={(newStatus) => handleStatusChange(lead.id, newStatus)}
                                   >
-                                      <SelectTrigger className="w-full">
+                                      <SelectTrigger className="w-full h-8 text-xs">
                                           <SelectValue />
                                       </SelectTrigger>
                                       <SelectContent>
@@ -242,7 +242,7 @@ export default function LeadsPage() {
                           ))
                       ) : (
                           <TableRow>
-                          <TableCell colSpan={6} className="text-center">
+                          <TableCell colSpan={6} className="text-center text-sm py-4">
                               Nu ai niciun client momentan. Poți adăuga unul manual.
                           </TableCell>
                           </TableRow>
