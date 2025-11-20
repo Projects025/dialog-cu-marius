@@ -9,12 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { useRouter, type NextRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import { FilePlus2, Edit, Copy, Trash2 } from "lucide-react";
+import { FilePlus2, Edit, Copy, Trash2, CheckCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 
 // Componenta FormCard extrasă pentru a asigura stabilitatea event handler-elor
@@ -37,49 +38,55 @@ const FormCard = ({
     router: NextRouter,
     handleSetActiveForm: (id: string) => void,
 }) => (
-     <Card key={form.id} className="flex flex-col h-full">
-        <CardHeader>
+     <Card key={form.id} className={cn(
+        "flex flex-col h-full",
+        activeFormId === form.id && !isTemplate && "border-primary"
+     )}>
+        <CardHeader className="p-4">
             <div className="flex justify-between items-start">
-                <CardTitle className="text-lg">{form.title}</CardTitle>
-                 <Badge variant={isTemplate ? "secondary" : "outline"}>
+                <CardTitle className="text-base font-bold pr-2">{form.title}</CardTitle>
+                 <Badge variant={isTemplate ? "secondary" : "outline"} className="text-xs whitespace-nowrap">
                     {isTemplate ? "Șablon" : "Personalizat"}
                 </Badge>
             </div>
-             <CardDescription className="text-sm">
+             <CardDescription className="text-xs">
                 {form.createdAt?.toDate ? `Creat la: ${form.createdAt.toDate().toLocaleDateString('ro-RO')}` : 'Dată necunoscută'}
             </CardDescription>
         </CardHeader>
-        <CardContent className="flex-grow">
+        <CardContent className="flex-grow p-4 pt-0">
              {activeFormId === form.id && !isTemplate && (
                 <div className="flex items-center gap-2 font-semibold text-sm">
-                    <Badge variant="default" className="bg-green-600 text-white hover:bg-green-700">Activ pe Link</Badge>
+                    <Badge variant="default" className="bg-green-600 text-white hover:bg-green-700 text-xs">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Activ
+                    </Badge>
                 </div>
             )}
         </CardContent>
-        <CardFooter className="flex flex-col sm:flex-row justify-end gap-2 mt-auto pt-4 border-t">
+        <CardFooter className="flex flex-col sm:flex-row justify-end gap-2 mt-auto p-3 border-t bg-muted/30">
             {isTemplate ? (
                 <Button 
                     size="sm" 
                     variant="outline"
                     onClick={() => handleClone(form.id)}
                     disabled={cloning === form.id}
-                    className="w-full sm:w-auto"
+                    className="w-full sm:w-auto h-8 text-xs"
                 >
-                    <Copy className="mr-2 h-4 w-4" />
+                    <Copy className="mr-2 h-3 w-3" />
                     {cloning === form.id ? "Se clonează..." : "Clonează"}
                 </Button>
             ) : (
                 <>
-                    <Button size="sm" variant="destructive" onClick={() => handleDeleteClick(form.id)} className="w-full sm:w-auto">
-                        <Trash2 className="mr-2 h-4 w-4" />
+                    <Button size="sm" variant="destructive" onClick={() => handleDeleteClick(form.id)} className="w-full sm:w-auto h-8 text-xs">
+                        <Trash2 className="mr-2 h-3 w-3" />
                         Șterge
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => router.push(`/dashboard/form-editor?id=${form.id}`)} className="w-full sm:w-auto">
-                        <Edit className="mr-2 h-4 w-4" />
+                    <Button size="sm" variant="outline" onClick={() => router.push(`/dashboard/form-editor?id=${form.id}`)} className="w-full sm:w-auto h-8 text-xs">
+                        <Edit className="mr-2 h-3 w-3" />
                         Editează
                     </Button>
                     {activeFormId !== form.id && (
-                         <Button size="sm" onClick={() => handleSetActiveForm(form.id)} className="w-full sm:w-auto">Setează Activ</Button>
+                         <Button size="sm" onClick={() => handleSetActiveForm(form.id)} className="w-full sm:w-auto h-8 text-xs">Setează Activ</Button>
                     )}
                 </>
             )}
@@ -327,18 +334,18 @@ export default function FormsPage() {
     return (
         <>
             <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold md:text-3xl">Management Formulare</h1>
+                <h1 className="text-xl font-bold md:text-2xl">Management Formulare</h1>
                  <Button onClick={() => setIsCreateModalOpen(true)} disabled={loading} size="sm">
                     <FilePlus2 className="mr-2 h-4 w-4" />
-                    Creează Formular Nou
+                    Creează Formular
                 </Button>
             </div>
-             <p className="text-muted-foreground mt-2 text-sm">
+             <p className="text-muted-foreground mt-2 text-xs md:text-sm">
                 Creează formulare noi de la zero, clonează un șablon standard pentru a-l personaliza sau administrează formularele tale deja create.
             </p>
 
             <div className="mt-8">
-                <h2 className="text-xl font-semibold mb-4">Formularele Tale Personalizate</h2>
+                <h2 className="text-lg font-semibold mb-4 md:text-xl">Formularele Tale</h2>
                 {loading ? <p>Se încarcă...</p> : userForms.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {userForms.map(form => (
@@ -356,12 +363,12 @@ export default function FormsPage() {
                         ))}
                     </div>
                 ) : (
-                    <p className="text-muted-foreground text-sm">Nu ai niciun formular personalizat. Apasă pe "Creează Formular Nou" pentru a începe.</p>
+                    <p className="text-muted-foreground text-sm">Nu ai niciun formular personalizat. Apasă pe "Creează Formular" pentru a începe.</p>
                 )}
             </div>
 
             <div className="mt-12">
-                <h2 className="text-xl font-semibold mb-4">Șabloane Standard</h2>
+                <h2 className="text-lg font-semibold mb-4 md:text-xl">Șabloane Standard</h2>
                  {loading ? <p>Se încarcă...</p> : templateForms.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {templateForms.map(form => (

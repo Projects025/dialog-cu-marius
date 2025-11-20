@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Users, Target, ShieldCheck, AreaChart, Copy } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 interface Stats {
     totalClients: number;
@@ -29,11 +30,11 @@ const StatCard = ({ title, value, icon: Icon, formatAsCurrency = false, formatAs
 
     return (
         <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
                 <CardTitle className="text-sm font-medium">{title}</CardTitle>
                 <Icon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0">
                 <div className="text-2xl font-bold">{displayValue}</div>
             </CardContent>
         </Card>
@@ -134,7 +135,7 @@ export default function DashboardSummaryPage() {
     return (
         <>
             <div className="flex items-center">
-                <h1 className="text-2xl font-bold md:text-3xl">Sumar & Statistici</h1>
+                <h1 className="text-xl font-bold md:text-2xl">Sumar & Statistici</h1>
             </div>
             {loading ? (
                 <p>Se încarcă statisticile...</p>
@@ -150,16 +151,16 @@ export default function DashboardSummaryPage() {
             )}
              <div className="grid gap-4 md:gap-8 mt-6">
                  <Card>
-                    <CardHeader>
-                        <CardTitle>Link-ul tău de Client</CardTitle>
-                        <CardDescription>Acesta este link-ul pe care îl poți trimite clienților tăi. Formularul activ este cel setat din pagina "Formulare".</CardDescription>
+                    <CardHeader className="p-4">
+                        <CardTitle className="text-base">Link-ul tău de Client</CardTitle>
+                        <CardDescription className="text-xs">Acesta este link-ul pe care îl poți trimite clienților tăi. Formularul activ este cel setat din pagina "Formulare".</CardDescription>
                     </CardHeader>
-                    <CardContent className="flex flex-col sm:flex-row items-center gap-4">
+                    <CardContent className="flex flex-col sm:flex-row items-center gap-2 p-4 pt-0">
                          {!activeFormId && !loading && (
-                            <Badge variant="destructive" className="w-full sm:w-auto">Niciun formular activ setat. Link-ul nu va funcționa.</Badge>
+                            <Badge variant="destructive" className="w-full sm:w-auto text-xs">Niciun formular activ setat. Link-ul nu va funcționa.</Badge>
                         )}
                         {user && (
-                             <div className="flex-1 w-full bg-muted text-muted-foreground p-2 rounded-md text-sm text-center sm:text-left overflow-x-auto">
+                             <div className="flex-1 w-full bg-muted text-muted-foreground p-2 rounded-md text-xs text-center sm:text-left overflow-x-auto">
                                 {`${window.location.origin}/?agentId=${user.uid}`}
                             </div>
                         )}
