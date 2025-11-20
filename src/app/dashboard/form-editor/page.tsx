@@ -3,15 +3,9 @@
 
 import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { doc, getDoc, updateDoc, deleteField, type FieldValue } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { db, auth } from '@/lib/firebaseConfig';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,16 +13,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
-import { Trash2, PlusCircle } from 'lucide-react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-
+import { PlusCircle, Save, ArrowUp, ArrowDown } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 type StepData = {
+    id: string;
     message: string;
     actionType: 'buttons' | 'input' | 'date' | 'multi_choice' | 'end';
     options?: any;
     nextStep?: string;
-    handler?: string;
     [key: string]: any;
 };
 
@@ -39,17 +32,17 @@ function FormEditor() {
     const [form, setForm] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [editedSteps, setEditedSteps] = useState<{ [key: string]: Partial<StepData> }>({});
+    const [steps, setSteps] = useState<StepData[]>([]);
+    const [formTitle, setFormTitle] = useState("");
     const { toast } = useToast();
 
-    // State for the new step modal
     const [isAddStepModalOpen, setIsAddStepModalOpen] = useState(false);
     const [newStepId, setNewStepId] = useState("");
 
     const fetchForm = useCallback(async () => {
         if (!user || !formId) {
             if (user && !formId) {
-                setError("Niciun formular selectat. Te rog selectează un formular pentru a-l edita.");
+                setError("Niciun formular selectat.");
                 setLoading(false);
             }
             return;
@@ -61,46 +54,28 @@ function FormEditor() {
             const formRef = doc(db, 'formTemplates', formId);
             const formDoc = await getDoc(formRef);
 
-            if (!formDoc.exists()) {
-                throw new Error("Formularul nu a fost găsit.");
-            }
-
+            if (!formDoc.exists()) throw new Error("Formularul nu a fost găsit.");
+            
             const formData = formDoc.data();
             if (formData.ownerId !== user.uid) {
-                throw new Error("Nu ai permisiunea de a edita acest formular. Trebuie mai întâi să îl clonezi.");
+                throw new Error("Nu ai permisiunea de a edita acest formular.");
             }
             
-            const fetchedForm = { id: formDoc.id, ...formData };
-            setForm(fetchedForm);
+            setForm(formData);
+            setFormTitle(formData.title);
 
-            const initialEdits: { [key: string]: Partial<StepData> } = {};
-            if (fetchedForm.flow) {
-                Object.keys(fetchedForm.flow).forEach(stepKey => {
-                    const originalStep = fetchedForm.flow[stepKey];
-                    let messageString = '';
-
-                    if (typeof originalStep.message === 'string') {
-                        messageString = originalStep.message;
-                    } else if (typeof originalStep.message === 'function') {
-                         try {
-                            const funcString = originalStep.message.toString();
-                            const match = funcString.match(/return\s*`([^`]*)`/);
-                            messageString = match ? match[1] : '';
-                        } catch (e) { console.error("Could not stringify message function", e); }
-                    }
-                    
-                    initialEdits[stepKey] = {
-                        ...originalStep,
-                        message: messageString,
-                        options: Array.isArray(originalStep.options) ? originalStep.options.map((opt: any) => typeof opt === 'object' ? opt.label : opt).join(', ') : ''
-                    };
-                });
+            if (formData.flow) {
+                const flowArray = Object.entries(formData.flow).map(([id, data]) => ({
+                    id,
+                    ...(data as any)
+                }));
+                // Simple sort for now, will be replaced by a better logic if needed
+                flowArray.sort((a,b) => a.id.localeCompare(b.id));
+                setSteps(flowArray);
             }
-            setEditedSteps(initialEdits);
 
         } catch (err: any) {
             setError(err.message);
-            console.error(err);
         } finally {
             setLoading(false);
         }
@@ -118,228 +93,238 @@ function FormEditor() {
         fetchForm();
     }, [formId, user, fetchForm]);
 
-    const handleStepChange = (stepKey: string, field: keyof StepData, value: string) => {
-        setEditedSteps(prev => ({
-            ...prev,
-            [stepKey]: {
-                ...prev[stepKey],
-                [field]: value
-            }
-        }));
-    };
-
-    const handleSaveStep = async (stepKey: string) => {
-        if (!formId || !editedSteps[stepKey]) return;
-
-        const stepToSave = { ...editedSteps[stepKey] };
-        
-        // Convert options string back to array for certain action types
-        if (stepToSave.actionType === 'buttons' || stepToSave.actionType === 'multi_choice') {
-            if(typeof stepToSave.options === 'string' && stepToSave.options.trim() !== '') {
-                stepToSave.options = stepToSave.options.split(',').map(s => s.trim());
-                 if (stepToSave.actionType === 'multi_choice') {
-                    stepToSave.options = stepToSave.options.map((opt: string) => ({ label: opt, id: opt.toLowerCase().replace(/\s+/g, '_') }));
+    const handleStepChange = (index: number, field: keyof StepData, value: any) => {
+        setSteps(prev => {
+            const newSteps = [...prev];
+            const stepToUpdate = { ...newSteps[index] };
+    
+            if (field === 'options' && (stepToUpdate.actionType === 'buttons' || stepToUpdate.actionType === 'multi_choice')) {
+                 if (typeof value === 'string') {
+                    const optionsArray = value.split(',').map(s => s.trim()).filter(Boolean);
+                    if (stepToUpdate.actionType === 'multi_choice') {
+                         stepToUpdate.options = optionsArray.map(opt => ({ label: opt, id: opt.toLowerCase().replace(/\s+/g, '_') }));
+                    } else {
+                         stepToUpdate.options = optionsArray;
+                    }
                 }
             } else {
-                 stepToSave.options = [];
+                stepToUpdate[field] = value;
             }
-        }
-
-        try {
-            const formRef = doc(db, 'formTemplates', formId);
-            const updatePath = `flow.${stepKey}`;
-            await updateDoc(formRef, { [updatePath]: stepToSave });
             
-            toast({
-                title: "Salvat!",
-                description: `Pasul "${stepKey}" a fost actualizat cu succes.`,
-            });
-        } catch (err) {
-            console.error("Error saving step:", err);
-            toast({
-                variant: "destructive",
-                title: "Eroare la salvare",
-                description: "Nu s-a putut salva modificarea.",
-            });
-        }
+            newSteps[index] = stepToUpdate;
+            return newSteps;
+        });
     };
     
-    const handleAddStep = async () => {
-        if (!formId || !newStepId.trim()) {
+    const handleAddStep = () => {
+        if (!newStepId.trim()) {
              toast({ variant: "destructive", title: "ID-ul pasului este obligatoriu." });
             return;
         }
-
-        try {
-            const formRef = doc(db, 'formTemplates', formId);
-            const newStepData: StepData = {
-                message: "Mesaj nou...",
-                actionType: "buttons",
-                options: ["Continuă"],
-                nextStep: "end_dialog_friendly"
-            };
-
-            await updateDoc(formRef, { [`flow.${newStepId}`]: newStepData });
-
-            toast({ title: "Succes!", description: `Pasul "${newStepId}" a fost adăugat.` });
-            
-            // Refresh form data
-            await fetchForm();
-
-            setIsAddStepModalOpen(false);
-            setNewStepId("");
-
-        } catch (error) {
-            console.error("Error adding step:", error);
-            toast({ variant: "destructive", title: "Eroare", description: "Nu s-a putut adăuga pasul." });
-        }
-    };
-
-    const handleDeleteStep = async (stepKey: string) => {
-        if (!formId || !window.confirm(`Ești sigur că vrei să ștergi pasul "${stepKey}"? Acțiunea este ireversibilă.`)) {
+        if (steps.some(step => step.id === newStepId.trim())) {
+            toast({ variant: "destructive", title: "ID-ul pasului trebuie să fie unic." });
             return;
         }
-        
+
+        const newStep: StepData = {
+            id: newStepId.trim(),
+            message: "Mesaj nou...",
+            actionType: "buttons",
+            options: ["Continuă"],
+            nextStep: ""
+        };
+        setSteps(prev => [...prev, newStep]);
+        setIsAddStepModalOpen(false);
+        setNewStepId("");
+        toast({ title: "Succes!", description: `Pasul "${newStep.id}" a fost adăugat local. Nu uita să salvezi.` });
+    };
+
+    const handleDeleteStep = (index: number) => {
+        const stepIdToDelete = steps[index].id;
+         if (!window.confirm(`Ești sigur că vrei să ștergi pasul "${stepIdToDelete}"?`)) return;
+        setSteps(prev => prev.filter((_, i) => i !== index));
+        toast({ title: "Succes!", description: `Pasul a fost șters local. Nu uita să salvezi.` });
+    };
+
+    const moveStep = (index: number, direction: 'up' | 'down') => {
+        if (
+            (direction === 'up' && index === 0) ||
+            (direction === 'down' && index === steps.length - 1)
+        ) {
+            return;
+        }
+
+        setSteps(prev => {
+            const newSteps = [...prev];
+            const targetIndex = direction === 'up' ? index - 1 : index + 1;
+            const temp = newSteps[index];
+            newSteps[index] = newSteps[targetIndex];
+            newSteps[targetIndex] = temp;
+            return newSteps;
+        });
+    };
+
+    const handleSaveAll = async () => {
+        if (!formId) return;
+
+        // Auto-link steps
+        const linkedSteps = steps.map((step, index) => {
+            const nextStepId = (index < steps.length - 1) ? steps[index + 1].id : 'end_dialog_friendly';
+            return { ...step, nextStep: nextStepId };
+        });
+
+        // Convert array back to map for Firestore
+        const flowObject = linkedSteps.reduce((acc: {[key: string]: any}, step) => {
+            const { id, ...data } = step;
+            acc[id] = data;
+            return acc;
+        }, {});
+
         try {
             const formRef = doc(db, 'formTemplates', formId);
             await updateDoc(formRef, {
-                [`flow.${stepKey}`]: deleteField() as FieldValue
+                title: formTitle,
+                flow: flowObject
             });
 
-            toast({ title: "Succes!", description: `Pasul "${stepKey}" a fost șters.` });
-
-            // Refresh form data from server
+            toast({
+                title: "Salvat!",
+                description: `Formularul a fost actualizat cu succes.`,
+            });
+            // Re-fetch to confirm and re-sync
             await fetchForm();
-
-        } catch (error) {
-            console.error("Error deleting step:", error);
-            toast({ variant: "destructive", title: "Eroare", description: "Nu s-a putut șterge pasul." });
+        } catch (err) {
+            console.error("Error saving form:", err);
+            toast({
+                variant: "destructive",
+                title: "Eroare la salvare",
+                description: "Nu s-au putut salva modificările.",
+            });
         }
     };
-    
-    if (loading) {
-        return <p className="text-center mt-8">Se încarcă editorul...</p>;
-    }
 
-    if (error) {
-        return <p className="text-destructive text-center mt-8">{error}</p>;
-    }
-    
-    if (!form) {
-        return <p className="text-center mt-8">Selectează un formular pentru a-l edita din secțiunea "Formulare".</p>;
-    }
-    
-    // Sort steps alphabetically for consistent order
-    const flowSteps = form.flow ? Object.keys(form.flow).sort((a, b) => a.localeCompare(b)) : [];
+    if (loading) return <p className="text-center mt-8">Se încarcă editorul...</p>;
+    if (error) return <p className="text-destructive text-center mt-8">{error}</p>;
+    if (!form) return <p className="text-center mt-8">Selectează un formular pentru a-l edita.</p>;
 
     return (
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto pb-24">
             <Card>
                 <CardHeader>
-                    <CardTitle>Editare Formular: {form.title}</CardTitle>
-                    <CardDescription>Modifică pașii, mesajele și logica conversației. Salvarea se face la nivel de pas.</CardDescription>
+                    <CardTitle>Editare Formular</CardTitle>
+                    <CardDescription>Modifică titlul, adaugă, șterge și reordonează pașii. Legăturile se fac automat.</CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <Accordion type="single" collapsible className="w-full">
-                        {flowSteps.map(stepKey => (
-                            <AccordionItem value={stepKey} key={stepKey}>
-                                <AccordionTrigger>
-                                    <div className="flex items-center justify-between w-full pr-4">
-                                        <span className="font-mono text-primary text-sm">{stepKey}</span>
-                                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8" onClick={(e) => { e.stopPropagation(); handleDeleteStep(stepKey); }}>
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
+                <CardContent className="space-y-8">
+                    <div className="space-y-2">
+                        <Label htmlFor="form-title" className="text-lg font-semibold">Titlul Formularului</Label>
+                        <Input 
+                            id="form-title"
+                            value={formTitle}
+                            onChange={(e) => setFormTitle(e.target.value)}
+                            className="text-xl h-12"
+                        />
+                    </div>
+                    
+                    <div className="space-y-4">
+                        {steps.map((step, index) => {
+                             const optionsAsString = Array.isArray(step.options) 
+                                ? step.options.map(opt => typeof opt === 'object' ? opt.label : opt).join(', ')
+                                : '';
+                            
+                            return (
+                            <div key={step.id} className="border-l-4 border-primary pl-4 py-4 rounded-r-lg bg-muted/30">
+                                <div className="flex justify-between items-center mb-4">
+                                    <div className="flex items-center gap-4">
+                                        <span className="font-mono text-sm text-primary">{step.id}</span>
+                                        <div className="flex gap-1">
+                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => moveStep(index, 'up')} disabled={index === 0}>
+                                                <ArrowUp className="h-4 w-4" />
+                                            </Button>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => moveStep(index, 'down')} disabled={index === steps.length - 1}>
+                                                <ArrowDown className="h-4 w-4" />
+                                            </Button>
+                                        </div>
                                     </div>
-                                </AccordionTrigger>
-                                <AccordionContent className="space-y-6 p-4 bg-muted/50 rounded-b-md">
+                                    <Button variant="destructive" size="sm" onClick={() => handleDeleteStep(index)}>Șterge</Button>
+                                </div>
+                                <div className="space-y-4 p-4 bg-background rounded-md">
                                     <div className="space-y-2">
-                                        <Label htmlFor={`message-${stepKey}`} className="font-semibold">Textul Mesajului</Label>
+                                        <Label htmlFor={`message-${step.id}`}>Text Mesaj</Label>
                                         <Textarea
-                                            id={`message-${stepKey}`}
-                                            value={editedSteps[stepKey]?.message || ''}
-                                            onChange={(e) => handleStepChange(stepKey, 'message', e.target.value)}
-                                            rows={5}
-                                            className="bg-background"
+                                            id={`message-${step.id}`}
+                                            value={step.message}
+                                            onChange={(e) => handleStepChange(index, 'message', e.target.value)}
+                                            rows={3}
                                         />
-                                        <p className="text-xs text-muted-foreground">Tag-uri HTML simple precum {"<strong>"}, {"<br>"}, {"<em>"} și variabile precum {"${data.numeClient}"} sunt permise.</p>
                                     </div>
-                                    
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <Label htmlFor={`actionType-${stepKey}`}>Tipul Acțiunii</Label>
+                                            <Label htmlFor={`actionType-${step.id}`}>Tip Acțiune</Label>
                                             <Select
-                                                value={editedSteps[stepKey]?.actionType}
-                                                onValueChange={(value) => handleStepChange(stepKey, 'actionType', value)}
+                                                value={step.actionType}
+                                                onValueChange={(value) => handleStepChange(index, 'actionType', value)}
                                             >
-                                                <SelectTrigger id={`actionType-${stepKey}`} className="bg-background">
-                                                    <SelectValue placeholder="Selectează acțiune" />
+                                                <SelectTrigger id={`actionType-${step.id}`}>
+                                                    <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="buttons">Butoane (Opțiuni simple)</SelectItem>
+                                                    <SelectItem value="buttons">Butoane (Opțiuni Simple)</SelectItem>
                                                     <SelectItem value="multi_choice">Butoane (Selecție Multiplă)</SelectItem>
                                                     <SelectItem value="input">Câmp de text (Input)</SelectItem>
                                                     <SelectItem value="date">Selector de Dată</SelectItem>
-                                                     <SelectItem value="end">Final Conversație</SelectItem>
+                                                    <SelectItem value="end">Final Conversație</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>
-
-                                        <div className="space-y-2">
-                                            <Label htmlFor={`nextStep-${stepKey}`}>Pasul Următor (ID)</Label>
-                                            <Input
-                                                id={`nextStep-${stepKey}`}
-                                                value={editedSteps[stepKey]?.nextStep || ''}
-                                                onChange={(e) => handleStepChange(stepKey, 'nextStep', e.target.value)}
-                                                placeholder="Ex: intrebare_2"
-                                                className="bg-background"
-                                            />
-                                        </div>
+                                         {(step.actionType === 'buttons' || step.actionType === 'multi_choice') && (
+                                            <div className="space-y-2">
+                                                <Label htmlFor={`options-${step.id}`}>Opțiuni (separate prin virgulă)</Label>
+                                                <Input
+                                                    id={`options-${step.id}`}
+                                                    value={optionsAsString}
+                                                    onChange={(e) => handleStepChange(index, 'options', e.target.value)}
+                                                    placeholder="Ex: Da, Nu, Poate"
+                                                />
+                                            </div>
+                                        )}
                                     </div>
-                                    
-                                    {(editedSteps[stepKey]?.actionType === 'buttons' || editedSteps[stepKey]?.actionType === 'multi_choice') && (
-                                        <div className="space-y-2">
-                                            <Label htmlFor={`options-${stepKey}`}>Opțiuni (separate prin virgulă)</Label>
-                                            <Input
-                                                id={`options-${stepKey}`}
-                                                value={editedSteps[stepKey]?.options || ''}
-                                                onChange={(e) => handleStepChange(stepKey, 'options', e.target.value)}
-                                                placeholder="Ex: Da, Nu, Poate"
-                                                className="bg-background"
-                                            />
-                                        </div>
-                                    )}
-
-                                    <Button size="sm" onClick={() => handleSaveStep(stepKey)}>Salvează Modificările Pasului</Button>
-                                </AccordionContent>
-                            </AccordionItem>
-                        ))}
-                    </Accordion>
+                                </div>
+                            </div>
+                        )})}
+                    </div>
 
                     <div className="mt-8 border-t pt-6 flex justify-center">
-                         <Button variant="outline" onClick={() => setIsAddStepModalOpen(true)}>
+                        <Button variant="outline" onClick={() => setIsAddStepModalOpen(true)}>
                             <PlusCircle className="mr-2 h-4 w-4" />
-                            Adaugă un Pas Nou în Flux
+                            Adaugă un Pas Nou
                         </Button>
                     </div>
                 </CardContent>
             </Card>
+
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+                 <Button size="lg" onClick={handleSaveAll} className="shadow-2xl">
+                    <Save className="mr-2 h-5 w-5" />
+                    Salvează și Actualizează Fluxul
+                </Button>
+            </div>
 
             <Dialog open={isAddStepModalOpen} onOpenChange={setIsAddStepModalOpen}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Adaugă un Pas Nou</DialogTitle>
                         <DialogDescription>
-                            Introdu un ID unic pentru noul pas. Acesta va fi folosit pentru a lega pașii între ei. Ex: 'intrebare_contact'.
+                            Introdu un ID unic pentru noul pas. Folosește litere mici și underscore. Ex: 'intrebare_contact'.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="step-id" className="text-left">ID Pas Nou</Label>
+                            <Label htmlFor="step-id">ID Pas Nou</Label>
                             <Input
                                 id="step-id"
                                 placeholder="ex: intrebare_buget"
                                 value={newStepId}
-                                onChange={(e) => setNewStepId(e.target.value)}
+                                onChange={(e) => setNewStepId(e.target.value.toLowerCase().replace(/\s+/g, '_'))}
                                 className="font-mono"
                             />
                         </div>
@@ -361,3 +346,5 @@ export default function FormEditorPage() {
         </Suspense>
     );
 }
+
+    
