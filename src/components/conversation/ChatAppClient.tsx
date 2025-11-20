@@ -280,13 +280,13 @@ export default function ChatAppClient() {
 
     const processUserResponse = useCallback(async (response: any) => {
         setCurrentUserAction(null);
-
+    
         const currentStepId = currentStateRef.current;
         if (!currentStepId) {
             console.error("Cannot process response without a current state.");
             return;
         }
-
+    
         const step = getStep(currentStepId);
         if (!step) return;
         
@@ -296,7 +296,10 @@ export default function ChatAppClient() {
             setProgress(newProgress);
         }
         
-        const rawResponseValue = Array.isArray(response) ? response.map(r => r.id || r) : (response.id || response);
+        const rawResponseValue = (typeof response === 'object' && response !== null && !Array.isArray(response)) 
+            ? (response.id || response.value || response.label) 
+            : response;
+
         const displayResponseValue = (typeof response === 'object' && response !== null && response.label) ? response.label : response;
         
         let userMessageContent: string | null = null;
@@ -324,29 +327,32 @@ export default function ChatAppClient() {
              }
         }
         
-        // --- LOGICĂ NOUĂ DE CAPTARE UNIVERSALĂ ---
         const isNavigationButton = 
             step.actionType === 'buttons' && 
             (typeof rawResponseValue === 'string') &&
-            ['Continuă', 'Start', 'Da, continuăm', 'Sunt gata', 'Continuam'].includes(rawResponseValue);
+            ['Continuă', 'Start', 'Da, continuăm', 'Sunt gata'].includes(rawResponseValue);
     
-        if (!isNavigationButton && currentStepId) {
+        if (currentStepId && !isNavigationButton) {
             userDataRef.current[currentStepId as keyof FinancialData] = rawResponseValue;
             console.log(`[Data Capture] Saved ${currentStepId}:`, rawResponseValue);
         }
-        // -----------------------------------------
-
+    
         if (step.handler && typeof step.handler === 'function') {
             step.handler(rawResponseValue, userDataRef.current);
         }
-
+    
         if (step.actionType === 'form') {
             userDataRef.current.contact = response;
             await saveLeadToFirestore(userDataRef.current, agentIdRef.current);
         }
         
         let nextStepId;
-        if (typeof step.nextStep === 'function') {
+        // --- NOUA LOGICĂ DE RAMIFICARE ---
+        if (typeof response === 'object' && response !== null && response.nextStep) {
+            nextStepId = response.nextStep;
+        } 
+        // --- LOGICA VECHE ---
+        else if (typeof step.nextStep === 'function') {
             nextStepId = step.nextStep(rawResponseValue, userDataRef.current, loadedFlow);
         } else if (typeof step.nextStep === 'string') {
             nextStepId = step.nextStep;
@@ -356,7 +362,7 @@ export default function ChatAppClient() {
         }
         
         await renderStep(nextStepId);
-
+    
     }, [addMessage, renderStep, getStep, TOTAL_STEPS, loadedFlow]);
 
     const startConversation = useCallback(async () => {

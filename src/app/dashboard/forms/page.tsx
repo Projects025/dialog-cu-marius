@@ -131,7 +131,7 @@ export default function FormsPage() {
             const allForms = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             
             const personal = allForms.filter(form => form.ownerId === currentUser.uid).sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
-            const standard = allForms.filter(form => !form.ownerId);
+            const standard = allForms.filter(form => !form.ownerId || form.isTemplate).sort((a,b) => a.title.localeCompare(b.title));
             
             setUserForms(personal);
             setTemplateForms(standard);
@@ -331,6 +331,7 @@ export default function FormsPage() {
     };
     
     const restoreDatabase = async () => {
+        if (!user) return;
         const templateData = {
             title: "Analiză Financiară - Deces (Standard)",
             startStepId: "intro_analysis_1",
@@ -365,6 +366,101 @@ export default function FormsPage() {
         } catch (e: any) {
             console.error("Eroare la restaurare:", e);
             toast({ variant: "destructive", title: "Eroare la restaurare", description: e.message });
+        }
+    };
+    
+    const restoreMasterTemplate = async () => {
+        if (!user) return;
+
+        const masterFormData = {
+          title: "Analiză Completă (Master)",
+          startStepId: "ask_topic",
+          ownerId: user.uid,
+          isTemplate: true,
+          createdAt: serverTimestamp(),
+          flow: {
+            // --- INTRODUCERE ȘI RAMIFICARE ---
+            ask_topic: {
+              message: "Salut! Sunt Marius. Pentru a te putea ajuta, spune-mi ce te interesează acum?",
+              actionType: "buttons",
+              // AICI ESTE MAGIA: Fiecare buton duce în altă parte
+              options: [
+                { label: "Deces", nextStep: "deces_intro" },
+                { label: "Boli Grave", nextStep: "boala_intro" },
+                { label: "Pensie", nextStep: "pensie_intro" },
+                { label: "Studii Copii", nextStep: "studii_intro" }
+              ]
+            },
+            // --- RAMURA DECES ---
+            deces_intro: {
+              message: "Am înțeles. Hai să analizăm protecția în caz de deces...",
+              actionType: "buttons",
+              options: ["Continuă"],
+              nextStep: "deces_q1"
+            },
+            deces_q1: {
+               message: "Pe ce perioadă (ani) vrei protecție?",
+               actionType: "buttons",
+               options: ["5 ani", "10 ani", "20 ani"],
+               nextStep: "deces_q2"
+            },
+            deces_q2: {
+               message: "Care este suma necesară?",
+               actionType: "input",
+               options: { type: "number", placeholder: "Ex: 5000" },
+               nextStep: "final_contact"
+            },
+            // --- RAMURA PENSIE ---
+            pensie_intro: {
+              message: "Excelent. Planificarea pensiei este vitală. Câți ani ai acum?",
+              actionType: "input",
+              options: { type: "number", placeholder: "Ex: 35" },
+              nextStep: "final_contact"
+            },
+            // --- RAMURA BOLI ---
+            boala_intro: {
+              message: "Sănătatea e prioritară. Ai istoric medical?",
+              actionType: "buttons",
+              options: ["Da", "Nu"],
+              nextStep: "final_contact"
+            },
+             // --- RAMURA STUDII ---
+            studii_intro: {
+              message: "Investiția în copii. Câți ani are copilul?",
+              actionType: "input",
+              options: { type: "number", placeholder: "Ex: 5" },
+              nextStep: "final_contact"
+            },
+            // --- FINAL COMUN ---
+            final_contact: {
+              message: "Pentru a-ți trimite analiza completă, am nevoie de datele tale.",
+              actionType: "form",
+              options: {
+                buttonText: "Trimite",
+                gdpr: "Accept termeni",
+                fields: [
+                  { name: "name", placeholder: "Nume", type: "text", required: true },
+                  { name: "email", placeholder: "Email", type: "email", required: true },
+                  { name: "phone", placeholder: "Telefon", type: "tel", required: true }
+                ]
+              },
+              nextStep: "final_end"
+            },
+            final_end: {
+               message: "Mulțumesc! Te voi contacta.",
+               actionType: "end"
+            }
+          }
+        };
+
+        try {
+            console.log("Încep restaurarea șablonului MASTER...");
+            await setDoc(doc(db, "formTemplates", "master_standard_v1"), masterFormData);
+            toast({ title: "Succes!", description: "Șablonul 'Analiză Completă (Master)' a fost creat." });
+            if (user) await fetchForms(user);
+        } catch (e: any) {
+            console.error("Eroare la restaurare master:", e);
+            toast({ variant: "destructive", title: "Eroare la restaurare master", description: e.message });
         }
     };
 
@@ -434,13 +530,23 @@ export default function FormsPage() {
                         <CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="text-destructive h-5 w-5"/> Zonă de Mentenanță</CardTitle>
                         <CardDescription className="text-xs">Acțiunile din această secțiune sunt pentru depanare. Folosește-le cu precauție.</CardDescription>
                     </CardHeader>
-                    <CardContent>
-                         <Button variant="destructive" size="sm" onClick={restoreDatabase}>
-                            Resetează Șablonul Standard (Admin)
-                        </Button>
-                        <p className="text-xs text-muted-foreground mt-2">
-                            Acest buton va suprascrie șablonul "Analiză Financiară - Deces (Standard)" cu versiunea originală, completă. Utile dacă șablonul este corupt sau șters accidental.
-                        </p>
+                    <CardContent className="flex flex-col sm:flex-row gap-4">
+                         <div>
+                             <Button variant="destructive" size="sm" onClick={restoreDatabase}>
+                                Resetează Șablonul Standard
+                            </Button>
+                            <p className="text-xs text-muted-foreground mt-2">
+                                Suprascrie șablonul "Deces (Standard)" cu versiunea originală.
+                            </p>
+                        </div>
+                        <div>
+                             <Button variant="destructive" size="sm" onClick={restoreMasterTemplate}>
+                                Creează Șablonul Master
+                            </Button>
+                            <p className="text-xs text-muted-foreground mt-2">
+                                Creează/Resetează șablonul "Analiză Completă (Master)" cu 4 ramuri.
+                            </p>
+                        </div>
                     </CardContent>
                  </Card>
             </div>
