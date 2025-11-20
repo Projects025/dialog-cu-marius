@@ -6,15 +6,15 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Phone, Mail } from "lucide-react";
 
-const LeadCard = ({ lead, onStatusChange }: { lead: any; onStatusChange: (leadId: string, newStatus: string) => void }) => {
+const LeadCard = ({ lead, onStatusChange, onCardClick }: { lead: any; onStatusChange: (leadId: string, newStatus: string) => void; onCardClick: () => void; }) => {
     return (
-        <Card>
+        <Card onClick={onCardClick} className="cursor-pointer">
             <CardContent className="p-4">
                 <div className="flex justify-between items-start">
                     <p className="font-bold text-base">{lead.contact?.name || "N/A"}</p>
                     {lead.source === 'Manual' 
                         ? <Badge variant="secondary" className="text-xs">Manual</Badge> 
-                        : <Badge variant="default" className="text-xs">Link</Badge>}
+                        : <Badge variant="default" className="text-xs">Link Client</Badge>}
                 </div>
                  <p className="text-xs text-muted-foreground mb-3">
                     {lead.timestamp ? new Date(lead.timestamp).toLocaleDateString('ro-RO') : 'N/A'}
@@ -37,7 +37,11 @@ const LeadCard = ({ lead, onStatusChange }: { lead: any; onStatusChange: (leadId
             <CardFooter className="p-3 bg-muted/50 border-t">
                  <Select 
                     value={lead.status || "Nou"}
-                    onValueChange={(newStatus) => onStatusChange(lead.id, newStatus)}
+                    onValueChange={(newStatus) => {
+                        // Prevent the card click from firing when changing status
+                        (event as React.MouseEvent).stopPropagation();
+                        onStatusChange(lead.id, newStatus);
+                    }}
                 >
                     <SelectTrigger className="w-full h-8 text-xs">
                         <SelectValue />
@@ -57,3 +61,5 @@ const LeadCard = ({ lead, onStatusChange }: { lead: any; onStatusChange: (leadId
 }
 
 export default LeadCard;
+
+    

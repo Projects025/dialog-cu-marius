@@ -6,7 +6,7 @@ import { User, onAuthStateChanged } from "firebase/auth";
 import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebaseConfig";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Users, Target, ShieldCheck, AreaChart, Copy } from 'lucide-react';
+import { Users, Target, AreaChart, Copy } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -14,16 +14,12 @@ import { Badge } from "@/components/ui/badge";
 interface Stats {
     totalClients: number;
     convertedClients: number;
-    totalDeficit: number;
     conversionRate: number;
 }
 
-const StatCard = ({ title, value, icon: Icon, formatAsCurrency = false, formatAsPercent=false }: { title: string, value: string | number, icon: React.ElementType, formatAsCurrency?: boolean, formatAsPercent?: boolean }) => {
+const StatCard = ({ title, value, icon: Icon, formatAsPercent=false }: { title: string, value: string | number, icon: React.ElementType, formatAsPercent?: boolean }) => {
     
     let displayValue: string | number = value;
-    if (formatAsCurrency) {
-        displayValue = `${Number(value).toLocaleString('ro-RO')} RON`;
-    }
      if (formatAsPercent) {
         displayValue = `${value}%`;
     }
@@ -81,16 +77,12 @@ export default function DashboardSummaryPage() {
                     
                     let totalClients = 0;
                     let convertedClients = 0;
-                    let totalDeficit = 0;
 
                     querySnapshot.forEach(doc => {
                         const lead = doc.data();
                         totalClients++;
                         if (lead.status === 'Convertit') {
                             convertedClients++;
-                        }
-                        if (lead.finalDeficit && typeof lead.finalDeficit === 'number') {
-                             totalDeficit += lead.finalDeficit;
                         }
                     });
 
@@ -99,7 +91,6 @@ export default function DashboardSummaryPage() {
                     setStats({
                         totalClients,
                         convertedClients,
-                        totalDeficit,
                         conversionRate: Math.round(conversionRate * 100) / 100, // round to 2 decimals
                     });
 
@@ -140,9 +131,8 @@ export default function DashboardSummaryPage() {
             {loading ? (
                 <p>Se încarcă statisticile...</p>
             ) : stats ? (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                    <StatCard title="Total Clienți" value={stats.totalClients} icon={Users} />
-                   <StatCard title="Total Deficit Asigurat" value={stats.totalDeficit} icon={ShieldCheck} formatAsCurrency={true} />
                    <StatCard title="Clienți Convertiți" value={stats.convertedClients} icon={Target} />
                    <StatCard title="Rata de Conversie" value={stats.conversionRate} icon={AreaChart} formatAsPercent={true} />
                 </div>
@@ -174,3 +164,5 @@ export default function DashboardSummaryPage() {
         </>
     );
 }
+
+    

@@ -8,10 +8,10 @@ import { useRouter } from "next/navigation";
 
 import { auth, db } from "@/lib/firebaseConfig";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { errorEmitter } from "@/firebase/error-emitter";
@@ -19,6 +19,35 @@ import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/e
 import { Badge } from "@/components/ui/badge";
 import { FilePlus2 } from "lucide-react";
 import LeadCard from "@/components/dashboard/LeadCard";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+
+const LeadDetailItem = ({ label, value }: { label: string, value: any }) => {
+    if (value === undefined || value === null || value === '' || (Array.isArray(value) && value.length === 0)) {
+        return null;
+    }
+
+    let displayValue;
+    if (typeof value === 'number') {
+        displayValue = value.toLocaleString('ro-RO');
+    } else if (value instanceof Date) {
+        displayValue = value.toLocaleDateString('ro-RO');
+    } else if (typeof value === 'boolean') {
+        displayValue = value ? 'Da' : 'Nu';
+    } else if (Array.isArray(value)) {
+        displayValue = value.join(', ');
+    }
+    else {
+        displayValue = String(value);
+    }
+    
+    return (
+        <div className="grid grid-cols-3 gap-4 py-2 border-b border-muted">
+            <dt className="text-sm font-medium text-muted-foreground">{label}</dt>
+            <dd className="text-sm col-span-2">{displayValue}</dd>
+        </div>
+    )
+};
 
 
 export default function LeadsPage() {
@@ -33,6 +62,8 @@ export default function LeadsPage() {
   const [newPhone, setNewPhone] = useState("");
   const [newStatus, setNewStatus] = useState("Nou");
   const [isSaving, setIsSaving] = useState(false);
+
+  const [selectedLead, setSelectedLead] = useState<any | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -194,7 +225,7 @@ export default function LeadsPage() {
           {loading ? (
               <p className="text-center text-sm py-4">Se încarcă clienții...</p>
           ) : leads.length > 0 ? (
-              leads.map(lead => <LeadCard key={lead.id} lead={lead} onStatusChange={handleStatusChange} />)
+              leads.map(lead => <LeadCard key={lead.id} lead={lead} onStatusChange={handleStatusChange} onCardClick={() => setSelectedLead(lead)} />)
           ) : (
                 <div className="text-center text-sm py-4 text-muted-foreground">
                   Nu ai niciun client momentan.
@@ -224,7 +255,7 @@ export default function LeadsPage() {
                           </TableRow>
                       ) : leads.length > 0 ? (
                           leads.map((lead) => (
-                          <TableRow key={lead.id}>
+                          <TableRow key={lead.id} onClick={() => setSelectedLead(lead)} className="cursor-pointer">
                               <TableCell className="text-sm py-2">
                                   {lead.timestamp ? new Date(lead.timestamp).toLocaleDateString('ro-RO') : 'N/A'}
                               </TableCell>
@@ -268,6 +299,49 @@ export default function LeadsPage() {
               </div>
           </CardContent>
         </Card>
+
+        {/* Lead Details Dialog */}
+        <Dialog open={!!selectedLead} onOpenChange={(isOpen) => !isOpen && setSelectedLead(null)}>
+            <DialogContent className="sm:max-w-lg">
+                 <DialogHeader>
+                    <DialogTitle>Detalii Client</DialogTitle>
+                    <DialogDescription>
+                        Sumarul informațiilor colectate de la {selectedLead?.contact?.name || 'acest client'}.
+                    </DialogDescription>
+                </DialogHeader>
+                <ScrollArea className="max-h-[60vh] pr-4">
+                    <dl className="divide-y divide-muted">
+                        <LeadDetailItem label="Nume" value={selectedLead?.contact?.name} />
+                        <LeadDetailItem label="Email" value={selectedLead?.contact?.email} />
+                        <LeadDetailItem label="Telefon" value={selectedLead?.contact?.phone} />
+                        <LeadDetailItem label="Data Nașterii" value={selectedLead?.birthDate ? new Date(selectedLead.birthDate) : undefined} />
+                        <LeadDetailItem label="Status" value={selectedLead?.status} />
+                        <LeadDetailItem label="Sursă" value={selectedLead?.source} />
+                        <LeadDetailItem label="Priorități" value={selectedLead?.priorities} />
+                        
+                        <LeadDetailItem label="Perioadă protecție (ani)" value={selectedLead?.period} />
+                        <LeadDetailItem label="Sumă lunară necesară" value={selectedLead?.monthlySum} />
+                        <LeadDetailItem label="Costuri eveniment" value={selectedLead?.eventCosts} />
+                        <LeadDetailItem label="Proiecte de finanțat" value={selectedLead?.projects} />
+                        <LeadDetailItem label="Datorii de acoperit" value={selectedLead?.debts} />
+                        <LeadDetailItem label="Asigurări existente" value={selectedLead?.existingInsurance} />
+                        <LeadDetailItem label="Economii disponibile" value={selectedLead?.savings} />
+                        <LeadDetailItem label="Deficit brut calculat" value={selectedLead?.bruteDeficit} />
+                        <LeadDetailItem label="Deficit FINAL" value={selectedLead?.finalDeficit} />
+                        
+                        <LeadDetailItem label="Cum se simte?" value={selectedLead?.feeling} />
+                        <LeadDetailItem label="Opțiuni dramatice" value={selectedLead?.dramaticOptions} />
+                        <LeadDetailItem label="Primă lunară propusă" value={selectedLead?.premium} />
+                        <LeadDetailItem label="Dată creare lead" value={selectedLead?.timestamp} />
+                    </dl>
+                </ScrollArea>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setSelectedLead(null)}>Închide</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </>
   );
 }
+
+    

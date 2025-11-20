@@ -20,7 +20,7 @@ async function saveLeadToFirestore(data: any, agentId: string | null) {
         return; 
     }
     
-    const dataToSend = { ...data };
+    const dataToSend = { ...data, source: 'Link Client' };
 
     if (Array.isArray(dataToSend.dramaticOptions)) {
         dataToSend.dramaticOptions = dataToSend.dramaticOptions.join(', ');
@@ -28,6 +28,11 @@ async function saveLeadToFirestore(data: any, agentId: string | null) {
     if (Array.isArray(dataToSend.priorities)) {
         dataToSend.priorities = dataToSend.priorities.join(', ');
     }
+     // Convert Date object to a string or timestamp if it exists
+    if (dataToSend.birthDate instanceof Date) {
+        dataToSend.birthDate = dataToSend.birthDate.toISOString();
+    }
+
 
     const leadsCollection = collection(db, "leads");
 
@@ -63,12 +68,12 @@ type ConversationFlow = {
 
 const commonFlow: ConversationFlow = {
     end_dialog_friendly: {
-        message: () => "",
+        message: () => "Mulțumesc pentru timpul acordat! Un consultant te va contacta în curând.",
         actionType: 'end',
         nextStep: () => ''
     },
     end_dialog_success: {
-        message: () => "",
+        message: () => "Analiza a fost finalizată cu succes! Vei fi contactat de un consultant pentru a discuta rezultatele.",
         actionType: 'end',
         nextStep: () => ''
     }
@@ -456,3 +461,5 @@ export default function ChatAppClient() {
         </>
     );
 }
+
+    
