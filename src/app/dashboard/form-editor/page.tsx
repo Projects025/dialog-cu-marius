@@ -19,7 +19,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 type StepData = {
     id: string;
     message: string;
-    actionType: 'buttons' | 'input' | 'date' | 'multi_choice' | 'end';
+    actionType: 'buttons' | 'input' | 'date' | 'multi_choice' | 'end' | 'form';
     options?: any;
     nextStep?: string;
     [key: string]: any;
@@ -156,7 +156,11 @@ function FormEditor() {
                          stepToUpdate.options = optionsArray;
                     }
                 }
-            } else {
+            } else if (field === 'options' && stepToUpdate.actionType === 'form') {
+                 // For 'form' type, 'options' is an object with 'buttonText' and 'gdpr'
+                 stepToUpdate.options = { ...stepToUpdate.options, ...value };
+            }
+            else {
                 stepToUpdate[field] = value;
             }
             
@@ -334,6 +338,7 @@ function FormEditor() {
                                                     <SelectItem value="multi_choice">Butoane (Selecție Multiplă)</SelectItem>
                                                     <SelectItem value="input">Câmp de text (Input)</SelectItem>
                                                     <SelectItem value="date">Selector de Dată</SelectItem>
+                                                    <SelectItem value="form">Formular Contact (Nume/Email/Tel)</SelectItem>
                                                     <SelectItem value="end">Final Conversație</SelectItem>
                                                 </SelectContent>
                                             </Select>
@@ -358,6 +363,28 @@ function FormEditor() {
                                                 onChange={(e) => handleStepChange(index, 'options', e.target.value)}
                                                 placeholder="Ex: Da, Nu, Poate"
                                             />
+                                        </div>
+                                    )}
+                                     {step.actionType === 'form' && (
+                                        <div className="space-y-4 border-t border-dashed pt-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor={`form-button-${step.id}`}>Text Buton Trimitere</Label>
+                                                <Input
+                                                    id={`form-button-${step.id}`}
+                                                    value={step.options?.buttonText || "Trimite"}
+                                                    onChange={(e) => handleStepChange(index, 'options', { buttonText: e.target.value })}
+                                                    placeholder="Ex: Trimite datele"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor={`form-gdpr-${step.id}`}>Text Acord GDPR</Label>
+                                                <Textarea
+                                                    id={`form-gdpr-${step.id}`}
+                                                    value={step.options?.gdpr || "Sunt de acord cu prelucrarea datelor."}
+                                                    onChange={(e) => handleStepChange(index, 'options', { gdpr: e.target.value })}
+                                                    rows={2}
+                                                />
+                                            </div>
                                         </div>
                                     )}
                                 </div>
