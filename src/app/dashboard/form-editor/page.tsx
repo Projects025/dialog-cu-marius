@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Save, ArrowUp, ArrowDown } from 'lucide-react';
+import { PlusCircle, Save, ArrowUp, ArrowDown, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 type StepData = {
@@ -41,37 +41,38 @@ const sortStepsByFlow = (flowObject: { [key: string]: any }, startStepId?: strin
     // Încearcă să folosești startStepId dacă este disponibil
     let startStep: StepData | undefined = startStepId ? stepsMap.get(startStepId) : undefined;
     
-    // Dacă nu există startStepId sau nu găsește pasul, revine la logica veche
+    // Dacă nu există startStepId sau nu găsește pasul, revine la logica veche de a găsi primul nod
     if (!startStep) {
         const nextStepTargets = new Set(stepsArray.map(step => step.nextStep).filter(Boolean));
         startStep = stepsArray.find(step => !nextStepTargets.has(step.id));
         
+        // Căutare de fallback pentru starturi comune
         if (!startStep) {
             const commonStarts = ['welcome_1', 'intro_1'];
             const foundStart = commonStarts.find(id => stepsMap.has(id));
             if (foundStart) {
                 startStep = stepsMap.get(foundStart);
-            } else {
+            } else { // Dacă tot nu găsește, sortează alfabetic și ia primul
                  stepsArray.sort((a,b) => a.id.localeCompare(b.id));
                  startStep = stepsArray[0];
             }
         }
     }
     
-    if (!startStep) return stepsArray; // returnează nesortat dacă tot nu găsește
+    if (!startStep) return stepsArray; // Returnează nesortat dacă tot nu găsește nimic
 
     const sorted: StepData[] = [];
     const visited = new Set<string>();
     let currentStep: StepData | undefined = startStep;
     
-    // Parcurge lista înlănțuită, cu protecție pentru bucle
+    // Parcurge lista înlănțuită, cu protecție pentru bucle infinite
     while (currentStep && !visited.has(currentStep.id)) {
         sorted.push(currentStep);
         visited.add(currentStep.id);
         currentStep = stepsMap.get(currentStep.nextStep!);
     }
 
-    // Adaugă pașii "orfani" (care nu fac parte din lanțul principal) la final
+    // Adaugă pașii "orfani" (care nu fac parte din lanțul principal) la final pentru a nu se pierde
     const orphanedSteps = stepsArray.filter(step => !visited.has(step.id));
     
     return [...sorted, ...orphanedSteps];
@@ -184,14 +185,14 @@ function FormEditor() {
         setSteps(prev => [...prev, newStep]);
         setIsAddStepModalOpen(false);
         setNewStepId("");
-        toast({ title: "Succes!", description: `Pasul "${newStep.id}" a fost adăugat local. Nu uita să salvezi.` });
+        toast({ title: "Succes!", description: `Pasul "${newStep.id}" a fost adăugat. Nu uita să salvezi.` });
     };
 
     const handleDeleteStep = (index: number) => {
         const stepIdToDelete = steps[index].id;
-         if (!window.confirm(`Ești sigur că vrei să ștergi pasul "${stepIdToDelete}"?`)) return;
+         if (!window.confirm(`Ești sigur că vrei să ștergi pasul "${stepIdToDelete}"? Această acțiune este permanentă.`)) return;
         setSteps(prev => prev.filter((_, i) => i !== index));
-        toast({ title: "Succes!", description: `Pasul a fost șters local. Nu uita să salvezi.` });
+        toast({ title: "Succes!", description: `Pasul a fost șters local. Salvează pentru a confirma.` });
     };
 
     const moveStep = (index: number, direction: 'up' | 'down') => {
@@ -205,38 +206,37 @@ function FormEditor() {
         setSteps(prev => {
             const newSteps = [...prev];
             const targetIndex = direction === 'up' ? index - 1 : index + 1;
-            const temp = newSteps[index];
-            newSteps[index] = newSteps[targetIndex];
-            newSteps[targetIndex] = temp;
+            // Swap elements
+            [newSteps[index], newSteps[targetIndex]] = [newSteps[targetIndex], newSteps[index]];
             return newSteps;
         });
     };
 
     const handleSaveAll = async () => {
-        if (!formId || steps.length === 0) {
-            toast({
-                variant: "destructive",
-                title: "Eroare",
-                description: "Nu există pași de salvat.",
-            });
+        if (!formId || !user) {
+            toast({ variant: "destructive", title: "Eroare", description: "Formular sau utilizator neidentificat." });
             return;
         }
+        if (steps.length === 0) {
+             toast({ variant: "destructive", title: "Atenție", description: "Nu există niciun pas de salvat." });
+             return;
+        }
 
-        // Determină ID-ul pasului de start
+        // Determină ID-ul pasului de start din ordinea curentă
         const startStepId = steps[0].id;
 
-        // Auto-link steps
+        // Auto-link steps based on their order in the array
         const linkedSteps = steps.map((step, index) => {
             // Pasul următor este cel de la index+1, sau un final de dialog dacă e ultimul
             const nextStepId = (index < steps.length - 1) ? steps[index + 1].id : 'end_dialog_friendly';
-            // Nu modifica `nextStep` pentru pașii de tip 'end'
+            // Nu modifica `nextStep` pentru pașii de tip 'end' care ar putea fi la mijlocul listei
             if (step.actionType === 'end') {
                 return step;
             }
             return { ...step, nextStep: nextStepId };
         });
 
-        // Convert array back to map for Firestore
+        // Convert array back to map object for Firestore
         const flowObject = linkedSteps.reduce((acc: {[key: string]: any}, step) => {
             const { id, ...data } = step;
             acc[id] = data;
@@ -248,7 +248,7 @@ function FormEditor() {
             await updateDoc(formRef, {
                 title: formTitle,
                 flow: flowObject,
-                startStepId: startStepId, // Salvează ID-ul de start
+                startStepId: startStepId, // Salvează ID-ul de start corect
             });
 
             toast({
@@ -262,7 +262,7 @@ function FormEditor() {
             toast({
                 variant: "destructive",
                 title: "Eroare la salvare",
-                description: "Nu s-au putut salva modificările.",
+                description: "Nu s-au putut salva modificările. Verifică consola.",
             });
         }
     };
@@ -275,8 +275,8 @@ function FormEditor() {
         <div className="max-w-4xl mx-auto pb-24">
             <Card>
                 <CardHeader>
-                    <CardTitle>Editare Formular</CardTitle>
-                    <CardDescription>Modifică titlul, adaugă, șterge și reordonează pașii. Legăturile se fac automat la salvare.</CardDescription>
+                    <CardTitle>Editor de Flux Conversațional</CardTitle>
+                    <CardDescription>Modifică titlul, adaugă, șterge și reordonează pașii. Legăturile dintre pași se creează automat la salvare.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-8">
                     <div className="space-y-2">
@@ -299,7 +299,7 @@ function FormEditor() {
                             <div key={step.id} className="border-l-4 border-primary pl-4 py-4 rounded-r-lg bg-muted/30">
                                 <div className="flex justify-between items-center mb-4">
                                     <div className="flex items-center gap-4">
-                                        <span className="font-mono text-sm text-primary">{step.id}</span>
+                                        <span className="font-bold text-lg text-foreground">Pasul {index + 1}</span>
                                         <div className="flex gap-1">
                                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => moveStep(index, 'up')} disabled={index === 0}>
                                                 <ArrowUp className="h-4 w-4" />
@@ -309,21 +309,19 @@ function FormEditor() {
                                             </Button>
                                         </div>
                                     </div>
-                                    <Button variant="destructive" size="sm" onClick={() => handleDeleteStep(index)}>Șterge</Button>
+                                    <Button variant="destructive" size="sm" onClick={() => handleDeleteStep(index)}>
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        Șterge
+                                    </Button>
                                 </div>
                                 <div className="space-y-4 p-4 bg-background rounded-md">
-                                    <div className="space-y-2">
-                                        <Label htmlFor={`message-${step.id}`}>Text Mesaj</Label>
-                                        <Textarea
-                                            id={`message-${step.id}`}
-                                            value={step.message}
-                                            onChange={(e) => handleStepChange(index, 'message', e.target.value)}
-                                            rows={3}
-                                        />
-                                    </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                         <div className="space-y-2">
+                                            <Label htmlFor={`id-${step.id}`}>ID Pas (nemodificabil)</Label>
+                                            <Input id={`id-${step.id}`} value={step.id} disabled className="font-mono text-muted-foreground"/>
+                                        </div>
                                         <div className="space-y-2">
-                                            <Label htmlFor={`actionType-${step.id}`}>Tip Acțiune</Label>
+                                            <Label htmlFor={`actionType-${step.id}`}>Tip Răspuns Utilizator</Label>
                                             <Select
                                                 value={step.actionType}
                                                 onValueChange={(value) => handleStepChange(index, 'actionType', value)}
@@ -340,18 +338,28 @@ function FormEditor() {
                                                 </SelectContent>
                                             </Select>
                                         </div>
-                                         {(step.actionType === 'buttons' || step.actionType === 'multi_choice') && (
-                                            <div className="space-y-2">
-                                                <Label htmlFor={`options-${step.id}`}>Opțiuni (separate prin virgulă)</Label>
-                                                <Input
-                                                    id={`options-${step.id}`}
-                                                    value={optionsAsString}
-                                                    onChange={(e) => handleStepChange(index, 'options', e.target.value)}
-                                                    placeholder="Ex: Da, Nu, Poate"
-                                                />
-                                            </div>
-                                        )}
                                     </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor={`message-${step.id}`}>Mesaj Agent</Label>
+                                        <Textarea
+                                            id={`message-${step.id}`}
+                                            value={step.message}
+                                            onChange={(e) => handleStepChange(index, 'message', e.target.value)}
+                                            rows={3}
+                                            placeholder="Ce mesaj vede utilizatorul în acest pas?"
+                                        />
+                                    </div>
+                                     {(step.actionType === 'buttons' || step.actionType === 'multi_choice') && (
+                                        <div className="space-y-2">
+                                            <Label htmlFor={`options-${step.id}`}>Opțiuni Butoane (separate prin virgulă)</Label>
+                                            <Input
+                                                id={`options-${step.id}`}
+                                                value={optionsAsString}
+                                                onChange={(e) => handleStepChange(index, 'options', e.target.value)}
+                                                placeholder="Ex: Da, Nu, Poate"
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )})}
@@ -366,11 +374,13 @@ function FormEditor() {
                 </CardContent>
             </Card>
 
-            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-                 <Button size="lg" onClick={handleSaveAll} className="shadow-2xl">
-                    <Save className="mr-2 h-5 w-5" />
-                    Salvează și Actualizează Fluxul
-                </Button>
+            <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-sm border-t z-50">
+                 <div className="max-w-4xl mx-auto flex justify-center">
+                    <Button size="lg" onClick={handleSaveAll} className="shadow-2xl w-full sm:w-auto">
+                        <Save className="mr-2 h-5 w-5" />
+                        Salvează și Actualizează Fluxul
+                    </Button>
+                 </div>
             </div>
 
             <Dialog open={isAddStepModalOpen} onOpenChange={setIsAddStepModalOpen}>
@@ -410,3 +420,5 @@ export default function FormEditorPage() {
         </Suspense>
     );
 }
+
+    
