@@ -285,7 +285,7 @@ const ContactForm = ({ options, onResponse }: { options: any, onResponse: (data:
     const [gdprChecked, setGdprChecked] = useState(false);
     const [errors, setErrors] = useState<{[key: string]: string}>({});
     
-    // Fallback for safety
+    // Fallback for safety: if options.fields is undefined, use an empty array.
     const fields = options?.fields || [];
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -511,3 +511,4 @@ const ChatView = ({ conversation, userAction, onResponse, progress, isConversati
 };
 
 export default ChatView;
+

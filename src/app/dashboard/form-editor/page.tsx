@@ -150,6 +150,7 @@ function FormEditor() {
             // Handle actionType change specifically to setup default structures
             if (field === 'actionType') {
                 stepToUpdate.actionType = value;
+                // CRITICAL FIX: Initialize options with default structures
                 if (value === 'form') {
                     stepToUpdate.options = {
                         buttonText: "Trimite",
@@ -161,25 +162,28 @@ function FormEditor() {
                         ]
                     };
                 } else if (value === 'buttons' || value === 'multi_choice') {
-                    stepToUpdate.options = [];
+                    stepToUpdate.options = []; // Initialize as empty array
                 } else {
-                    delete stepToUpdate.options; // Or set to a relevant default
+                    delete stepToUpdate.options; // Clear options for other types
                 }
             } else if (field === 'options') {
+                // This logic handles user input for options
                 if (stepToUpdate.actionType === 'buttons' || stepToUpdate.actionType === 'multi_choice') {
                     if (typeof value === 'string') {
+                        // Split string from input into an array
                         const optionsArray = value.split(',').map(s => s.trim()).filter(Boolean);
-                        if (stepToUpdate.actionType === 'multi_choice') {
+                         if (stepToUpdate.actionType === 'multi_choice') {
                             stepToUpdate.options = optionsArray.map(opt => ({ label: opt, id: opt.toLowerCase().replace(/\s+/g, '_') }));
                         } else {
                             stepToUpdate.options = optionsArray;
                         }
                     }
                 } else if (stepToUpdate.actionType === 'form') {
-                    // For 'form' type, 'options' is an object with 'buttonText' and 'gdpr'
-                    stepToUpdate.options = { ...stepToUpdate.options, ...value };
+                    // For 'form' type, 'options' is an object. Merge new values.
+                    stepToUpdate.options = { ...(stepToUpdate.options || {}), ...value };
                 }
             } else {
+                // For all other fields like 'message'
                 stepToUpdate[field] = value;
             }
             
@@ -384,13 +388,13 @@ function FormEditor() {
                                             />
                                         </div>
                                     )}
-                                     {step.actionType === 'form' && (
+                                     {step.actionType === 'form' && step.options && (
                                         <div className="space-y-4 border-t border-dashed pt-4">
                                             <div className="space-y-2">
                                                 <Label htmlFor={`form-button-${step.id}`}>Text Buton Trimitere</Label>
                                                 <Input
                                                     id={`form-button-${step.id}`}
-                                                    value={step.options?.buttonText || "Trimite"}
+                                                    value={step.options.buttonText || "Trimite"}
                                                     onChange={(e) => handleStepChange(index, 'options', { buttonText: e.target.value })}
                                                     placeholder="Ex: Trimite datele"
                                                 />
@@ -399,7 +403,7 @@ function FormEditor() {
                                                 <Label htmlFor={`form-gdpr-${step.id}`}>Text Acord GDPR</Label>
                                                 <Textarea
                                                     id={`form-gdpr-${step.id}`}
-                                                    value={step.options?.gdpr || "Sunt de acord cu prelucrarea datelor."}
+                                                    value={step.options.gdpr || "Sunt de acord cu prelucrarea datelor."}
                                                     onChange={(e) => handleStepChange(index, 'options', { gdpr: e.target.value })}
                                                     rows={2}
                                                 />
@@ -467,4 +471,3 @@ export default function FormEditorPage() {
     );
 }
 
-    
