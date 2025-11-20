@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 
 import { auth, db } from "@/lib/firebaseConfig";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
@@ -17,67 +17,9 @@ import { Label } from "@/components/ui/label";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/errors";
 import { Badge } from "@/components/ui/badge";
-import { Phone, Mail, FilePlus2 } from "lucide-react";
+import { FilePlus2 } from "lucide-react";
+import LeadCard from "@/components/dashboard/LeadCard";
 
-const statusColors: { [key: string]: string } = {
-    "Nou": "bg-blue-500",
-    "De contactat": "bg-yellow-500",
-    "Contactat": "bg-orange-500",
-    "Ofertă trimisă": "bg-purple-500",
-    "Convertit": "bg-green-600",
-    "Inactiv": "bg-gray-500",
-};
-
-
-const LeadCard = ({ lead, onStatusChange }: { lead: any; onStatusChange: (leadId: string, newStatus: string) => void }) => {
-    return (
-        <Card>
-            <CardContent className="p-4">
-                <div className="flex justify-between items-start">
-                    <p className="font-bold text-base">{lead.contact?.name || "N/A"}</p>
-                    {lead.source === 'Manual' 
-                        ? <Badge variant="secondary" className="text-xs">Manual</Badge> 
-                        : <Badge variant="default" className="text-xs">Link</Badge>}
-                </div>
-                 <p className="text-xs text-muted-foreground mb-3">
-                    {lead.timestamp ? new Date(lead.timestamp).toLocaleDateString('ro-RO') : 'N/A'}
-                 </p>
-                <div className="space-y-2 text-sm">
-                    {lead.contact?.phone && (
-                        <div className="flex items-center gap-2">
-                            <Phone className="h-3 w-3 text-muted-foreground"/>
-                            <span>{lead.contact.phone}</span>
-                        </div>
-                    )}
-                    {lead.contact?.email && (
-                         <div className="flex items-center gap-2">
-                            <Mail className="h-3 w-3 text-muted-foreground"/>
-                            <span>{lead.contact.email}</span>
-                        </div>
-                    )}
-                </div>
-            </CardContent>
-            <CardFooter className="p-3 bg-muted/50 border-t">
-                 <Select 
-                    value={lead.status || "Nou"}
-                    onValueChange={(newStatus) => onStatusChange(lead.id, newStatus)}
-                >
-                    <SelectTrigger className="w-full h-8 text-xs">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="Nou">Nou</SelectItem>
-                        <SelectItem value="De contactat">De contactat</SelectItem>
-                        <SelectItem value="Contactat">Contactat</SelectItem>
-                        <SelectItem value="Ofertă trimisă">Ofertă trimisă</SelectItem>
-                        <SelectItem value="Convertit">Convertit</SelectItem>
-                        <SelectItem value="Inactiv">Inactiv</SelectItem>
-                    </SelectContent>
-                </Select>
-            </CardFooter>
-        </Card>
-    )
-}
 
 export default function LeadsPage() {
   const [user, setUser] = useState<User | null>(null);
