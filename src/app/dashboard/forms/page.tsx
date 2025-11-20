@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { useRouter, type NextRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import { FilePlus2, Edit, Copy, Trash2, CheckCircle } from "lucide-react";
+import { FilePlus2, Edit, Copy, Trash2, CheckCircle, AlertTriangle } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -330,6 +330,44 @@ export default function FormsPage() {
         }
     };
     
+    const restoreDatabase = async () => {
+        const templateData = {
+            title: "Analiză Financiară - Deces (Standard)",
+            startStepId: "intro_analysis_1",
+            ownerId: null,
+            isTemplate: true,
+            createdAt: serverTimestamp(),
+            flow: {
+                "intro_analysis_1": { "message": "Un deces afectează negativ pe multiple planuri, două dintre acestea fiind extrem de profunde și de durată - planul existențial și planul financiar.", "actionType": "buttons", "options": [], "autoContinue": true, "delay": 2000, "nextStep": "intro_analysis_2" },
+                "intro_analysis_2": { "message": "În momentele următoare, vom răspunde la 6 întrebări prin care să stabilim care este suma de bani de care ar avea nevoie familia pentru a ameliora impactul financiar negativ.", "actionType": "buttons", "options": [], "autoContinue": true, "delay": 2000, "nextStep": "ask_period" },
+                "ask_period": { "message": "1. În cazul unui posibil deces, care ar fi perioada de timp în care familia ta ar avea nevoie de susținere financiară (ani)?", "actionType": "buttons", "options": ["3 ani", "4 ani", "5 ani"], "nextStep": "ask_monthly_sum" },
+                "ask_monthly_sum": { "message": "Care ar fi suma lunară necesară (în lei) pentru menținerea actualului standard de viață?", "actionType": "input", "options": { "type": "number", "placeholder": "Ex: 5000" }, "nextStep": "show_deficit_1" },
+                "show_deficit_1": { "message": "Am calculat primul deficit. Continuăm cu cheltuielile specifice.", "actionType": "buttons", "options": [], "autoContinue": true, "delay": 2000, "nextStep": "ask_event_costs" },
+                "ask_event_costs": { "message": "2. Ce sumă unică (în lei) ar fi necesară pentru cheltuieli imediate (înmormântare, taxe succesorale)?", "actionType": "input", "options": { "type": "number", "placeholder": "Ex: 20000" }, "nextStep": "ask_projects" },
+                "ask_projects": { "message": "3. Există proiecte în desfășurare (construcții, studii) care necesită finanțare? Care este suma totală necesară?", "actionType": "input", "options": { "type": "number", "placeholder": "Ex: 50000" }, "nextStep": "ask_debts" },
+                "ask_debts": { "message": "4. Există credite sau datorii care ar trebui stinse? Care este valoarea lor totală?", "actionType": "input", "options": { "type": "number", "placeholder": "Ex: 150000" }, "nextStep": "show_brute_deficit" },
+                "show_brute_deficit": { "message": "Am calculat necesarul total brut. Acum haide să vedem ce resurse există deja.", "actionType": "buttons", "options": [], "autoContinue": true, "delay": 2500, "nextStep": "ask_insurance" },
+                "ask_insurance": { "message": "5. Familia ar beneficia de vreo asigurare de viață existentă (necesionată băncii)? Care este suma?", "actionType": "input", "options": { "type": "number", "placeholder": "Ex: 0" }, "nextStep": "ask_savings" },
+                "ask_savings": { "message": "6. Există economii sau investiții care pot fi accesate imediat? Care este valoarea lor?", "actionType": "input", "options": { "type": "number", "placeholder": "Ex: 10000" }, "nextStep": "show_final_deficit" },
+                "show_final_deficit": { "message": "Calcul finalizat. Acesta este deficitul real care ar rămâne descoperit.", "actionType": "buttons", "options": [], "autoContinue": true, "delay": 3000, "nextStep": "ask_feeling" },
+                "ask_feeling": { "message": "Cum ți se pare această sumă? Care este sentimentul pe care îl simți acum?", "actionType": "input", "options": { "type": "text", "placeholder": "Scrie aici..." }, "nextStep": "ask_dramatic_options" },
+                "ask_dramatic_options": { "message": "În lipsa acestei sume, ce opțiuni realiste ar avea familia? Bifează-le:", "actionType": "interactive_scroll_list", "options": { "buttonText": "Am bifat", "options": ["Să se mute cu părinții", "Să vândă casa", "Să își ia un al doilea job", "Să renunțe la educația copiilor", "Să ceară ajutor prietenilor"] }, "nextStep": "present_solution" },
+                "present_solution": { "message": "Dacă nu ești mulțumit cu aceste opțiuni, dorești să vezi o soluție personalizată care să acopere acest deficit?", "actionType": "buttons", "options": ["Da, vreau detalii", "Nu"], "nextStep": "ask_contact_details" },
+                "ask_contact_details": { "message": "Perfect. Te rog lasă-mi datele de contact pentru a-ți trimite analiza completă.", "actionType": "form", "options": { "buttonText": "Trimite", "gdpr": "Sunt de acord cu prelucrarea datelor.", "fields": [{ "name": "name", "placeholder": "Nume", "type": "text", "required": true }, { "name": "email", "placeholder": "Email", "type": "email", "required": true }, { "name": "phone", "placeholder": "Telefon", "type": "tel", "required": true }] }, "nextStep": "thank_you_final" },
+                "thank_you_final": { "message": "Mulțumesc! Datele au fost transmise.", "actionType": "end", "nextStep": "" }
+            }
+        };
+        try {
+            console.log("Încep restaurarea șablonului...");
+            await setDoc(doc(db, "formTemplates", "deces_standard_v1"), templateData);
+            toast({ title: "Succes!", description: "Șablonul 'Analiză Financiară - Deces (Standard)' a fost restaurat." });
+            if (user) await fetchForms(user);
+        } catch (e: any) {
+            console.error("Eroare la restaurare:", e);
+            toast({ variant: "destructive", title: "Eroare la restaurare", description: e.message });
+        }
+    };
+
 
     return (
         <>
@@ -388,6 +426,23 @@ export default function FormsPage() {
                 ) : (
                     <p className="text-muted-foreground text-sm">Nu există șabloane disponibile.</p>
                 )}
+            </div>
+
+             <div className="mt-12 border-t pt-8">
+                 <Card className="bg-muted/30 border-dashed">
+                    <CardHeader>
+                        <CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="text-destructive h-5 w-5"/> Zonă de Mentenanță</CardTitle>
+                        <CardDescription className="text-xs">Acțiunile din această secțiune sunt pentru depanare. Folosește-le cu precauție.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                         <Button variant="destructive" size="sm" onClick={restoreDatabase}>
+                            Resetează Șablonul Standard (Admin)
+                        </Button>
+                        <p className="text-xs text-muted-foreground mt-2">
+                            Acest buton va suprascrie șablonul "Analiză Financiară - Deces (Standard)" cu versiunea originală, completă. Utile dacă șablonul este corupt sau șters accidental.
+                        </p>
+                    </CardContent>
+                 </Card>
             </div>
 
             <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
