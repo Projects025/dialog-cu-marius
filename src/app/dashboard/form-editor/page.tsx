@@ -147,10 +147,8 @@ function FormEditor() {
             const newSteps = [...prev];
             const stepToUpdate = { ...newSteps[index] };
     
-            // Handle actionType change specifically to setup default structures
             if (field === 'actionType') {
                 stepToUpdate.actionType = value;
-                // CRITICAL FIX: Initialize options with default structures
                 if (value === 'form') {
                     stepToUpdate.options = {
                         buttonText: "Trimite",
@@ -162,15 +160,13 @@ function FormEditor() {
                         ]
                     };
                 } else if (value === 'buttons' || value === 'multi_choice') {
-                    stepToUpdate.options = []; // Initialize as empty array
+                    stepToUpdate.options = [];
                 } else {
-                    delete stepToUpdate.options; // Clear options for other types
+                    delete stepToUpdate.options;
                 }
             } else if (field === 'options') {
-                // This logic handles user input for options
                 if (stepToUpdate.actionType === 'buttons' || stepToUpdate.actionType === 'multi_choice') {
                     if (typeof value === 'string') {
-                        // Split string from input into an array
                         const optionsArray = value.split(',').map(s => s.trim()).filter(Boolean);
                          if (stepToUpdate.actionType === 'multi_choice') {
                             stepToUpdate.options = optionsArray.map(opt => ({ label: opt, id: opt.toLowerCase().replace(/\s+/g, '_') }));
@@ -179,11 +175,13 @@ function FormEditor() {
                         }
                     }
                 } else if (stepToUpdate.actionType === 'form') {
-                    // For 'form' type, 'options' is an object. Merge new values.
-                    stepToUpdate.options = { ...(stepToUpdate.options || {}), ...value };
+                     // Asigură că 'options' este un obiect înainte de a-l actualiza
+                    const currentOptions = typeof stepToUpdate.options === 'object' && stepToUpdate.options !== null && !Array.isArray(stepToUpdate.options)
+                        ? stepToUpdate.options
+                        : {};
+                    stepToUpdate.options = { ...currentOptions, ...value };
                 }
             } else {
-                // For all other fields like 'message'
                 stepToUpdate[field] = value;
             }
             
@@ -233,7 +231,6 @@ function FormEditor() {
         setSteps(prev => {
             const newSteps = [...prev];
             const targetIndex = direction === 'up' ? index - 1 : index + 1;
-            // Swap elements
             [newSteps[index], newSteps[targetIndex]] = [newSteps[targetIndex], newSteps[index]];
             return newSteps;
         });
@@ -249,21 +246,16 @@ function FormEditor() {
              return;
         }
 
-        // Determină ID-ul pasului de start din ordinea curentă
         const startStepId = steps[0].id;
 
-        // Auto-link steps based on their order in the array
         const linkedSteps = steps.map((step, index) => {
-            // Pasul următor este cel de la index+1, sau un final de dialog dacă e ultimul
             const nextStepId = (index < steps.length - 1) ? steps[index + 1].id : 'end_dialog_friendly';
-            // Nu modifica `nextStep` pentru pașii de tip 'end' care ar putea fi la mijlocul listei
             if (step.actionType === 'end') {
                 return step;
             }
             return { ...step, nextStep: nextStepId };
         });
 
-        // Convert array back to map object for Firestore
         const flowObject = linkedSteps.reduce((acc: {[key: string]: any}, step) => {
             const { id, ...data } = step;
             acc[id] = data;
@@ -275,14 +267,13 @@ function FormEditor() {
             await updateDoc(formRef, {
                 title: formTitle,
                 flow: flowObject,
-                startStepId: startStepId, // Salvează ID-ul de start corect
+                startStepId: startStepId,
             });
 
             toast({
                 title: "Salvat!",
                 description: `Formularul și ordinea au fost actualizate cu succes.`,
             });
-            // Re-fetch pentru a confirma și a re-sincroniza ordinea afișată
             await fetchForm();
         } catch (err) {
             console.error("Error saving form:", err);
@@ -361,7 +352,7 @@ function FormEditor() {
                                                     <SelectItem value="multi_choice">Butoane (Selecție Multiplă)</SelectItem>
                                                     <SelectItem value="input">Câmp de text (Input)</SelectItem>
                                                     <SelectItem value="date">Selector de Dată</SelectItem>
-                                                    <SelectItem value="form">Formular Contact (Nume/Email/Tel)</SelectItem>
+                                                    <SelectItem value="form">Formular Contact (Final)</SelectItem>
                                                     <SelectItem value="end">Final Conversație</SelectItem>
                                                 </SelectContent>
                                             </Select>
@@ -389,12 +380,13 @@ function FormEditor() {
                                         </div>
                                     )}
                                      {step.actionType === 'form' && step.options && (
-                                        <div className="space-y-4 border-t border-dashed pt-4">
+                                        <div className="space-y-4 border-t border-dashed pt-4 mt-4">
+                                            <p className="text-sm text-muted-foreground">Acest pas va afișa formularul standard de contact (Nume, Email, Telefon).</p>
                                             <div className="space-y-2">
                                                 <Label htmlFor={`form-button-${step.id}`}>Text Buton Trimitere</Label>
                                                 <Input
                                                     id={`form-button-${step.id}`}
-                                                    value={step.options.buttonText || "Trimite"}
+                                                    value={step.options.buttonText || ""}
                                                     onChange={(e) => handleStepChange(index, 'options', { buttonText: e.target.value })}
                                                     placeholder="Ex: Trimite datele"
                                                 />
@@ -403,7 +395,7 @@ function FormEditor() {
                                                 <Label htmlFor={`form-gdpr-${step.id}`}>Text Acord GDPR</Label>
                                                 <Textarea
                                                     id={`form-gdpr-${step.id}`}
-                                                    value={step.options.gdpr || "Sunt de acord cu prelucrarea datelor."}
+                                                    value={step.options.gdpr || ""}
                                                     onChange={(e) => handleStepChange(index, 'options', { gdpr: e.target.value })}
                                                     rows={2}
                                                 />
@@ -470,4 +462,3 @@ export default function FormEditorPage() {
         </Suspense>
     );
 }
-

@@ -285,7 +285,6 @@ const ContactForm = ({ options, onResponse }: { options: any, onResponse: (data:
     const [gdprChecked, setGdprChecked] = useState(false);
     const [errors, setErrors] = useState<{[key: string]: string}>({});
     
-    // Fallback for safety: if options.fields is undefined, use an empty array.
     const fields = options?.fields || [];
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -298,7 +297,6 @@ const ContactForm = ({ options, onResponse }: { options: any, onResponse: (data:
             if (field.required && !formData[field.name]) {
                 newErrors[field.name] = 'Acest câmp este obligatoriu.';
             }
-            // Basic email validation
             if (field.type === 'email' && formData[field.name] && !/\S+@\S+\.\S+/.test(formData[field.name])) {
                  newErrors[field.name] = 'Adresa de email nu este validă.';
             }
@@ -315,6 +313,10 @@ const ContactForm = ({ options, onResponse }: { options: any, onResponse: (data:
             onResponse(formData);
         }
     };
+    
+    if (fields.length === 0) {
+        return <div className="text-destructive p-2 text-center bg-destructive/10 rounded-md">Eroare de configurare: Câmpurile formularului lipsesc.</div>;
+    }
 
     return (
         <div className="flex flex-col gap-4 w-full animate-in fade-in-50">
@@ -461,43 +463,45 @@ const ChatView = ({ conversation, userAction, onResponse, progress, isConversati
             </div>
         </div>
         
-        <div id="dialog-flow" className="flex-grow space-y-6 overflow-y-auto p-4 md:p-6 no-scrollbar">
-            {conversation.map((message) => {
-                 const content = renderMessageContent(message.content);
-                 if (!content && message.content !== 0) return null;
+        <ScrollArea id="dialog-flow" className="flex-grow w-full px-4 md:px-6">
+            <div className="space-y-6">
+                {conversation.map((message) => {
+                    const content = renderMessageContent(message.content);
+                    if (!content && message.content !== 0) return null;
 
-                 return (
-                    <div
-                        key={message.id}
-                        className={cn(
-                        "flex items-end gap-3 w-full animate-in fade-in slide-in-from-bottom-5 duration-500",
-                        message.author === "Marius" ? "justify-start" : "justify-end"
-                        )}
-                    >
-                        {message.author === "Marius" && (
-                        <Avatar className="h-8 w-8 hidden sm:flex self-start flex-shrink-0">
-                            <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
-                            M
-                            </AvatarFallback>
-                        </Avatar>
-                        )}
+                    return (
                         <div
-                        className={cn(
-                            "max-w-md md:max-w-lg rounded-2xl px-4 py-3 shadow-md text-base",
-                            message.author === "Marius"
-                            ? "bg-secondary text-secondary-foreground rounded-bl-none"
-                            : "bg-primary text-primary-foreground rounded-br-none"
-                        )}
+                            key={message.id}
+                            className={cn(
+                            "flex items-end gap-3 w-full animate-in fade-in slide-in-from-bottom-5 duration-500",
+                            message.author === "Marius" ? "justify-start" : "justify-end"
+                            )}
                         >
-                        {content}
+                            {message.author === "Marius" && (
+                            <Avatar className="h-8 w-8 hidden sm:flex self-start flex-shrink-0">
+                                <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
+                                M
+                                </AvatarFallback>
+                            </Avatar>
+                            )}
+                            <div
+                            className={cn(
+                                "max-w-md md:max-w-lg rounded-2xl px-4 py-3 shadow-md text-base",
+                                message.author === "Marius"
+                                ? "bg-secondary text-secondary-foreground rounded-bl-none"
+                                : "bg-primary text-primary-foreground rounded-br-none"
+                            )}
+                            >
+                            {content}
+                            </div>
                         </div>
-                    </div>
-                )
-            })}
-             {isTyping && <TypingIndicator />}
-            <div ref={spacerRef} className="flex-shrink-0 transition-height duration-300" />
-            <div ref={endOfMessagesRef} />
-        </div>
+                    )
+                })}
+                {isTyping && <TypingIndicator />}
+                <div ref={spacerRef} className="flex-shrink-0 transition-height duration-300" />
+                <div ref={endOfMessagesRef} />
+            </div>
+        </ScrollArea>
       
         <div ref={actionsContainerRef} id="user-actions-container" className="flex-shrink-0 p-4 bg-background/80 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none fixed bottom-0 left-0 right-0 md:relative flex flex-col">
              <div className="w-full max-w-lg mx-auto flex flex-col justify-center items-center">
@@ -511,4 +515,3 @@ const ChatView = ({ conversation, userAction, onResponse, progress, isConversati
 };
 
 export default ChatView;
-
