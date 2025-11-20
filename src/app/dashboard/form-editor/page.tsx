@@ -25,6 +25,56 @@ type StepData = {
     [key: string]: any;
 };
 
+// Algoritm de sortare a pașilor ca o listă înlănțuită
+const sortStepsByFlow = (flowObject: { [key: string]: any }): StepData[] => {
+    if (!flowObject || Object.keys(flowObject).length === 0) {
+        return [];
+    }
+
+    const stepsArray: StepData[] = Object.entries(flowObject).map(([id, data]) => ({
+        id,
+        ...(data as any)
+    }));
+
+    const stepsMap = new Map(stepsArray.map(step => [step.id, step]));
+    const nextStepTargets = new Set(stepsArray.map(step => step.nextStep).filter(Boolean));
+
+    // Găsește punctul de start (pasul al cărui ID nu apare în niciun `nextStep`)
+    let startStep = stepsArray.find(step => !nextStepTargets.has(step.id));
+
+    // Fallback: dacă nu se găsește un start clar (ex: buclă), alege primul alfabetic
+    if (!startStep) {
+        // Căutăm un punct de start comun, ex: welcome_1, intro_1
+        const commonStarts = ['welcome_1', 'intro_1'];
+        const foundStart = commonStarts.find(id => stepsMap.has(id));
+        if (foundStart) {
+            startStep = stepsMap.get(foundStart);
+        } else {
+             stepsArray.sort((a,b) => a.id.localeCompare(b.id));
+             startStep = stepsArray[0];
+        }
+    }
+    
+    if (!startStep) return stepsArray; // returnează nesortat dacă tot nu găsește
+
+    const sorted: StepData[] = [];
+    const visited = new Set<string>();
+    let currentStep: StepData | undefined = startStep;
+    
+    // Parcurge lista înlănțuită
+    while (currentStep && !visited.has(currentStep.id)) {
+        sorted.push(currentStep);
+        visited.add(currentStep.id);
+        currentStep = stepsMap.get(currentStep.nextStep!);
+    }
+
+    // Adaugă pașii "orfani" (care nu fac parte din lanțul principal) la final
+    const orphanedSteps = stepsArray.filter(step => !visited.has(step.id));
+    
+    return [...sorted, ...orphanedSteps];
+};
+
+
 function FormEditor() {
     const searchParams = useSearchParams();
     const formId = searchParams.get('id');
@@ -65,13 +115,8 @@ function FormEditor() {
             setFormTitle(formData.title);
 
             if (formData.flow) {
-                const flowArray = Object.entries(formData.flow).map(([id, data]) => ({
-                    id,
-                    ...(data as any)
-                }));
-                // Simple sort for now, will be replaced by a better logic if needed
-                flowArray.sort((a,b) => a.id.localeCompare(b.id));
-                setSteps(flowArray);
+                const sortedFlow = sortStepsByFlow(formData.flow);
+                setSteps(sortedFlow);
             }
 
         } catch (err: any) {
@@ -170,6 +215,10 @@ function FormEditor() {
         // Auto-link steps
         const linkedSteps = steps.map((step, index) => {
             const nextStepId = (index < steps.length - 1) ? steps[index + 1].id : 'end_dialog_friendly';
+            // Nu modifica `nextStep` pentru pașii de final
+            if (step.actionType === 'end') {
+                return step;
+            }
             return { ...step, nextStep: nextStepId };
         });
 
@@ -191,7 +240,7 @@ function FormEditor() {
                 title: "Salvat!",
                 description: `Formularul a fost actualizat cu succes.`,
             });
-            // Re-fetch to confirm and re-sync
+            // Re-fetch to confirm and re-sync with sorted order
             await fetchForm();
         } catch (err) {
             console.error("Error saving form:", err);
@@ -346,5 +395,3 @@ export default function FormEditorPage() {
         </Suspense>
     );
 }
-
-    
