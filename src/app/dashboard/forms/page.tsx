@@ -37,7 +37,7 @@ const FormCard = ({
     router: NextRouter,
     handleSetActiveForm: (id: string) => void,
 }) => (
-     <Card key={form.id} className="flex flex-col">
+     <Card key={form.id} className="flex flex-col h-full">
         <CardHeader>
             <div className="flex justify-between items-start">
                 <CardTitle className="text-lg">{form.title}</CardTitle>
@@ -51,34 +51,35 @@ const FormCard = ({
         </CardHeader>
         <CardContent className="flex-grow">
              {activeFormId === form.id && !isTemplate && (
-                <div className="flex items-center gap-2 font-semibold text-sm mb-4">
+                <div className="flex items-center gap-2 font-semibold text-sm">
                     <Badge variant="default" className="bg-green-600 text-white hover:bg-green-700">Activ pe Link</Badge>
                 </div>
             )}
         </CardContent>
-        <CardFooter className="flex justify-end gap-2">
+        <CardFooter className="flex flex-col sm:flex-row justify-end gap-2 mt-auto pt-4 border-t">
             {isTemplate ? (
                 <Button 
                     size="sm" 
                     variant="outline"
                     onClick={() => handleClone(form.id)}
                     disabled={cloning === form.id}
+                    className="w-full sm:w-auto"
                 >
                     <Copy className="mr-2 h-4 w-4" />
                     {cloning === form.id ? "Se clonează..." : "Clonează"}
                 </Button>
             ) : (
                 <>
-                    <Button size="sm" variant="destructive" onClick={() => handleDeleteClick(form.id)}>
+                    <Button size="sm" variant="destructive" onClick={() => handleDeleteClick(form.id)} className="w-full sm:w-auto">
                         <Trash2 className="mr-2 h-4 w-4" />
                         Șterge
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => router.push(`/dashboard/form-editor?id=${form.id}`)}>
+                    <Button size="sm" variant="outline" onClick={() => router.push(`/dashboard/form-editor?id=${form.id}`)} className="w-full sm:w-auto">
                         <Edit className="mr-2 h-4 w-4" />
                         Editează
                     </Button>
                     {activeFormId !== form.id && (
-                         <Button size="sm" onClick={() => handleSetActiveForm(form.id)}>Setează Activ</Button>
+                         <Button size="sm" onClick={() => handleSetActiveForm(form.id)} className="w-full sm:w-auto">Setează Activ</Button>
                     )}
                 </>
             )}
@@ -150,8 +151,7 @@ export default function FormsPage() {
             }
         });
         return () => unsubscribe();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [router]);
+    }, [router, fetchForms]);
     
     const handleCreateForm = async () => {
         if (!user || !newFormTitle.trim() || !sourceTemplateId) {
@@ -336,7 +336,7 @@ export default function FormsPage() {
             <div className="mt-8">
                 <h2 className="text-xl font-semibold mb-4">Formularele Tale Personalizate</h2>
                 {loading ? <p>Se încarcă...</p> : userForms.length > 0 ? (
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {userForms.map(form => (
                             <FormCard 
                                 key={form.id}
@@ -359,7 +359,7 @@ export default function FormsPage() {
             <div className="mt-12">
                 <h2 className="text-xl font-semibold mb-4">Șabloane Standard</h2>
                  {loading ? <p>Se încarcă...</p> : templateForms.length > 0 ? (
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {templateForms.map(form => (
                              <FormCard 
                                 key={form.id}
@@ -441,3 +441,5 @@ export default function FormsPage() {
         </>
     );
 }
+
+    
