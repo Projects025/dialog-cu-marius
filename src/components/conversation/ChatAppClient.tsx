@@ -235,16 +235,6 @@ export default function ChatAppClient() {
             setCurrentUserAction(null);
             return;
         }
-        
-        if (step.actionType === 'end') {
-            setIsTyping(false);
-            setIsConversationDone(true);
-            setCurrentUserAction(null);
-            if (Object.keys(userDataRef.current).length > 1) { // more than just priorities
-                await saveLeadToFirestore(userDataRef.current, agentIdRef.current);
-            }
-            return;
-        }
 
         setCurrentUserAction(null);
 
@@ -252,7 +242,7 @@ export default function ChatAppClient() {
         if (typeof step.message === 'function') {
             messageContent = step.message(userDataRef.current);
         } else {
-            messageContent = step.message; 
+            messageContent = step.message;
         }
 
         if (messageContent) {
@@ -263,6 +253,16 @@ export default function ChatAppClient() {
             
             const dynamicDelay = calculateDynamicDelay(messageContent);
             await delay(dynamicDelay);
+        }
+
+        if (step.actionType === 'end') {
+            setIsTyping(false);
+            setIsConversationDone(true);
+            setCurrentUserAction(null);
+            if (Object.keys(userDataRef.current).length > 1) { // more than just priorities
+                await saveLeadToFirestore(userDataRef.current, agentIdRef.current);
+            }
+            return;
         }
         
         const actionOptions = step.options;
@@ -387,7 +387,6 @@ export default function ChatAppClient() {
             const formData = formDoc.data();
             setLoadedFlow(formData.flow as ConversationFlow);
             
-            // Folosește noul câmp 'startStepId' dacă există, altfel revine la 'welcome_1'
             setStartStepId(formData.startStepId || 'welcome_1');
 
         } catch (error: any) {
@@ -407,7 +406,6 @@ export default function ChatAppClient() {
     };
 
     useEffect(() => {
-        // Așteaptă până când atât `loadedFlow` cât și `startStepId` sunt setate
         if (loadedFlow && startStepId && view === 'chat' && conversation.length === 0) {
             userDataRef.current = {};
             conversationIdRef.current = 0;
