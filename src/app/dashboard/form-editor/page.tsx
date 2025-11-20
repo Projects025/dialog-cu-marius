@@ -147,20 +147,39 @@ function FormEditor() {
             const newSteps = [...prev];
             const stepToUpdate = { ...newSteps[index] };
     
-            if (field === 'options' && (stepToUpdate.actionType === 'buttons' || stepToUpdate.actionType === 'multi_choice')) {
-                 if (typeof value === 'string') {
-                    const optionsArray = value.split(',').map(s => s.trim()).filter(Boolean);
-                    if (stepToUpdate.actionType === 'multi_choice') {
-                         stepToUpdate.options = optionsArray.map(opt => ({ label: opt, id: opt.toLowerCase().replace(/\s+/g, '_') }));
-                    } else {
-                         stepToUpdate.options = optionsArray;
-                    }
+            // Handle actionType change specifically to setup default structures
+            if (field === 'actionType') {
+                stepToUpdate.actionType = value;
+                if (value === 'form') {
+                    stepToUpdate.options = {
+                        buttonText: "Trimite",
+                        gdpr: "Sunt de acord cu prelucrarea datelor.",
+                        fields: [
+                            { name: "name", placeholder: "Nume", type: "text", required: true },
+                            { name: "email", placeholder: "Email", type: "email", required: true },
+                            { name: "phone", placeholder: "Telefon", type: "tel", required: true }
+                        ]
+                    };
+                } else if (value === 'buttons' || value === 'multi_choice') {
+                    stepToUpdate.options = [];
+                } else {
+                    delete stepToUpdate.options; // Or set to a relevant default
                 }
-            } else if (field === 'options' && stepToUpdate.actionType === 'form') {
-                 // For 'form' type, 'options' is an object with 'buttonText' and 'gdpr'
-                 stepToUpdate.options = { ...stepToUpdate.options, ...value };
-            }
-            else {
+            } else if (field === 'options') {
+                if (stepToUpdate.actionType === 'buttons' || stepToUpdate.actionType === 'multi_choice') {
+                    if (typeof value === 'string') {
+                        const optionsArray = value.split(',').map(s => s.trim()).filter(Boolean);
+                        if (stepToUpdate.actionType === 'multi_choice') {
+                            stepToUpdate.options = optionsArray.map(opt => ({ label: opt, id: opt.toLowerCase().replace(/\s+/g, '_') }));
+                        } else {
+                            stepToUpdate.options = optionsArray;
+                        }
+                    }
+                } else if (stepToUpdate.actionType === 'form') {
+                    // For 'form' type, 'options' is an object with 'buttonText' and 'gdpr'
+                    stepToUpdate.options = { ...stepToUpdate.options, ...value };
+                }
+            } else {
                 stepToUpdate[field] = value;
             }
             

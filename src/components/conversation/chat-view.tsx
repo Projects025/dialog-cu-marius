@@ -284,6 +284,9 @@ const ContactForm = ({ options, onResponse }: { options: any, onResponse: (data:
     const [formData, setFormData] = useState<{[key: string]: string}>({});
     const [gdprChecked, setGdprChecked] = useState(false);
     const [errors, setErrors] = useState<{[key: string]: string}>({});
+    
+    // Fallback for safety
+    const fields = options?.fields || [];
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -291,7 +294,7 @@ const ContactForm = ({ options, onResponse }: { options: any, onResponse: (data:
 
     const validate = () => {
         const newErrors: {[key: string]: string} = {};
-        options.fields.forEach((field: any) => {
+        fields.forEach((field: any) => {
             if (field.required && !formData[field.name]) {
                 newErrors[field.name] = 'Acest câmp este obligatoriu.';
             }
@@ -315,7 +318,7 @@ const ContactForm = ({ options, onResponse }: { options: any, onResponse: (data:
 
     return (
         <div className="flex flex-col gap-4 w-full animate-in fade-in-50">
-            {options.fields.map((field: any) => (
+            {fields.map((field: any) => (
                 <div key={field.name}>
                     <Input
                         name={field.name}
@@ -329,10 +332,10 @@ const ContactForm = ({ options, onResponse }: { options: any, onResponse: (data:
             ))}
             <div className="flex items-center space-x-2">
                 <Checkbox id="gdpr" checked={gdprChecked} onCheckedChange={(checked) => setGdprChecked(checked as boolean)} />
-                <Label htmlFor="gdpr" className="text-sm font-medium leading-none text-foreground/80 cursor-pointer">{options.gdpr}</Label>
+                <Label htmlFor="gdpr" className="text-sm font-medium leading-none text-foreground/80 cursor-pointer">{options?.gdpr || 'Sunt de acord cu prelucrarea datelor.'}</Label>
             </div>
             {errors.gdpr && <p className="text-sm text-red-600">{errors.gdpr}</p>}
-            <Button onClick={handleSubmit} className="w-full h-12 mt-2">{options.buttonText}</Button>
+            <Button onClick={handleSubmit} className="w-full h-12 mt-2">{options?.buttonText || 'Trimite'}</Button>
         </div>
     )
 }
