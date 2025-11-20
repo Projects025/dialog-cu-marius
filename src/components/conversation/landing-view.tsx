@@ -45,7 +45,7 @@ const LandingView = ({ onStart, isFadingOut }: LandingViewProps) => {
   return (
     <div
       className={cn(
-        "min-h-screen w-full flex flex-col justify-center items-center p-6 md:p-8 transition-opacity duration-500",
+        "min-h-screen w-full flex flex-col justify-center items-center p-6 transition-opacity duration-500",
         isFadingOut ? "opacity-0" : "opacity-100"
       )}
     >
@@ -81,19 +81,13 @@ const LandingView = ({ onStart, isFadingOut }: LandingViewProps) => {
         </div>
 
         {/* Conținutul principal al paginii */}
-        <main className="relative z-10 text-center p-8 max-w-2xl mx-auto flex flex-col items-center">
+        <main className="relative z-10 text-center p-6 max-w-2xl mx-auto flex flex-col items-center">
 
-            {/* ======================================================= */}
-            {/* 1. Titlul Principal - Mare, de Impact, cu spațiu dedesubt */}
-            {/* ======================================================= */}
-            <h1 className="text-4xl md:text-5xl font-bold text-white drop-shadow-lg mb-6">
+            <h1 className="text-3xl md:text-5xl font-bold text-white drop-shadow-lg mb-6">
                 <span>Cât ești de pregătit financiar</span>
                 <span className="block mt-2">pentru surprizele vieții?</span>
             </h1>
 
-            {/* ====================================================================== */}
-            {/* 2. Grupul de Sub-titluri - Unitate vizuală cu spațiere controlată */}
-            {/* ====================================================================== */}
             <div className="mb-10 text-center">
                 <p className="text-lg md:text-xl text-gray-300 drop-shadow-md">
                     <span>Fă o scurtă analiză și</span>
@@ -101,9 +95,6 @@ const LandingView = ({ onStart, isFadingOut }: LandingViewProps) => {
                 </p>
             </div>
 
-            {/* ====================================================================== */}
-            {/* 3. Butonul de Acțiune - Clar separat de text */}
-            {/* ====================================================================== */}
             <button 
                 onClick={onStart} 
                 className="bg-amber-400 text-gray-900 font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-amber-300 transition-all duration-300 transform hover:scale-105"
@@ -117,3 +108,5 @@ const LandingView = ({ onStart, isFadingOut }: LandingViewProps) => {
 };
 
 export default LandingView;
+
+    
