@@ -26,7 +26,7 @@ type StepData = {
 };
 
 // Algoritm de sortare a pașilor ca o listă înlănțuită
-const sortStepsByFlow = (flowObject: { [key: string]: any }): StepData[] => {
+const sortStepsByFlow = (flowObject: { [key: string]: any }, startStepId?: string): StepData[] => {
     if (!flowObject || Object.keys(flowObject).length === 0) {
         return [];
     }
@@ -37,21 +37,24 @@ const sortStepsByFlow = (flowObject: { [key: string]: any }): StepData[] => {
     }));
 
     const stepsMap = new Map(stepsArray.map(step => [step.id, step]));
-    const nextStepTargets = new Set(stepsArray.map(step => step.nextStep).filter(Boolean));
-
-    // Găsește punctul de start (pasul al cărui ID nu apare în niciun `nextStep`)
-    let startStep = stepsArray.find(step => !nextStepTargets.has(step.id));
-
-    // Fallback: dacă nu se găsește un start clar (ex: buclă), alege primul alfabetic
+    
+    // Încearcă să folosești startStepId dacă este disponibil
+    let startStep: StepData | undefined = startStepId ? stepsMap.get(startStepId) : undefined;
+    
+    // Dacă nu există startStepId sau nu găsește pasul, revine la logica veche
     if (!startStep) {
-        // Căutăm un punct de start comun, ex: welcome_1, intro_1
-        const commonStarts = ['welcome_1', 'intro_1'];
-        const foundStart = commonStarts.find(id => stepsMap.has(id));
-        if (foundStart) {
-            startStep = stepsMap.get(foundStart);
-        } else {
-             stepsArray.sort((a,b) => a.id.localeCompare(b.id));
-             startStep = stepsArray[0];
+        const nextStepTargets = new Set(stepsArray.map(step => step.nextStep).filter(Boolean));
+        startStep = stepsArray.find(step => !nextStepTargets.has(step.id));
+        
+        if (!startStep) {
+            const commonStarts = ['welcome_1', 'intro_1'];
+            const foundStart = commonStarts.find(id => stepsMap.has(id));
+            if (foundStart) {
+                startStep = stepsMap.get(foundStart);
+            } else {
+                 stepsArray.sort((a,b) => a.id.localeCompare(b.id));
+                 startStep = stepsArray[0];
+            }
         }
     }
     
@@ -61,7 +64,7 @@ const sortStepsByFlow = (flowObject: { [key: string]: any }): StepData[] => {
     const visited = new Set<string>();
     let currentStep: StepData | undefined = startStep;
     
-    // Parcurge lista înlănțuită
+    // Parcurge lista înlănțuită, cu protecție pentru bucle
     while (currentStep && !visited.has(currentStep.id)) {
         sorted.push(currentStep);
         visited.add(currentStep.id);
@@ -115,7 +118,7 @@ function FormEditor() {
             setFormTitle(formData.title);
 
             if (formData.flow) {
-                const sortedFlow = sortStepsByFlow(formData.flow);
+                const sortedFlow = sortStepsByFlow(formData.flow, formData.startStepId);
                 setSteps(sortedFlow);
             }
 
@@ -210,12 +213,23 @@ function FormEditor() {
     };
 
     const handleSaveAll = async () => {
-        if (!formId) return;
+        if (!formId || steps.length === 0) {
+            toast({
+                variant: "destructive",
+                title: "Eroare",
+                description: "Nu există pași de salvat.",
+            });
+            return;
+        }
+
+        // Determină ID-ul pasului de start
+        const startStepId = steps[0].id;
 
         // Auto-link steps
         const linkedSteps = steps.map((step, index) => {
+            // Pasul următor este cel de la index+1, sau un final de dialog dacă e ultimul
             const nextStepId = (index < steps.length - 1) ? steps[index + 1].id : 'end_dialog_friendly';
-            // Nu modifica `nextStep` pentru pașii de final
+            // Nu modifica `nextStep` pentru pașii de tip 'end'
             if (step.actionType === 'end') {
                 return step;
             }
@@ -233,14 +247,15 @@ function FormEditor() {
             const formRef = doc(db, 'formTemplates', formId);
             await updateDoc(formRef, {
                 title: formTitle,
-                flow: flowObject
+                flow: flowObject,
+                startStepId: startStepId, // Salvează ID-ul de start
             });
 
             toast({
                 title: "Salvat!",
-                description: `Formularul a fost actualizat cu succes.`,
+                description: `Formularul și ordinea au fost actualizate cu succes.`,
             });
-            // Re-fetch to confirm and re-sync with sorted order
+            // Re-fetch pentru a confirma și a re-sincroniza ordinea afișată
             await fetchForm();
         } catch (err) {
             console.error("Error saving form:", err);
@@ -261,7 +276,7 @@ function FormEditor() {
             <Card>
                 <CardHeader>
                     <CardTitle>Editare Formular</CardTitle>
-                    <CardDescription>Modifică titlul, adaugă, șterge și reordonează pașii. Legăturile se fac automat.</CardDescription>
+                    <CardDescription>Modifică titlul, adaugă, șterge și reordonează pașii. Legăturile se fac automat la salvare.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-8">
                     <div className="space-y-2">

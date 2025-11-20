@@ -190,6 +190,7 @@ export default function ChatAppClient() {
     const [isTyping, setIsTyping] = useState(false);
     
     const [loadedFlow, setLoadedFlow] = useState<ConversationFlow | null>(null);
+    const [startStepId, setStartStepId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     
@@ -333,12 +334,7 @@ export default function ChatAppClient() {
             if (typeof step.handler === 'function') {
                 step.handler(handlerResponse, userDataRef.current);
             } else {
-                try {
-                    const handlerFunc = new Function('response', 'data', step.handler);
-                    handlerFunc(handlerResponse, userDataRef.current);
-                } catch (e) {
-                    console.error("Error executing string handler:", e);
-                }
+                 // String handlers are deprecated due to security and complexity
             }
         }
         
@@ -388,9 +384,12 @@ export default function ChatAppClient() {
                 throw new Error("Formularul configurat nu a fost găsit.");
             }
             
-            const flowData = formDoc.data().flow as ConversationFlow;
-            setLoadedFlow(flowData);
+            const formData = formDoc.data();
+            setLoadedFlow(formData.flow as ConversationFlow);
             
+            // Folosește noul câmp 'startStepId' dacă există, altfel revine la 'welcome_1'
+            setStartStepId(formData.startStepId || 'welcome_1');
+
         } catch (error: any) {
             setErrorMessage(error.message);
         } finally {
@@ -408,15 +407,16 @@ export default function ChatAppClient() {
     };
 
     useEffect(() => {
-        if (loadedFlow && view === 'chat' && conversation.length === 0) {
+        // Așteaptă până când atât `loadedFlow` cât și `startStepId` sunt setate
+        if (loadedFlow && startStepId && view === 'chat' && conversation.length === 0) {
             userDataRef.current = {};
             conversationIdRef.current = 0;
             currentProgressStep.current = 0;
             setProgress(0);
             setIsConversationDone(false);
-            renderStep('welcome_1');
+            renderStep(startStepId);
         }
-    }, [loadedFlow, view, conversation.length, renderStep]);
+    }, [loadedFlow, startStepId, view, conversation.length, renderStep]);
 
 
     return (
