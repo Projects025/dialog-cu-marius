@@ -317,22 +317,19 @@ export default function LeadsPage() {
                         <LeadDetailItem label="Data Nașterii" value={selectedLead?.birthDate ? new Date(selectedLead.birthDate) : undefined} />
                         <LeadDetailItem label="Status" value={selectedLead?.status} />
                         <LeadDetailItem label="Sursă" value={selectedLead?.source} />
-                        <LeadDetailItem label="Priorități" value={selectedLead?.priorities} />
-                        
-                        <LeadDetailItem label="Perioadă protecție (ani)" value={selectedLead?.period} />
-                        <LeadDetailItem label="Sumă lunară necesară" value={selectedLead?.monthlySum} />
-                        <LeadDetailItem label="Costuri eveniment" value={selectedLead?.eventCosts} />
-                        <LeadDetailItem label="Proiecte de finanțat" value={selectedLead?.projects} />
-                        <LeadDetailItem label="Datorii de acoperit" value={selectedLead?.debts} />
-                        <LeadDetailItem label="Asigurări existente" value={selectedLead?.existingInsurance} />
-                        <LeadDetailItem label="Economii disponibile" value={selectedLead?.savings} />
-                        <LeadDetailItem label="Deficit brut calculat" value={selectedLead?.bruteDeficit} />
-                        <LeadDetailItem label="Deficit FINAL" value={selectedLead?.finalDeficit} />
-                        
-                        <LeadDetailItem label="Cum se simte?" value={selectedLead?.feeling} />
-                        <LeadDetailItem label="Opțiuni dramatice" value={selectedLead?.dramaticOptions} />
-                        <LeadDetailItem label="Primă lunară propusă" value={selectedLead?.premium} />
                         <LeadDetailItem label="Dată creare lead" value={selectedLead?.timestamp} />
+                        {selectedLead && Object.entries(selectedLead).map(([key, value]) => {
+                             // Exclude keys that are already displayed or are technical
+                            const excludedKeys = [
+                                'id', 'agentId', 'timestamp', 'status', 'source', 'contact', 'birthDate',
+                            ];
+                            if (excludedKeys.includes(key)) return null;
+
+                             // Format the key for display
+                            const displayKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+                            return <LeadDetailItem key={key} label={displayKey} value={value} />;
+                        })}
                     </dl>
                 </ScrollArea>
                 <DialogFooter>
