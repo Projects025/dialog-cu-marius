@@ -449,12 +449,6 @@ export default function FormsPage() {
             message: "4. Rămân pe umerii familiei anumite responsabilități financiare de tip credite, datorii? Care ar fi suma necesară pentru a le stinge?",
             actionType: "input",
             options: { type: "number", placeholder: "Ex: 150000" },
-            nextStep: "deces_show_brute_deficit"
-          },
-           deces_show_brute_deficit: {
-            message: "Am calculat necesarul total brut. Acum haide să vedem ce resurse există deja.",
-            actionType: "buttons",
-            options: ["Continuă"],
             nextStep: "deces_ask_insurance"
           },
           deces_ask_insurance: {
@@ -520,7 +514,7 @@ export default function FormsPage() {
             options: ["Continuă"],
             nextStep: "pensie_ask_start_time"
           },
-           pensie_ask_start_time: {
+          pensie_ask_start_time: {
             message: "Când crezi că ar fi cel mai potrivit moment să începi să-ți planifici pensionarea?",
             actionType: "buttons",
             options: ["ACUM"],
@@ -599,6 +593,12 @@ export default function FormsPage() {
             message: "Menirea ta ca părinte este să îi dai copilului aripi în viață!\n\n„Cu cât vrei să zboare mai sus, cu atât sunt mai scumpe aripile”.",
             actionType: "buttons",
             options: ["De acord"],
+            nextStep: "studii_intro_2"
+          },
+          studii_intro_2: {
+            message: "Vei răspunde la 6 întrebări pentru a stabili suma necesară pentru: educație formală, dezvoltare personală, proiecte majore și familie.",
+            actionType: "buttons",
+            options: ["Continuă"],
             nextStep: "studii_ask_years"
           },
           studii_ask_years: {
@@ -852,5 +852,4 @@ export default function FormsPage() {
         </div>
     );
 }
-
-```
+    
