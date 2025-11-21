@@ -800,16 +800,19 @@ export default function FormsPage() {
                 </div>
             </div>
             
-            <div className="mt-12 pt-8 border-t border-dashed border-destructive/30">
-                <h2 className="text-lg font-bold text-destructive mb-2">Zonă de Mentenanță</h2>
-                <p className="text-sm text-muted-foreground mb-4">Aceste acțiuni sunt ireversibile și pot afecta funcționarea aplicației. Folosește-le cu prudență.</p>
-                <div className="flex gap-4">
-                    <Button variant="destructive" onClick={restoreMasterTemplate}>
-                        <AlertTriangle className="mr-2 h-4 w-4" />
-                        Regenerează Șablon Master (Admin)
-                    </Button>
-                </div>
-            </div>
+            {user?.email === "alinmflavius@gmail.com" && (
+              <div className="mt-12 pt-8 border-t border-dashed border-destructive/30">
+                  <h2 className="text-lg font-bold text-destructive mb-2">Zonă de Mentenanță</h2>
+                  <p className="text-sm text-muted-foreground mb-4">Aceste acțiuni sunt ireversibile și pot afecta funcționarea aplicației. Folosește-le cu prudență.</p>
+                  <div className="flex gap-4">
+                      <Button variant="destructive" onClick={restoreMasterTemplate}>
+                          <AlertTriangle className="mr-2 h-4 w-4" />
+                          Regenerează Șablon Master (Admin)
+                      </Button>
+                  </div>
+              </div>
+            )}
+
 
             {/* --- Modale de Confirmare --- */}
 
