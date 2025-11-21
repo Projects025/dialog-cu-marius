@@ -22,7 +22,7 @@ export type Message = {
 };
 
 export type UserAction = {
-  type: 'input' | 'buttons' | 'date' | 'interactive_scroll_list' | 'form' | 'multi_choice';
+  type: 'input' | 'buttons' | 'date' | 'interactive_scroll_list' | 'form' | 'multi_choice' | 'end';
   options?: any;
 }
 
@@ -515,3 +515,5 @@ const ChatView = ({ conversation, userAction, onResponse, progress, isConversati
 };
 
 export default ChatView;
+
+    

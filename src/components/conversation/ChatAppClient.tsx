@@ -41,6 +41,9 @@ async function saveLeadToFirestore(data: any, agentId: string | null) {
     if (Array.isArray(dataToSend.priorities)) {
         dataToSend.priorities = dataToSend.priorities.join(', ');
     }
+     if (Array.isArray(dataToSend.deces_ask_dramatic_options)) {
+        dataToSend.deces_ask_dramatic_options = dataToSend.deces_ask_dramatic_options.join(', ');
+    }
     if (dataToSend.birthDate && typeof dataToSend.birthDate === 'string' && dataToSend.birthDate.includes('T')) {
          // Asigură-te că data este într-un format consistent dacă e deja string
         dataToSend.birthDate = new Date(dataToSend.birthDate).toISOString();
@@ -118,55 +121,6 @@ const introFlow: ConversationFlow = {
         actionType: 'buttons',
         options: ['Continuă'],
         nextStep: () => 'intro_1'
-    },
-    intro_1: {
-        message: () => `Viața produce pierderi financiare semnificative în patru situații majore.`,
-        actionType: 'buttons',
-        options: ['Continuă'],
-        nextStep: () => 'intro_2',
-    },
-    intro_2: {
-        message: () => `Dintre acestea, două situații sunt previzibile, precis așezate pe axa vieții, iar două sunt total imprevizibile.`,
-        actionType: 'buttons',
-        options: ['Continuă'],
-        nextStep: () => 'intro_3',
-    },
-    intro_3: {
-        message: () => `&lt;strong&gt;Previzibile:&lt;/strong&gt; \n\n
-1. Pensionarea - reducerea drastică a opțiunilor, a demnității și a statutului de susținător al familiei\n\n
-2. Studiile copiilor - cheltuieli complexe, unele neanticipate, care pun presiune pe bugetul familiei`,
-        actionType: 'buttons',
-        options: ['Continuă'],
-        nextStep: () => 'intro_4',
-    },
-    intro_4: {
-        message: () => `&lt;strong&gt;Imprevizibile:&lt;/strong&gt; \n\n
-1. Decesul - detonează standardul de viață, proiectele în desfășurare și viitorul copiilor \n\n
-2. Bolile grave - Accident Vascular cerebral, Cancer, Infarct Miocardic, Transplant, etc,`,
-        actionType: 'buttons',
-        options: ['Continuă'],
-        nextStep: () => 'ask_priority',
-    },
-    ask_priority: {
-        message: () => "Pentru care dintre aceste subiecte dorești să îți calculezi gradul de expunere financiară?",
-        actionType: 'multi_choice',
-        isProgressStep: true,
-        options: [
-            { label: 'Reducerea drastică a veniturilor la pensionare', id: 'pensionare', disabled: true },
-            { label: 'Asigurarea viitorului copiilor', id: 'studii_copii', disabled: true },
-            { label: 'Decesul spontan', id: 'deces', disabled: false },
-            { label: 'Protecție în caz de boală gravă', id: 'boala_grava', disabled: true }
-        ],
-        handler: (response, data) => { data.priorities = response; },
-        nextStep: (response, data, loadedFlow) => {
-            if (!response || response.length === 0) return 'end_dialog_friendly';
-            const selectedId = response.find((r: string) => r === 'deces') || response[0];
-            if (loadedFlow) {
-                const firstStepKey = Object.keys(loadedFlow).find(key => key.startsWith(`${selectedId}.`));
-                return firstStepKey || 'end_dialog_friendly';
-            }
-            return 'end_dialog_friendly';
-        }
     },
 };
 
@@ -338,7 +292,7 @@ export default function ChatAppClient() {
         const isNavigationButton = 
             step.actionType === 'buttons' && 
             (typeof rawResponseValue === 'string') &&
-            ['Continuă', 'Start', 'Da, continuăm', 'Sunt gata'].includes(rawResponseValue);
+            ['Continuă', 'Start', 'Da, continuăm', 'Sunt gata', 'Da'].includes(rawResponseValue);
     
         if (currentStepId && !isNavigationButton) {
             userDataRef.current[currentStepId as keyof FinancialData] = rawResponseValue;
@@ -478,3 +432,6 @@ export default function ChatAppClient() {
 
     
 
+
+
+    
