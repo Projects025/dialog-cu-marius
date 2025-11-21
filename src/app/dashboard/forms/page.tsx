@@ -383,7 +383,6 @@ export default function FormsPage() {
             ask_topic: {
               message: "Salut! Sunt Marius. Pentru a te putea ajuta, spune-mi ce te interesează acum?",
               actionType: "buttons",
-              // AICI ESTE MAGIA: Fiecare buton duce în altă parte
               options: [
                 { label: "Deces", nextStep: "deces_intro" },
                 { label: "Boli Grave", nextStep: "boala_intro" },
@@ -391,24 +390,71 @@ export default function FormsPage() {
                 { label: "Studii Copii", nextStep: "studii_intro" }
               ]
             },
-            // --- RAMURA DECES ---
-            deces_intro: {
-              message: "Am înțeles. Hai să analizăm protecția în caz de deces...",
-              actionType: "buttons",
-              options: ["Continuă"],
-              nextStep: "deces_q1"
+            // --- RAMURA DECES COMPLETĂ ---
+            deces_intro: { 
+                message: "Un deces afectează negativ pe multiple planuri, două dintre acestea fiind extrem de profunde și de durată - planul existențial și planul financiar.", 
+                actionType: "buttons", 
+                options: ["Continuă"], 
+                nextStep: "deces_intro_2" 
             },
-            deces_q1: {
-               message: "Pe ce perioadă (ani) vrei protecție?",
-               actionType: "buttons",
-               options: ["5 ani", "10 ani", "20 ani"],
-               nextStep: "deces_q2"
+            deces_intro_2: { 
+                message: "În momentele următoare, vom răspunde la 6 întrebări prin care să stabilim care este suma de bani de care ar avea nevoie familia pentru a ameliora impactul financiar negativ.", 
+                actionType: "buttons", 
+                options: ["Continuă"], 
+                nextStep: "deces_ask_period" 
             },
-            deces_q2: {
-               message: "Care este suma necesară?",
-               actionType: "input",
-               options: { type: "number", placeholder: "Ex: 5000" },
-               nextStep: "final_contact"
+            deces_ask_period: { 
+                message: "1. În cazul unui posibil deces, care ar fi perioada de timp în care familia ta ar avea nevoie de susținere financiară (ani)?", 
+                actionType: "buttons", 
+                options: ["3 ani", "4 ani", "5 ani"], 
+                nextStep: "deces_ask_monthly_sum" 
+            },
+            deces_ask_monthly_sum: { 
+                message: "Care ar fi suma lunară necesară (în lei) pentru menținerea actualului standard de viață?", 
+                actionType: "input", 
+                options: { type: "number", placeholder: "Ex: 5000" }, 
+                nextStep: "deces_ask_event_costs" 
+            },
+            deces_ask_event_costs: { 
+                message: "2. Ce sumă unică (în lei) ar fi necesară pentru cheltuieli imediate (înmormântare, taxe succesorale)?", 
+                actionType: "input", 
+                options: { type: "number", placeholder: "Ex: 20000" }, 
+                nextStep: "deces_ask_projects" 
+            },
+            deces_ask_projects: { 
+                message: "3. Există proiecte în desfășurare (construcții, studii) care necesită finanțare? Care este suma totală necesară?", 
+                actionType: "input", options: { type: "number", placeholder: "Ex: 50000" }, 
+                nextStep: "deces_ask_debts" 
+            },
+            deces_ask_debts: { 
+                message: "4. Există credite sau datorii care ar trebui stinse? Care este valoarea lor totală?", 
+                actionType: "input", 
+                options: { type: "number", placeholder: "Ex: 150000" }, 
+                nextStep: "deces_ask_insurance" 
+            },
+            deces_ask_insurance: { 
+                message: "5. Familia ar beneficia de vreo asigurare de viață existentă (necesionată băncii)? Care este suma?", 
+                actionType: "input", 
+                options: { type: "number", placeholder: "Ex: 0" }, 
+                nextStep: "deces_ask_savings" 
+            },
+            deces_ask_savings: { 
+                message: "6. Există economii sau investiții care pot fi accesate imediat? Care este valoarea lor?", 
+                actionType: "input", 
+                options: { type: "number", placeholder: "Ex: 10000" }, 
+                nextStep: "deces_ask_dramatic_options" 
+            },
+            deces_ask_dramatic_options: { 
+                message: "În lipsa acestei sume, ce opțiuni realiste ar avea familia? Bifează-le:", 
+                actionType: "multi_choice", 
+                options: ["Să se mute cu părinții", "Să vândă casa", "Să își ia un al doilea job", "Să renunțe la educația copiilor", "Să ceară ajutor prietenilor"], 
+                nextStep: "deces_present_solution" 
+            },
+            deces_present_solution: { 
+                message: "Dacă nu ești mulțumit cu aceste opțiuni, dorești să vezi o soluție personalizată care să acopere acest deficit?", 
+                actionType: "buttons", 
+                options: ["Da, vreau detalii", "Nu"], 
+                nextStep: "final_contact" 
             },
             // --- RAMURA PENSIE ---
             pensie_intro: {
@@ -615,3 +661,4 @@ export default function FormsPage() {
 }
 
     
+

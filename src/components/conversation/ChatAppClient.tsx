@@ -19,33 +19,41 @@ async function saveLeadToFirestore(data: any, agentId: string | null) {
         console.error("Eroare critică: ID-ul agentului lipsește la trimitere.");
         return; 
     }
-    
-    console.log("Încerc salvare lead...", data);
-    const dataToSend = { ...data, source: 'Link Client' };
 
+    // Curățarea datelor de valori 'undefined' care cauzează erori în Firestore
+    const cleanedData = JSON.parse(JSON.stringify(data, (key, value) => {
+        return value === undefined ? null : value;
+    }));
+    
+    console.log("Încerc salvare lead...", cleanedData);
+    
+    const dataToSend = { 
+        ...cleanedData, 
+        agentId: agentId,
+        source: 'Link Client',
+        timestamp: serverTimestamp()
+    };
+
+    // Conversii suplimentare pe datele deja curățate
     if (Array.isArray(dataToSend.dramaticOptions)) {
         dataToSend.dramaticOptions = dataToSend.dramaticOptions.join(', ');
     }
     if (Array.isArray(dataToSend.priorities)) {
         dataToSend.priorities = dataToSend.priorities.join(', ');
     }
-     // Convert Date object to a string or timestamp if it exists
-    if (dataToSend.birthDate instanceof Date) {
-        dataToSend.birthDate = dataToSend.birthDate.toISOString();
+    if (dataToSend.birthDate && typeof dataToSend.birthDate === 'string' && dataToSend.birthDate.includes('T')) {
+         // Asigură-te că data este într-un format consistent dacă e deja string
+        dataToSend.birthDate = new Date(dataToSend.birthDate).toISOString();
     }
 
 
     const leadsCollection = collection(db, "leads");
 
-    addDoc(leadsCollection, { 
-        ...dataToSend, 
-        agentId: agentId,
-        timestamp: serverTimestamp()
-    }).catch(async (serverError) => {
+    addDoc(leadsCollection, dataToSend).catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
             path: leadsCollection.path,
             operation: 'create',
-            requestResourceData: { ...dataToSend, agentId, timestamp: new Date().toISOString() }, // Approximate timestamp
+            requestResourceData: { ...dataToSend, timestamp: new Date().toISOString() }, // Approximate timestamp
         } satisfies SecurityRuleContext);
         errorEmitter.emit('permission-error', permissionError);
     });
@@ -469,3 +477,4 @@ export default function ChatAppClient() {
     
 
     
+
