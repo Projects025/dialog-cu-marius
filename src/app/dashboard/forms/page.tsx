@@ -409,7 +409,7 @@ export default function FormsPage() {
                       nextStep: "deces_show_deficit_1"
                     },
                     deces_show_deficit_1: {
-                      message: "Am notat primul deficit pentru menținerea standardului de viață. Continuăm cu cheltuielile specifice.",
+                      message: "Am notat primul deficit pentru menținerea standardului de viață. Acum să vedem deficitul final, care este {finalDeficit_deces} lei. Continuăm cu cheltuielile specifice.",
                       actionType: "buttons",
                       options: ["Da"],
                       nextStep: "deces_ask_event_costs"
@@ -445,7 +445,7 @@ export default function FormsPage() {
                       nextStep: "deces_show_final_result"
                     },
                     deces_show_final_result: {
-                      message: "Calcul finalizat. Acesta este deficitul financiar (Moștenirea Negativă) cu care familia ta ar păși în viitor.",
+                      message: "Calcul finalizat. Deficitul financiar (Moștenirea Negativă) cu care familia ta ar păși în viitor este de {finalDeficit_deces} lei.",
                       actionType: "buttons",
                       options: ["Vezi Rezultatul"],
                       nextStep: "deces_ask_feeling"
@@ -490,7 +490,7 @@ export default function FormsPage() {
                       nextStep: "pensie_intro_2"
                     },
                     pensie_intro_2: {
-                      message: "Reducerea veniturilor la pensie va afecta:\\n1. Opțiunile personale\\n2. Demnitatea\\n3. Rolul în familie",
+                      message: "Reducerea veniturilor la pensie va afecta:\n1. Opțiunile personale\n2. Demnitatea\n3. Rolul în familie",
                       actionType: "buttons",
                       options: ["Continuă"],
                       nextStep: "pensie_ask_start_time"
@@ -514,7 +514,7 @@ export default function FormsPage() {
                       nextStep: "pensie_show_deficit_1"
                     },
                     pensie_show_deficit_1: {
-                      message: "Am calculat necesarul de bază. Continuăm.",
+                      message: "Am calculat necesarul de bază. Acum deficitul este de {finalDeficit_pensie} lei. Continuăm.",
                       actionType: "buttons",
                       options: ["Continuă"],
                       nextStep: "pensie_ask_projects"
@@ -544,7 +544,7 @@ export default function FormsPage() {
                       nextStep: "pensie_show_final_result"
                     },
                     pensie_show_final_result: {
-                      message: "Calcul finalizat. Acesta este deficitul financiar cu care tu ai ieși la pensie.",
+                      message: "Calcul finalizat. Deficitul financiar cu care tu ai ieși la pensie este de {finalDeficit_pensie} lei.",
                       actionType: "buttons",
                       options: ["Vezi Rezultatul"],
                       nextStep: "pensie_ask_feeling"
@@ -631,7 +631,7 @@ export default function FormsPage() {
                       nextStep: "studii_show_final_result"
                     },
                     studii_show_final_result: {
-                      message: "Am calculat deficitul total pentru un start bun în viață.",
+                      message: "Am calculat deficitul total pentru un start bun în viață: {finalDeficit_studii} lei.",
                       actionType: "buttons",
                       options: ["Vezi Rezultatul"],
                       nextStep: "studii_ask_feeling"
@@ -846,7 +846,5 @@ export default function FormsPage() {
         </div>
     );
 }
-
-    
 
     

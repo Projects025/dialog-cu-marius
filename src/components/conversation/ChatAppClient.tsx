@@ -44,6 +44,12 @@ async function saveLeadToFirestore(data: any, agentId: string | null) {
      if (Array.isArray(dataToSend.deces_ask_dramatic_options)) {
         dataToSend.deces_ask_dramatic_options = dataToSend.deces_ask_dramatic_options.join(', ');
     }
+     if (Array.isArray(dataToSend.pensie_dramatic_options)) {
+        dataToSend.pensie_dramatic_options = dataToSend.pensie_dramatic_options.join(', ');
+    }
+     if (Array.isArray(dataToSend.studii_dramatic_options)) {
+        dataToSend.studii_dramatic_options = dataToSend.studii_dramatic_options.join(', ');
+    }
     if (dataToSend.birthDate && typeof dataToSend.birthDate === 'string' && dataToSend.birthDate.includes('T')) {
          // Asigură-te că data este într-un format consistent dacă e deja string
         dataToSend.birthDate = new Date(dataToSend.birthDate).toISOString();
@@ -91,39 +97,6 @@ const commonFlow: ConversationFlow = {
     }
 };
 
-const introFlow: ConversationFlow = {
-    welcome_1: {
-        message: () => `Salut!`,
-        actionType: 'buttons',
-        options: [],
-        nextStep: () => 'welcome_2',
-        autoContinue: true,
-        delay: 500,
-    },
-    welcome_2: {
-        message: () => `Sunt Marius, consultantul tău financiar.`,
-        actionType: 'buttons',
-        options: [],
-        nextStep: () => 'welcome_3',
-        autoContinue: true,
-        delay: 1200,
-    },
-    welcome_3: {
-        message: () => `În următoarele 3 minute te invit la un moment de reflecție și de analiză prin care să descoperi care este gradul tău de expunere financiară.`,
-        actionType: 'buttons',
-        options: [],
-        nextStep: () => 'welcome_4',
-        autoContinue: true,
-        delay: 1200,
-    },
-    welcome_4: {
-        message: () => `Această analiză nu implică nicio obligație din partea ta.`,
-        actionType: 'buttons',
-        options: ['Continuă'],
-        nextStep: () => 'intro_1'
-    },
-};
-
 
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
@@ -140,6 +113,58 @@ const calculateDynamicDelay = (text: string): number => {
     
     return Math.max(BASE_DELAY, Math.min(readingTime, 400));
 }
+
+const performDynamicCalculations = (data: any) => {
+    const newData = { ...data };
+
+    const parse = (val: any) => {
+        if (!val) return 0;
+        if (typeof val === 'number') return val;
+        const clean = String(val).replace(/\./g, '').replace(/,/g, '.').replace(/[^0-9.]/g, '');
+        return Number(clean) || 0;
+    };
+
+    // === SCENARIUL 1: DECES ===
+    if (newData.deces_ask_monthly_sum && newData.deces_ask_period) {
+        newData.deficit1_deces = parse(newData.deces_ask_monthly_sum) * parse(newData.deces_ask_period) * 12;
+        newData.bruteDeficit_deces = newData.deficit1_deces + parse(newData.deces_ask_event_costs) + parse(newData.deces_ask_projects) + parse(newData.deces_ask_debts);
+        newData.finalDeficit_deces = newData.bruteDeficit_deces - (parse(newData.deces_ask_insurance) + parse(newData.deces_ask_savings));
+    }
+
+    // === SCENARIUL 2: PENSIE ===
+    if (newData.pensie_ask_monthly_needed && newData.pensie_ask_years) {
+        const years = parse(newData.pensie_ask_years) || 20; 
+        newData.deficit1_pensie = parse(newData.pensie_ask_monthly_needed) * years * 12;
+
+        const totalNeed = newData.deficit1_pensie + parse(newData.pensie_ask_projects) + parse(newData.pensie_ask_debts);
+        newData.finalDeficit_pensie = totalNeed - (parse(newData.pensie_ask_insurance) + parse(newData.pensie_ask_savings));
+    }
+
+    // === SCENARIUL 3: STUDII COPII ===
+    if (newData.studii_ask_annual_cost && newData.studii_ask_years) {
+        newData.deficit1_studii = parse(newData.studii_ask_annual_cost) * parse(newData.studii_ask_years);
+        const perChild = newData.deficit1_studii + parse(newData.studii_ask_extra) + parse(newData.studii_ask_projects) + parse(newData.studii_ask_wedding) - (parse(newData.studii_ask_savings) + parse(newData.studii_ask_insurance));
+        const children = parse(newData.studii_ask_children_count) || 1;
+        newData.finalDeficit_studii = perChild * children;
+    }
+
+    return newData;
+};
+
+
+const formatMessage = (template: string, data: any): string => {
+    if (!template) return "";
+    return template.replace(/\{(\w+)\}/g, (match, key) => {
+        const value = data[key];
+        if (value !== undefined && value !== null) {
+            if (typeof value === 'number') {
+                return value.toLocaleString('ro-RO');
+            }
+            return String(value);
+        }
+        return match; // Lasă placeholder-ul dacă data nu există
+    });
+};
 
 
 export default function ChatAppClient() {
@@ -164,7 +189,6 @@ export default function ChatAppClient() {
     
 
     const allFlows = useMemo(() => ({
-        ...introFlow,
         ...(loadedFlow || {}),
         ...commonFlow
     }), [loadedFlow]);
@@ -197,6 +221,10 @@ export default function ChatAppClient() {
     
     const renderStep = useCallback(async (stepId: string) => {
         currentStateRef.current = stepId;
+        
+        // 1. Calculează datele dinamice
+        userDataRef.current = performDynamicCalculations(userDataRef.current);
+        
         const step = getStep(stepId);
     
         if (!step) {
@@ -214,13 +242,16 @@ export default function ChatAppClient() {
             messageContent = step.message;
         }
     
-        if (messageContent) {
+        // 2. Formatează mesajul cu datele calculate
+        const formattedMessage = formatMessage(messageContent, userDataRef.current);
+
+        if (formattedMessage) {
             setIsTyping(true);
             await delay(step.delay || 1000);
             setIsTyping(false);
-            addMessage({ author: "Marius", type: "text" }, messageContent);
+            addMessage({ author: "Marius", type: "text" }, formattedMessage);
             
-            const dynamicDelay = calculateDynamicDelay(messageContent);
+            const dynamicDelay = calculateDynamicDelay(formattedMessage);
             await delay(dynamicDelay);
         }
 
@@ -309,11 +340,9 @@ export default function ChatAppClient() {
         }
         
         let nextStepId;
-        // --- NOUA LOGICĂ DE RAMIFICARE ---
         if (typeof response === 'object' && response !== null && response.nextStep) {
             nextStepId = response.nextStep;
         } 
-        // --- LOGICA VECHE ---
         else if (typeof step.nextStep === 'function') {
             nextStepId = step.nextStep(rawResponseValue, userDataRef.current, loadedFlow);
         } else if (typeof step.nextStep === 'string') {
@@ -357,7 +386,6 @@ export default function ChatAppClient() {
             const formData = formDoc.data();
             setLoadedFlow(formData.flow as ConversationFlow);
             
-            // Prioritize new startStepId field, with fallback to old logic
             setStartStepId(formData.startStepId || 'welcome_1');
 
         } catch (error: any) {
@@ -433,5 +461,7 @@ export default function ChatAppClient() {
     
 
 
+
+    
 
     
