@@ -66,7 +66,7 @@
     display: none;
   }
   .no-scrollbar {
-    -ms-overflow-style: none;  /* IE și Edge */
+    -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
   }
 }
