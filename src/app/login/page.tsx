@@ -1,8 +1,8 @@
 
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebaseConfig";
@@ -12,13 +12,24 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [isSignUp, setIsSignUp] = useState(false);
+
+  useEffect(() => {
+      // Sincronizează starea 'isSignUp' cu parametrul URL 'mode'
+      if (searchParams.get('mode') === 'signup') {
+          setIsSignUp(true);
+      } else {
+          setIsSignUp(false);
+      }
+  }, [searchParams]);
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,11 +81,16 @@ export default function LoginPage() {
   };
 
   const toggleAuthMode = () => {
-      setIsSignUp(!isSignUp);
+      const newMode = !isSignUp;
+      setIsSignUp(newMode);
       setError(null);
+      // Resetează câmpurile de formular
       setName("");
       setEmail("");
       setPassword("");
+      // Actualizează URL-ul fără a reîncărca pagina
+      const newUrl = newMode ? `${window.location.pathname}?mode=signup` : window.location.pathname;
+      window.history.pushState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl);
   }
 
   return (
@@ -136,14 +152,14 @@ export default function LoginPage() {
             </Button>
           </form>
           <div className="mt-6 text-center text-sm">
-            <span
+            <button
               onClick={toggleAuthMode}
               className="cursor-pointer font-medium text-primary hover:underline"
             >
               {isSignUp
                 ? "Ai deja cont? Autentifică-te"
                 : "Nu ai cont? Creează unul acum"}
-            </span>
+            </button>
           </div>
         </CardContent>
       </Card>

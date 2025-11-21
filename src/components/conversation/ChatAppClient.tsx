@@ -12,6 +12,7 @@ import { collection, addDoc, serverTimestamp, doc, getDoc, setDoc } from "fireba
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/errors";
 import type { FinancialData } from "@/lib/calculation";
+import SaaSLandingView from "@/components/marketing/SaaSLandingView";
 
 
 async function saveLeadToFirestore(data: any, agentId: string | null) {
@@ -170,8 +171,11 @@ const formatMessage = (template: string, data: any): string => {
 export default function ChatAppClient() {
     const searchParams = useSearchParams();
     const agentIdRef = useRef<string | null>(null);
+    const [hasCheckedParams, setHasCheckedParams] = useState(false);
+
     useEffect(() => {
         agentIdRef.current = searchParams.get('agentId');
+        setHasCheckedParams(true);
     }, [searchParams]);
 
     const [view, setView] = useState<"landing" | "chat">("landing");
@@ -363,6 +367,7 @@ export default function ChatAppClient() {
         try {
             const agentId = agentIdRef.current;
             if (!agentId) {
+                // This case should be handled by the parent component, but as a fallback:
                 throw new Error("Link invalid sau incomplet. Te rog contactează consultantul tău.");
             }
 
@@ -400,12 +405,14 @@ export default function ChatAppClient() {
         setTimeout(() => {
             setView("chat");
             setIsFadingOut(false);
-            startConversation();
+            if (agentIdRef.current) {
+                startConversation();
+            }
         }, 500);
     };
 
     useEffect(() => {
-        if (loadedFlow && startStepId && view === 'chat' && conversation.length === 0) {
+        if (view === 'chat' && agentIdRef.current && loadedFlow && startStepId && conversation.length === 0) {
             userDataRef.current = {};
             conversationIdRef.current = 0;
             currentProgressStep.current = 0;
@@ -415,6 +422,13 @@ export default function ChatAppClient() {
         }
     }, [loadedFlow, startStepId, view, conversation.length, renderStep]);
 
+    if (!hasCheckedParams) {
+        return <div className="flex items-center justify-center h-full">Se încarcă...</div>;
+    }
+
+    if (!agentIdRef.current) {
+        return <SaaSLandingView />;
+    }
 
     return (
         <>
@@ -438,8 +452,8 @@ export default function ChatAppClient() {
                                 progress={progress}
                                 isConversationDone={isConversationDone}
                                 isTyping={isTyping}
-                                isLoading={false} // Pass false as it's handled here
-                                errorMessage={null}  // Pass null as it's handled here
+                                isLoading={false}
+                                errorMessage={null}
                             />
                         )}
 
@@ -455,13 +469,3 @@ export default function ChatAppClient() {
         </>
     );
 }
-
-    
-
-    
-
-
-
-    
-
-    
