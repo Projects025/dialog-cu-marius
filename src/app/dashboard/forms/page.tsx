@@ -63,30 +63,30 @@ const FormCard = ({
                 </div>
             )}
         </CardContent>
-        <CardFooter className="flex flex-col sm:flex-row justify-end gap-2 mt-auto p-3 border-t bg-muted/30">
+        <CardFooter className="flex flex-wrap justify-end gap-2 p-3 border-t bg-muted/30">
             {isTemplate ? (
                 <Button 
                     size="sm" 
                     variant="outline"
                     onClick={() => handleClone(form.id)}
                     disabled={cloning === form.id}
-                    className="w-full sm:w-auto h-8 text-xs"
+                    className="flex-1 sm:flex-none whitespace-nowrap h-8 text-xs"
                 >
                     <Copy className="mr-2 h-3 w-3" />
                     {cloning === form.id ? "Se clonează..." : "Clonează"}
                 </Button>
             ) : (
                 <>
-                    <Button size="sm" variant="destructive" onClick={() => handleDeleteClick(form.id)} className="w-full sm:w-auto h-8 text-xs">
+                    <Button size="sm" variant="destructive" onClick={() => handleDeleteClick(form.id)} className="flex-1 sm:flex-none whitespace-nowrap h-8 text-xs">
                         <Trash2 className="mr-2 h-3 w-3" />
                         Șterge
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => router.push(`/dashboard/form-editor?id=${form.id}`)} className="w-full sm:w-auto h-8 text-xs">
+                    <Button size="sm" variant="outline" onClick={() => router.push(`/dashboard/form-editor?id=${form.id}`)} className="flex-1 sm:flex-none whitespace-nowrap h-8 text-xs">
                         <Edit className="mr-2 h-3 w-3" />
                         Editează
                     </Button>
                     {activeFormId !== form.id && (
-                         <Button size="sm" onClick={() => handleSetActiveForm(form.id)} className="w-full sm:w-auto h-8 text-xs">Setează Activ</Button>
+                         <Button size="sm" onClick={() => handleSetActiveForm(form.id)} className="flex-1 sm:flex-none whitespace-nowrap h-8 text-xs">Setează Activ</Button>
                     )}
                 </>
             )}
@@ -409,7 +409,7 @@ export default function FormsPage() {
                       nextStep: "deces_show_deficit_1"
                     },
                     deces_show_deficit_1: {
-                      message: "Am notat primul deficit pentru menținerea standardului de viață. Acum să vedem deficitul final, care este {finalDeficit_deces} lei. Continuăm cu cheltuielile specifice.",
+                      message: "Am notat primul deficit pentru menținerea standardului de viață. Continuăm cu cheltuielile specifice.",
                       actionType: "buttons",
                       options: ["Da"],
                       nextStep: "deces_ask_event_costs"
