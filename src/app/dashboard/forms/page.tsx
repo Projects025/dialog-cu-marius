@@ -372,146 +372,359 @@ export default function FormsPage() {
     const restoreMasterTemplate = async () => {
         if (!user) return;
 
-        const masterFormData = {
-          title: "Analiză Completă (Master)",
-          startStepId: "ask_topic",
-          ownerId: user.uid,
-          isTemplate: true,
-          createdAt: serverTimestamp(),
-          flow: {
-            "ask_topic": {
-              "message": "Salut! Sunt Marius. Pentru a te putea ajuta, spune-mi ce te interesează acum?",
-              "actionType": "buttons",
-              "options": [
-                { "label": "Deces", "nextStep": "deces_intro" },
-                { "label": "Boli Grave", "nextStep": "boala_intro" },
-                { "label": "Pensie", "nextStep": "pensie_intro" },
-                { "label": "Studii Copii", "nextStep": "studii_intro" }
-              ]
-            },
-            "deces_intro": {
-              "message": "Un deces afectează negativ pe multiple planuri...",
-              "actionType": "buttons",
-              "options": ["Continuă"],
-              "nextStep": "deces_intro_2"
-            },
-            "deces_intro_2": {
-              "message": "În momentele următoare, vom răspunde la 6 întrebări...",
-              "actionType": "buttons",
-              "options": ["Continuă"],
-              "nextStep": "deces_ask_period"
-            },
-            "deces_ask_period": {
-              "message": "1. În cazul unui posibil deces, care ar fi perioada de timp...?",
-              "actionType": "buttons",
-              "options": ["3 ani", "4 ani", "5 ani"],
-              "nextStep": "deces_ask_monthly_sum"
-            },
-            "deces_ask_monthly_sum": {
-              "message": "Care ar fi suma lunară necesară...?",
-              "actionType": "input",
-              "options": { "type": "number", "placeholder": "Ex: 5000" },
-              "nextStep": "deces_ask_event_costs"
-            },
-            "deces_ask_event_costs": {
-              "message": "2. Ce sumă unică ar fi necesară pentru cheltuieli imediate...?",
-              "actionType": "input",
-              "options": { "type": "number", "placeholder": "Ex: 20000" },
-              "nextStep": "deces_ask_projects"
-            },
-            "deces_ask_projects": {
-              "message": "3. Există proiecte în desfășurare...?",
-              "actionType": "input",
-              "options": { "type": "number", "placeholder": "Ex: 50000" },
-              "nextStep": "deces_ask_debts"
-            },
-            "deces_ask_debts": {
-              "message": "4. Există credite sau datorii...?",
-              "actionType": "input",
-              "options": { "type": "number", "placeholder": "Ex: 150000" },
-              "nextStep": "deces_ask_insurance"
-            },
-            "deces_ask_insurance": {
-              "message": "5. Familia ar beneficia de vreo asigurare de viață...?",
-              "actionType": "input",
-              "options": { "type": "number", "placeholder": "Ex: 0" },
-              "nextStep": "deces_ask_savings"
-            },
-            "deces_ask_savings": {
-              "message": "6. Există economii sau investiții...?",
-              "actionType": "input",
-              "options": { "type": "number", "placeholder": "Ex: 10000" },
-              "nextStep": "deces_ask_dramatic_options"
-            },
-            "deces_ask_dramatic_options": {
-              "message": "Ce opțiuni realiste ar avea familia?",
-              "actionType": "multi_choice",
-              "options": [
-                {"label": "Să se mute cu părinții", "id": "muta_parinti"},
-                {"label": "Să vândă casa", "id": "vinde_casa"},
-                {"label": "Să își ia un al doilea job", "id": "job_extra"},
-                {"label": "Să renunțe la educația copiilor", "id": "renunta_educatie"},
-                {"label": "Să ceară ajutor prietenilor", "id": "ajutor_prieteni"}
-              ],
-              "nextStep": "deces_present_solution"
-            },
-            "deces_present_solution": {
-              "message": "Vrei o soluție personalizată?",
-              "actionType": "buttons",
-              "options": ["Da, vreau detalii", "Nu"],
-              "nextStep": "final_contact"
-            },
-            "pensie_intro": {
-              "message": "Excelent. Planificarea pensiei este vitală. Câți ani ai acum?",
-              "actionType": "input",
-              "options": { "type": "number", "placeholder": "Ex: 35" },
-              "nextStep": "final_contact"
-            },
-            "boala_intro": {
-              "message": "Sănătatea e prioritară. Ai un istoric medical în familie?",
-              "actionType": "buttons",
-              "options": ["Da", "Nu"],
-              "nextStep": "final_contact"
-            },
-            "studii_intro": {
-              "message": "Investiția în copii. Câți ani are copilul?",
-              "actionType": "input",
-              "options": { "type": "number", "placeholder": "Ex: 5" },
-              "nextStep": "final_contact"
-            },
-            "final_contact": {
-              "message": "Pentru a-ți trimite analiza completă, am nevoie de datele tale.",
-              "actionType": "form",
-              "options": {
-                "buttonText": "Trimite",
-                "gdpr": "Accept termeni",
-                "fields": [
-                  { "name": "name", "placeholder": "Nume", "type": "text", "required": true },
-                  { "name": "email", "placeholder": "Email", "type": "email", "required": true },
-                  { "name": "phone", "placeholder": "Telefon", "type": "tel", "required": true }
+        const masterData = {
+            title: "Analiză Completă (Toate Scenariile)",
+            description: "Include fluxurile pentru Deces, Pensionare și Viitorul Copiilor.",
+            startStepId: "intro_general",
+            ownerId: user.uid,
+            isTemplate: true,
+            createdAt: serverTimestamp(),
+            flow: {
+              // === 1. START GENERAL ===
+              intro_general: {
+                message: "Cât ești de pregătit financiar pentru surprizele vieții?\n\nFă o scurtă analiză și descoperă unde ești vulnerabil.",
+                actionType: "buttons",
+                options: ["Începe"],
+                nextStep: "ask_topic"
+              },
+              ask_topic: {
+                message: "Salut! Sunt Marius, agentul tău de asigurări.\n\nÎn următoarele 3 minute te invit la o analiză fără obligații.\n\nCe subiect este de interes pentru tine acum?",
+                actionType: "buttons",
+                options: [
+                  { label: "Deces (Siguranța Familiei)", nextStep: "deces_intro_1" },
+                  { label: "Pensionare", nextStep: "pensie_intro_1" },
+                  { label: "Viitorul Copiilor", nextStep: "studii_intro_1" }
                 ]
               },
-              "nextStep": "final_end"
+          // =================================================
+          // === RAMURA DECES (Conform fișierului tău) ===
+          // =================================================
+          deces_intro_1: {
+            message: "Un deces afectează negativ profund și pe termen lung atât planul existențial cât și planul financiar (dispariția opțiunilor, presiuni financiare).",
+            actionType: "buttons",
+            options: ["Continuă"],
+            nextStep: "deces_intro_2"
+          },
+          deces_intro_2: {
+            message: "Vei răspunde la 6 întrebări pentru a stabili suma necesară familiei pentru:\n1. Standardul de viață\n2. Proiecte în desfășurare\n3. Credite / Datorii",
+            actionType: "buttons",
+            options: ["Continuă"],
+            nextStep: "deces_ask_period"
+          },
+          deces_ask_period: {
+            message: "1. În cazul unui posibil deces, câți ani ar avea nevoie familia ta de susținere financiară pentru a-și menține nivelul de trai fără ajustări majore?",
+            actionType: "buttons",
+            options: ["3 ani", "4 ani", "5 ani"],
+            nextStep: "deces_ask_monthly_sum"
+          },
+          deces_ask_monthly_sum: {
+            message: "Care ar fi suma de bani lunară necesară în această perioadă (în lei)?",
+            actionType: "input",
+            options: { type: "number", placeholder: "Ex: 5000" },
+            nextStep: "deces_show_deficit_1"
+          },
+          deces_show_deficit_1: {
+            message: "Am notat primul deficit pentru menținerea standardului de viață. Continuăm cu cheltuielile specifice.",
+            actionType: "buttons",
+            options: ["Da"],
+            nextStep: "deces_ask_event_costs"
+          },
+          deces_ask_event_costs: {
+            message: "2. În cazul unui posibil deces, evenimentul este însoțit de cheltuieli (înmormântare, taxe). Care ar fi această sumă (lei)?",
+            actionType: "input",
+            options: { type: "number", placeholder: "Ex: 20000" },
+            nextStep: "deces_ask_projects"
+          },
+          deces_ask_projects: {
+            message: "3. Există proiecte în desfășurare (construcție, sport copii) care ar avea de suferit? Care ar fi suma necesară finalizării lor?",
+            actionType: "input",
+            options: { type: "number", placeholder: "Ex: 50000" },
+            nextStep: "deces_ask_debts"
+          },
+          deces_ask_debts: {
+            message: "4. Rămân pe umerii familiei credite sau datorii? Care ar fi suma necesară pentru a stinge aceste obligații?",
+            actionType: "input",
+            options: { type: "number", placeholder: "Ex: 150000" },
+            nextStep: "deces_ask_insurance"
+          },
+          deces_ask_insurance: {
+            message: "5. Familia ar beneficia de vreo asigurare de viață pe numele tău (necesionată băncii)? Dacă da, care este suma?",
+            actionType: "input",
+            options: { type: "number", placeholder: "Ex: 0" },
+            nextStep: "deces_ask_savings"
+          },
+          deces_ask_savings: {
+            message: "6. Familia ar putea accesa economii sau investiții imediate? Care este suma disponibilă?",
+            actionType: "input",
+            options: { type: "number", placeholder: "Ex: 10000" },
+            nextStep: "deces_show_final_result"
+          },
+          deces_show_final_result: {
+            message: "Calcul finalizat. Acesta este deficitul real (Moștenirea Negativă) care ar rămâne descoperit.",
+            actionType: "buttons",
+            options: ["Vezi Rezultatul"],
+            nextStep: "deces_ask_feeling"
+          },
+          deces_ask_feeling: {
+            message: "Cum ți se pare această sumă? Care este sentimentul pe care îl simți acum?",
+            actionType: "input",
+            options: { type: "text", placeholder: "Scrie aici..." },
+            nextStep: "deces_ask_dramatic_options"
+          },
+          deces_ask_dramatic_options: {
+            message: "În acest scenariu, ce opțiuni realiste ar avea familia? Bifează-le:",
+            actionType: "interactive_scroll_list",
+            options: {
+              buttonText: "Am bifat",
+              options: [
+                "Să se mute cu părinții",
+                "Să vândă casa",
+                "Să își ia un al doilea job",
+                "Să renunțe la educația copiilor",
+                "Să ceară ajutor prietenilor",
+                "Să reducă drastic cheltuielile",
+                "Să accepte compromisuri majore"
+              ]
             },
-            "final_end": {
-              "message": "Mulțumesc! Te voi contacta.",
-              "actionType": "end",
-              "nextStep": ""
-            }
+            nextStep: "deces_present_solution"
+          },
+          deces_present_solution: {
+            message: "Dacă nu ești mulțumit cu opțiunile, dorești să vezi o soluție personalizată care să acopere acest deficit?",
+            actionType: "buttons",
+            options: ["Da, vreau detalii", "Nu"],
+            nextStep: "final_contact"
+          },
+          // =================================================
+          // === RAMURA PENSIONARE (Conform fișierului tău) ===
+          // =================================================
+          pensie_intro_1: {
+            message: "Pensionarea poate fi cel mai lung concediu al vieții sau cel mai chinuitor.",
+            actionType: "buttons",
+            options: ["Continuă"],
+            nextStep: "pensie_intro_2"
+          },
+          pensie_intro_2: {
+            message: "Reducerea veniturilor la pensie afectează:\n1. Opțiunile personale (stil de viață)\n2. Demnitatea (dependență financiară)\n3. Rolul în familie (de la susținător la susținut)",
+            actionType: "buttons",
+            options: ["Continuă"],
+            nextStep: "pensie_ask_start_time"
+          },
+          pensie_ask_start_time: {
+            message: "Când crezi că ar fi cel mai potrivit moment să începi să-ți planifici pensionarea?",
+            actionType: "buttons",
+            options: ["ACUM"],
+            nextStep: "pensie_ask_years"
+          },
+          pensie_ask_years: {
+            message: "Exercițiu de imaginație: ai 65 ani și pierzi din venituri. Câți ani speri să mai trăiești din acest moment?",
+            actionType: "buttons",
+            options: ["10 ani", "15 ani", "20 ani"],
+            nextStep: "pensie_ask_monthly_needed"
+          },
+          pensie_ask_monthly_needed: {
+            message: "Care ar fi suma lunară necesară în completarea pensiei de stat pentru a-ți menține standardul de viață (lei)?",
+            actionType: "input",
+            options: { type: "number", placeholder: "Ex: 2000" },
+            nextStep: "pensie_ask_projects"
+          },
+          pensie_ask_projects: {
+            message: "2. Ce planuri ai pentru pensie (călătorii, hobby-uri, nepoți)? Fă un calcul total anual necesar.",
+            actionType: "input",
+            options: { type: "number", placeholder: "Ex: 5000" },
+            nextStep: "pensie_ask_debts"
+          },
+          pensie_ask_debts: {
+            message: "3. La vârsta pensionării, te aștepți să mai ai de plătit credite? Care ar fi suma necesară achitării lor?",
+            actionType: "input",
+            options: { type: "number", placeholder: "Ex: 0" },
+            nextStep: "pensie_ask_insurance"
+          },
+          pensie_ask_insurance: {
+            message: "4. Ai vreo asigurare de viață cu economisire/investiție pentru pensie? Ce sumă s-a strâns?",
+            actionType: "input",
+            options: { type: "number", placeholder: "Ex: 0" },
+            nextStep: "pensie_ask_savings"
+          },
+          pensie_ask_savings: {
+            message: "5. Ai economii (Pilon 2, 3, investiții) accesibile la pensie? Ce sumă?",
+            actionType: "input",
+            options: { type: "number", placeholder: "Ex: 30000" },
+            nextStep: "pensie_show_deficit"
+          },
+          pensie_show_deficit: {
+            message: "Calcul finalizat. Acesta este deficitul financiar cu care ai ieși la pensie.",
+            actionType: "buttons",
+            options: ["Vezi Rezultatul"],
+            nextStep: "pensie_ask_feeling"
+          },
+          pensie_ask_feeling: {
+            message: "Cum ți se pare această sumă? Cum te simți?",
+            actionType: "input",
+            options: { type: "text", placeholder: "Scrie aici..." },
+            nextStep: "pensie_dramatic_options"
+          },
+          pensie_dramatic_options: {
+            message: "În acest scenariu, cum ți s-ar ajusta standardul de viață? Bifează ce e realist:",
+            actionType: "interactive_scroll_list",
+            options: {
+              buttonText: "Am bifat",
+              options: [
+                "Reducerea calității alimentelor",
+                "Limitarea utilităților",
+                "Limitarea accesului medical",
+                "Munca la vârstă înaintată",
+                "Apel la banii copiilor",
+                "Izolare socială",
+                "Anularea călătoriilor"
+              ]
+            },
+            nextStep: "pensie_solution"
+          },
+          pensie_solution: {
+            message: "Dacă nu ești mulțumit, ai fi interesat să vezi o soluție care să-ți mențină demnitatea și standardul de viață la pensie?",
+            actionType: "buttons",
+            options: ["Da, vreau detalii", "Nu"],
+            nextStep: "final_contact"
+          },
+          // =================================================
+          // === RAMURA STUDII (Conform fișierului tău) ===
+          // =================================================
+          studii_intro_1: {
+            message: "Menirea ta ca părinte este să îi dai copilului aripi în viață!\n\n„Cu cât vrei să zboare mai sus, cu atât sunt mai scumpe aripile”.",
+            actionType: "buttons",
+            options: ["De acord"],
+            nextStep: "studii_intro_2"
+          },
+          studii_intro_2: {
+            message: "Vei răspunde la 6 întrebări despre costurile pentru: educație, dezvoltare, proiecte și familie.",
+            actionType: "buttons",
+            options: ["Continuă"],
+            nextStep: "studii_ask_years"
+          },
+          studii_ask_years: {
+            message: "1. Câți ani ești dispus să-ți susții financiar copilul în studenție?",
+            actionType: "buttons",
+            options: ["3 ani", "4 ani", "5 ani", "6 ani"],
+            nextStep: "studii_ask_annual_cost"
+          },
+          studii_ask_annual_cost: {
+            message: "Care ar fi suma anuală necesară pentru studii (taxe, chirie, transport, gadgeturi)?",
+            actionType: "input",
+            options: { type: "number", placeholder: "Ex: 30000" },
+            nextStep: "studii_ask_extra"
+          },
+          studii_ask_extra: {
+            message: "2. Activități extra-curriculare (hobby-uri, călătorii, viață socială). Care este suma anuală necesară?",
+            actionType: "input",
+            options: { type: "number", placeholder: "Ex: 5000" },
+            nextStep: "studii_ask_projects"
+          },
+          studii_ask_projects: {
+            message: "3. Proiecte majore la debut (mașină, afacere, avans casă). Care este suma necesară?",
+            actionType: "input",
+            options: { type: "number", placeholder: "Ex: 10000" },
+            nextStep: "studii_ask_wedding"
+          },
+          studii_ask_wedding: {
+            message: "4. Contribuția ta la nunta copilului (rochie/costum/eveniment). Care ar fi suma?",
+            actionType: "input",
+            options: { type: "number", placeholder: "Ex: 20000" },
+            nextStep: "studii_ask_savings"
+          },
+          studii_ask_savings: {
+            message: "5. Există economii sau investiții pe care copilul le-ar putea accesa acum?",
+            actionType: "input",
+            options: { type: "number", placeholder: "Ex: 5000" },
+            nextStep: "studii_ask_insurance"
+          },
+          studii_ask_insurance: {
+            message: "6. Există vreo asigurare de viață cu economisire pentru copil?",
+            actionType: "input",
+            options: { type: "number", placeholder: "Ex: 0" },
+            nextStep: "studii_ask_children_count"
+          },
+          studii_ask_children_count: {
+            message: "Câți copii ai? (Vom înmulți deficitul cu acest număr).",
+            actionType: "input",
+            options: { type: "number", placeholder: "Ex: 1" },
+            nextStep: "studii_show_deficit"
+          },
+          studii_show_deficit: {
+            message: "Am calculat deficitul total pentru un start bun în viață.",
+            actionType: "buttons",
+            options: ["Vezi Rezultatul"],
+            nextStep: "studii_ask_feeling"
+          },
+          studii_ask_feeling: {
+            message: "Cum ți se pare această sumă? Ce simți?",
+            actionType: "input",
+            options: { type: "text", placeholder: "Scrie aici..." },
+            nextStep: "studii_dramatic_options"
+          },
+          studii_dramatic_options: {
+            message: "Dacă nu ar putea conta pe sprijinul tău, ce scenarii sunt posibile?",
+            actionType: "interactive_scroll_list",
+            options: {
+              buttonText: "Am înțeles",
+              options: [
+                "Abandon școlar",
+                "Muncă excesivă în timpul facultății",
+                "Scăderea încrederii în sine",
+                "Renunțarea la hobby-uri",
+                "Dependență financiară",
+                "Anxietate și teamă de viitor"
+              ]
+            },
+            nextStep: "studii_solution"
+          },
+          studii_solution: {
+            message: "Ai fi interesat de o soluție care să-ți eșaloneze efortul și să garanteze viitorul copilului, indiferent de ce ți se întâmplă ție?",
+            actionType: "buttons",
+            options: ["Da, vreau detalii", "Nu"],
+            nextStep: "final_contact"
+          },
+           // --- RAMURA BOLI GRAVE (Placeholder rapid) ---
+          boala_intro: {
+             message: "Modulul pentru Boli Grave este în pregătire. Vrei să fii contactat pentru detalii?",
+             actionType: "buttons",
+             options: ["Da"],
+             nextStep: "final_contact"
+          },
+          // =================================================
+          // === FINAL COMUN ===
+          // =================================================
+          final_contact: {
+            message: "Perfect. Te rog lasă-mi datele de contact pentru a-ți trimite analiza completă.",
+            actionType: "form",
+            options: {
+              buttonText: "Trimite Analiza",
+              gdpr: "Sunt de acord cu prelucrarea datelor.",
+              fields: [
+                { name: "name", placeholder: "Nume Prenume", type: "text", required: true },
+                { name: "email", placeholder: "Email", type: "email", required: true },
+                { name: "phone", placeholder: "Telefon", type: "tel", required: true }
+              ]
+            },
+            nextStep: "thank_you_final"
+          },
+          thank_you_final: {
+            message: "Mulțumesc! Datele au fost transmise securizat.",
+            actionType: "end",
+            nextStep: ""
           }
-        };
-
-        try {
-            console.log("Încep restaurarea șablonului MASTER...");
-            await setDoc(doc(db, "formTemplates", "master_standard_v1"), masterFormData);
-            toast({ title: "Succes!", description: "Șablonul 'Analiză Completă (Master)' a fost creat/actualizat." });
-            if (user) await fetchForms(user);
-        } catch (e: any) {
-            console.error("Eroare la restaurare master:", e);
-            toast({ variant: "destructive", title: "Eroare la restaurare master", description: e.message });
         }
     };
 
+        try {
+            console.log("Încep restaurarea șablonului MASTER COMPLET...");
+            await setDoc(doc(db, "formTemplates", "master_standard_v1"), masterData);
+            toast({ title: "Succes!", description: "Șablonul 'Analiză Completă (Toate Scenariile)' a fost creat/actualizat." });
+            if (user) await fetchForms(user);
+        } catch (e: any) {
+            console.error("Eroare la restaurare master complet:", e);
+            toast({ variant: "destructive", title: "Eroare la restaurare master", description: e.message });
+        }
+    };
 
     return (
         <>
@@ -588,7 +801,7 @@ export default function FormsPage() {
                             </p>
                         </div>
                         <div>
-                             <Button variant="destructive" size="sm" onClick={restoreMasterTemplate}>
+                             <Button variant="destructive" size="sm" onClick={restoreFullMaster}>
                                 Creează Șablonul Master
                             </Button>
                             <p className="text-xs text-muted-foreground mt-2">
@@ -665,5 +878,7 @@ export default function FormsPage() {
     
 
 
+
+    
 
     
