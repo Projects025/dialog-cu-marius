@@ -61,6 +61,14 @@
 @layer utilities {
   .animation-delay-2000 { animation-delay: 2s; }
   .animation-delay-4000 { animation-delay: 4s; }
+  
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE și Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
 }
 
 @keyframes blob {
@@ -95,4 +103,3 @@
 body {
   background: radial-gradient(circle at top, hsl(222, 40%, 15%), hsl(var(--background)));
 }
-    

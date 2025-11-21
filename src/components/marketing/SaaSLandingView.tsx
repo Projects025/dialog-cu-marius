@@ -16,7 +16,7 @@ const SaaSLandingView = () => {
   };
 
   return (
-    <div className='min-h-screen bg-background text-white'>
+    <div className='min-h-screen bg-background text-white overflow-y-auto no-scrollbar'>
       <Navbar />
 
       {/* Fundal Dinamic */}
