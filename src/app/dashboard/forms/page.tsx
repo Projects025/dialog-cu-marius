@@ -332,6 +332,8 @@ export default function FormsPage() {
     
     const restoreDatabase = async () => {
         if (!user) return;
+        if (!window.confirm("Această acțiune va reseta/crea șablonul 'Analiză Financiară - Deces (Standard)'. Continui?")) return;
+
         const templateData = {
             title: "Analiză Financiară - Deces (Standard)",
             startStepId: "intro_analysis_1",
@@ -359,7 +361,6 @@ export default function FormsPage() {
             }
         };
         try {
-            console.log("Încep restaurarea șablonului...");
             await setDoc(doc(db, "formTemplates", "deces_standard_v1"), templateData);
             toast({ title: "Succes!", description: "Șablonul 'Analiză Financiară - Deces (Standard)' a fost restaurat." });
             if (user) await fetchForms(user);
@@ -369,24 +370,20 @@ export default function FormsPage() {
         }
     };
     
-    const restoreFullMaster = async () => {
-    if (!confirm("Ești sigur că vrei să suprascrii Formularul Master cu versiunea completă (3 scenarii)?")) return;
-    if (!user) {
-        toast({variant: "destructive", title: "Eroare", description: "Utilizator neautentificat."});
-        return;
-    }
-    
+  const restoreMasterTemplate = async () => {
+    if (!window.confirm("Această acțiune va reseta/crea șablonul 'Analiză Completă (Master)'. Continui?")) return;
+
     try {
       const masterData = {
-        title: "Analiză Completă (Master - Toate Scenariile)",
+        title: "Analiză Completă (Master)",
         description: "Include fluxurile complete pentru Deces, Pensionare și Viitorul Copiilor.",
         startStepId: "ask_topic",
-        ownerId: user.uid,
-        isTemplate: true,
-        createdAt: serverTimestamp(), 
+        ownerId: null, 
+        isTemplate: true, 
+        createdAt: new Date(),
         flow: {
           ask_topic: {
-            message: "Salut!\n\nSunt Marius, agentul tău de asigurări.\n\nÎn următoarele 3 minute te invit la un moment de reflecție și de analiză prin care să descoperi care este gradul tău de expunere financiară.\n\nAceastă analiză nu implică nicio obligație din partea ta.\n\nDespre ce subiect vrei să discutăm?",
+            message: "Salut! Sunt Marius, agentul tău de asigurări.\n\nÎn următoarele 3 minute te invit la un moment de reflecție și de analiză prin care să descoperi care este gradul tău de expunere financiară.\n\nAceastă analiză nu implică nicio obligație din partea ta.\n\nDespre ce subiect vrei să discutăm?",
             actionType: "buttons",
             options: [
               { label: "Deces (Siguranța Familiei)", nextStep: "deces_intro_1" },
@@ -431,13 +428,13 @@ export default function FormsPage() {
             nextStep: "deces_show_deficit_1"
           },
           deces_show_deficit_1: {
-            message: "Am notat primul deficit pentru menținerea standardului de viață (Suma x Perioada x 12). Continuăm cu cheltuielile specifice.",
+            message: "Am notat primul deficit pentru menținerea standardului de viață. Continuăm cu cheltuielile specifice.",
             actionType: "buttons",
             options: ["Da"],
             nextStep: "deces_ask_event_costs"
           },
           deces_ask_event_costs: {
-            message: "2. În cazul unui posibil deces, evenimentul în sine este însoțit de anumite cheltuieli (ex. înmormântare, taxe succesorale). Care ar fi această sumă?",
+            message: "2. În cazul unui posibil deces, evenimentul este însoțit de cheltuieli (ex. înmormântare, taxe succesorale). Care ar fi această sumă?",
             actionType: "input",
             options: { type: "number", placeholder: "Ex: 20000" },
             nextStep: "deces_ask_projects"
@@ -452,6 +449,12 @@ export default function FormsPage() {
             message: "4. Rămân pe umerii familiei anumite responsabilități financiare de tip credite, datorii? Care ar fi suma necesară pentru a le stinge?",
             actionType: "input",
             options: { type: "number", placeholder: "Ex: 150000" },
+            nextStep: "deces_show_brute_deficit"
+          },
+           deces_show_brute_deficit: {
+            message: "Am calculat necesarul total brut. Acum haide să vedem ce resurse există deja.",
+            actionType: "buttons",
+            options: ["Continuă"],
             nextStep: "deces_ask_insurance"
           },
           deces_ask_insurance: {
@@ -494,8 +497,7 @@ export default function FormsPage() {
                 "Să amâne educația copiilor",
                 "Să ceară ajutor de la familie și prieteni",
                 "Să renunțe la economii",
-                "Să accepte orice compromis major",
-                "Să se căsătorească din obligații financiare"
+                "Să accepte orice compromis major"
               ]
             },
             nextStep: "deces_present_solution"
@@ -513,63 +515,57 @@ export default function FormsPage() {
             nextStep: "pensie_intro_2"
           },
           pensie_intro_2: {
-            message: "Reducerea veniturilor la pensie va afecta:\n1. Opțiunile personale (stil de viață)\n2. Demnitatea și stima de sine\n3. Tranziția de la rolul de susținător la susținut",
+            message: "Reducerea veniturilor la pensie va afecta:\n1. Opțiunile personale\n2. Demnitatea\n3. Rolul în familie",
             actionType: "buttons",
             options: ["Continuă"],
-            nextStep: "pensie_intro_3"
+            nextStep: "pensie_ask_start_time"
           },
-          pensie_intro_3: {
+           pensie_ask_start_time: {
             message: "Când crezi că ar fi cel mai potrivit moment să începi să-ți planifici pensionarea?",
             actionType: "buttons",
             options: ["ACUM"],
-            nextStep: "pensie_intro_4"
-          },
-          pensie_intro_4: {
-            message: "Vei răspunde la 5 întrebări pentru a stabili suma de bani necesară pentru a-ți menține standardul de viață dacă mâine ai ieși la pensie.",
-            actionType: "buttons",
-            options: ["Continuă"],
             nextStep: "pensie_ask_years"
           },
           pensie_ask_years: {
-            message: "1. Exercițiu de imaginație: ai 65 ani și ieși la pensie. Câți ani speri să mai trăiești din acest moment?",
+            message: "1. Exercițiu de imaginație: ai 65 ani. Câți ani speri să mai trăiești din acest moment?",
             actionType: "buttons",
             options: ["10 ani", "15 ani", "20 ani"],
-            nextStep: "pensie_ask_monthly"
+            nextStep: "pensie_ask_monthly_needed"
           },
-          pensie_ask_monthly: {
-            message: "Care ar fi suma de bani lunară de care ai avea nevoie în completarea pensiei de stat pentru a-ți menține standardul de viață (lei)?",
+           pensie_ask_monthly_needed: {
+            message: "Care ar fi suma lunară necesară în completarea pensiei de stat (lei)?",
             actionType: "input",
             options: { type: "number", placeholder: "Ex: 2000" },
             nextStep: "pensie_show_deficit_1"
           },
           pensie_show_deficit_1: {
-            message: "Am calculat necesarul de bază (Suma x Ani x 12).",
+            message: "Am calculat necesarul de bază. Continuăm.",
             actionType: "buttons",
             options: ["Continuă"],
             nextStep: "pensie_ask_projects"
           },
           pensie_ask_projects: {
-            message: "2. Ce planuri/proiecte ai pentru pensie (călătorii, hobby-uri, nepoți)? Care ar fi suma de bani anuală necesară?",
+            message: "2. Ce planuri ai pentru pensie (călătorii, hobby-uri)? Care ar fi costul anual?",
             actionType: "input",
             options: { type: "number", placeholder: "Ex: 5000" },
             nextStep: "pensie_ask_debts"
           },
           pensie_ask_debts: {
-            message: "3. La vârsta pensionării, te aștepți să mai ai de plătit credite? Care ar fi suma necesară achitării integrale?",
+            message: "3. La vârsta pensionării, te aștepți să mai ai de plătit credite? Care ar fi suma?",
             actionType: "input",
             options: { type: "number", placeholder: "Ex: 0" },
             nextStep: "pensie_ask_insurance"
           },
           pensie_ask_insurance: {
-            message: "4. Ai vreo asigurare de viață cu economisire/investiție pentru pensie? Ce sumă s-a strâns?",
+            message: "4. Ai vreo asigurare de viață cu economisire pentru pensie? Ce sumă s-a strâns?",
             actionType: "input",
             options: { type: "number", placeholder: "Ex: 0" },
             nextStep: "pensie_ask_savings"
           },
           pensie_ask_savings: {
-            message: "5. Ai economii (Pilon 2, 3, investiții) accesibile la pensie? Ce sumă?",
+            message: "5. Ai economii (Pilon 2, 3, investiții)? Ce sumă?",
             actionType: "input",
-            options: { type: "number", placeholder: "Ex: 40000" },
+            options: { type: "number", placeholder: "Ex: 30000" },
             nextStep: "pensie_show_final_result"
           },
           pensie_show_final_result: {
@@ -579,47 +575,30 @@ export default function FormsPage() {
             nextStep: "pensie_ask_feeling"
           },
           pensie_ask_feeling: {
-            message: "Cum ți se pare această sumă? Care este sentimentul pe care îl simți acum?",
+            message: "Cum ți se pare această sumă?",
             actionType: "input",
             options: { type: "text", placeholder: "Scrie aici..." },
             nextStep: "pensie_dramatic_options"
           },
           pensie_dramatic_options: {
-            message: "În acest scenariu, cum crezi că ți s-ar ajusta standardul de viață? Bifează opțiunile realiste:",
+            message: "Cum ți s-ar ajusta standardul de viață? Bifează opțiunile:",
             actionType: "interactive_scroll_list",
             options: {
-              buttonText: "Am bifat",
-              options: [
-                "Reducerea calității alimentelor",
-                "Limitarea utilităților",
-                "Limitarea accesului la servicii medicale",
-                "Împrumuturi noi",
-                "Apel la banii copiilor",
-                "Vânzarea de bunuri",
-                "Munca la vârstă înaintată",
-                "Renunțarea la hobby-uri",
-                "Izolare socială",
-                "Schimbarea domiciliului"
-              ]
+              buttonText: "Am înțeles",
+              options: ["Reducerea calității alimentelor", "Limitarea utilităților", "Limitare servicii medicale", "Munca la vârstă înaintată", "Apel la banii copiilor"]
             },
             nextStep: "pensie_solution"
           },
           pensie_solution: {
-            message: "Dacă nu ești mulțumit, ai fi interesat să vezi o soluție care să-ți mențină demnitatea și standardul de viață la pensie?",
+            message: "Ai fi interesat de o soluție care să-ți mențină demnitatea la pensie?",
             actionType: "buttons",
             options: ["Da, vreau detalii", "Nu"],
             nextStep: "final_contact"
           },
           studii_intro_1: {
-            message: "Menirea ta ca părinte este să îi dai copilului aripi în viață!\n\nEști de acord cu afirmația: „Cu cât vrei să zboare mai sus, cu atât sunt mai scumpe aripile”?",
+            message: "Menirea ta ca părinte este să îi dai copilului aripi în viață!\n\n„Cu cât vrei să zboare mai sus, cu atât sunt mai scumpe aripile”.",
             actionType: "buttons",
             options: ["De acord"],
-            nextStep: "studii_intro_2"
-          },
-          studii_intro_2: {
-            message: "Vei răspunde la 6 întrebări pentru a stabili suma necesară pentru: educație formală, dezvoltare personală, proiecte majore și familie.",
-            actionType: "buttons",
-            options: ["Continuă"],
             nextStep: "studii_ask_years"
           },
           studii_ask_years: {
@@ -629,100 +608,85 @@ export default function FormsPage() {
             nextStep: "studii_ask_annual_cost"
           },
           studii_ask_annual_cost: {
-            message: "Care ar fi suma anuală necesară pentru studii (taxă, cazare, masă, gadgeturi, cărți)? Încearcă să nu pui sumele „din burtă”.",
+            message: "Care ar fi suma anuală necesară pentru studii (taxe, chirie, masă)?",
             actionType: "input",
             options: { type: "number", placeholder: "Ex: 30000" },
-            nextStep: "studii_show_deficit_1"
-          },
-          studii_show_deficit_1: {
-            message: "Am calculat costul de bază al studiilor (Ani x Sumă anuală).",
-            actionType: "buttons",
-            options: ["Continuă"],
             nextStep: "studii_ask_extra"
           },
           studii_ask_extra: {
-            message: "2. Pentru dezvoltare personală (tabere, hobby-uri, călătorii, viață socială), care ar fi suma anuală necesară?",
+            message: "2. Pentru dezvoltare personală (hobby-uri, viață socială), care ar fi suma anuală?",
             actionType: "input",
             options: { type: "number", placeholder: "Ex: 5000" },
             nextStep: "studii_ask_projects"
           },
           studii_ask_projects: {
-            message: "3. Debutul în viață: Proiecte majore (mașină, afacere, avans casă). Care este suma necesară?",
+            message: "3. Proiecte majore la debut (mașină, afacere, avans casă). Suma necesară?",
             actionType: "input",
             options: { type: "number", placeholder: "Ex: 10000" },
             nextStep: "studii_ask_wedding"
           },
           studii_ask_wedding: {
-            message: "4. Nunta copilului. Care ar fi contribuția ta financiară?",
+            message: "4. Contribuția ta la nunta copilului. Care ar fi suma?",
             actionType: "input",
             options: { type: "number", placeholder: "Ex: 20000" },
             nextStep: "studii_ask_savings"
           },
           studii_ask_savings: {
-            message: "5. Există economii sau investiții pe care copilul le-ar putea accesa pentru aceste cheltuieli?",
+            message: "5. Există economii/investiții pe care copilul le-ar putea accesa acum?",
             actionType: "input",
             options: { type: "number", placeholder: "Ex: 5000" },
             nextStep: "studii_ask_insurance"
           },
           studii_ask_insurance: {
-            message: "6. Există vreo asigurare de viață cu economisire destinată copilului?",
+            message: "6. Există vreo asigurare de viață cu economisire pentru copil?",
             actionType: "input",
             options: { type: "number", placeholder: "Ex: 0" },
             nextStep: "studii_ask_children_count"
           },
           studii_ask_children_count: {
-            message: "Pentru a finaliza: Câți copii ai? (Voi înmulți deficitul cu acest număr).",
+            message: "Pentru a finaliza: Câți copii ai?",
             actionType: "input",
             options: { type: "number", placeholder: "Ex: 1" },
             nextStep: "studii_show_final_result"
           },
           studii_show_final_result: {
-            message: "Deficitul financiar pe care trebuie să îl acoperi pentru a asigura startul în viață este:",
+            message: "Am calculat deficitul total pentru un start bun în viață.",
             actionType: "buttons",
             options: ["Vezi Rezultatul"],
             nextStep: "studii_ask_feeling"
           },
           studii_ask_feeling: {
-            message: "Cum ți se pare această sumă? Ce simți?",
+            message: "Cum ți se pare această sumă?",
             actionType: "input",
             options: { type: "text", placeholder: "Scrie aici..." },
-            nextStep: "studii_dramatic_intro"
-          },
-          studii_dramatic_intro: {
-             message: "Cum s-ar schimba viitorul copiilor dacă nu ar putea conta pe sprijinul tău financiar?",
-             actionType: "buttons",
-             options: ["Continuă"],
-             nextStep: "studii_dramatic_options"
+            nextStep: "studii_dramatic_options"
           },
           studii_dramatic_options: {
-            message: "Bifează scenariile posibile:",
+            message: "Ce scenarii sunt posibile fără sprijinul tău?",
             actionType: "interactive_scroll_list",
             options: {
               buttonText: "Am înțeles",
-              options: [
-                "Renunțarea la hobby-uri",
-                "Abandon școlar",
-                "Acces limitat la educație",
-                "Izolare față de prieteni",
-                "Scăderea încrederii în sine",
-                "Dependență financiară",
-                "Muncă excesivă în facultate",
-                "Anxietate și teamă de viitor"
-              ]
+              options: ["Abandon școlar", "Muncă excesivă în facultate", "Scăderea încrederii", "Renunțarea la hobby-uri", "Dependență financiară"]
             },
             nextStep: "studii_solution"
           },
           studii_solution: {
-            message: "Ai fi interesat de o soluție care să-ți eșaloneze efortul și să garanteze viitorul copilului, indiferent de ce ți se întâmplă ție?",
+            message: "Ai fi interesat de o soluție care să garanteze viitorul copilului?",
             actionType: "buttons",
             options: ["Da, vreau detalii", "Nu"],
             nextStep: "final_contact"
+          },
+           boala_intro: {
+             message: "Modulul pentru Boli Grave este în pregătire. Vrei să fii contactat pentru detalii?",
+             actionType: "buttons",
+             options: ["Da", "Nu"],
+             nextStep: "final_contact"
           },
           final_contact: {
             message: "Perfect. Te rog lasă-mi datele de contact pentru a-ți trimite analiza completă.",
             actionType: "form",
             options: {
-              buttonText: "Trimite",
+              buttonText: "Trimite Analiza",
               gdpr: "Sunt de acord cu prelucrarea datelor personale.",
               fields: [
                 { name: "name", placeholder: "Nume Prenume", type: "text", required: true },
@@ -733,45 +697,91 @@ export default function FormsPage() {
             nextStep: "thank_you_final"
           },
           thank_you_final: {
-            message: "Mulțumesc! Datele au fost transmise.",
+            message: "Mulțumesc! Datele au fost transmise securizat.",
             actionType: "end",
             nextStep: ""
           }
         }
       };
+
+      // 3. Salvare Firestore
       await setDoc(doc(db, "formTemplates", "master_standard_v1"), masterData);
-      toast({title: "Master Form Complet Restaurat!", description: "Baza de date a fost actualizată cu succes."});
-      await fetchForms(user);
+      toast({ title: "Șablon Master Creat/Resetat!", description: "Baza de date a fost actualizată cu succes." });
+      
+      // 4. Reîncărcare formulare
+      if(user) await fetchForms(user);
+
     } catch (error: any) {
-      console.error("Eroare la restaurare:", error);
-      toast({variant: "destructive", title: "Eroare la Restaurare", description: error.message});
+      console.error("Error restoring master template:", error);
+      toast({ variant: "destructive", title: "Eroare la Restaurare", description: error.message });
     }
   };
 
-    return (
-        <>
-            <div className="flex items-center justify-between">
-                <h1 className="text-xl font-bold md:text-2xl">Management Formulare</h1>
-                 <Button onClick={() => setIsCreateModalOpen(true)} disabled={loading} size="sm">
-                    <FilePlus2 className="mr-2 h-4 w-4" />
-                    Creează Formular
-                </Button>
-            </div>
-             <p className="text-muted-foreground mt-2 text-xs md:text-sm">
-                Creează formulare noi de la zero, clonează un șablon standard pentru a-l personaliza sau administrează formularele tale deja create.
-            </p>
 
-            <div className="mt-8">
-                <h2 className="text-lg font-semibold mb-4 md:text-xl">Formularele Tale</h2>
-                {loading ? <p>Se încarcă...</p> : userForms.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    return (
+        <div className="container mx-auto py-8">
+            <div className="flex items-center justify-between mb-8">
+                <h1 className="text-xl font-bold md:text-2xl">Gestionează Formularele</h1>
+                <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+                    <DialogTrigger asChild>
+                        <Button size="sm"><FilePlus2 className="mr-2 h-4 w-4" /> Creează Formular</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Creează un Formular Nou</DialogTitle>
+                            <DialogDescription>
+                                Dă-i un nume noului formular și alege un șablon de la care să pornești.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="form-title">Nume Formular</Label>
+                                <Input
+                                    id="form-title"
+                                    placeholder="ex: Analiză Deces V2"
+                                    value={newFormTitle}
+                                    onChange={(e) => setNewFormTitle(e.target.value)}
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="template-source">Pornește de la un Șablon</Label>
+                                 <Select onValueChange={setSourceTemplateId} value={sourceTemplateId}>
+                                    <SelectTrigger id="template-source">
+                                        <SelectValue placeholder="Selectează un șablon..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="blank">Formular Gol</SelectItem>
+                                        {templateForms.map(template => (
+                                            <SelectItem key={template.id} value={template.id}>{template.title}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>Anulează</Button>
+                            <Button onClick={handleCreateForm} disabled={isCreating}>
+                                {isCreating ? "Se creează..." : "Creează și Editează"}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            </div>
+
+            {/* Secțiune Formulare Personale */}
+            <section>
+                <h2 className="text-lg font-semibold mb-4 border-b pb-2">Formularele Tale</h2>
+                {loading ? (
+                    <p>Se încarcă...</p>
+                ) : userForms.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {userForms.map(form => (
-                            <FormCard 
+                             <FormCard
                                 key={form.id}
                                 form={form}
                                 isTemplate={false}
                                 activeFormId={activeFormId}
-                                cloning={cloning}
+                                cloning={null}
                                 handleClone={handleClone}
                                 handleDeleteClick={handleDeleteClick}
                                 router={router}
@@ -780,16 +790,19 @@ export default function FormsPage() {
                         ))}
                     </div>
                 ) : (
-                    <p className="text-muted-foreground text-sm">Nu ai niciun formular personalizat. Apasă pe "Creează Formular" pentru a începe.</p>
+                    <p className="text-muted-foreground text-sm">Nu ai încă niciun formular personalizat. Clonează un șablon pentru a începe.</p>
                 )}
-            </div>
-
-            <div className="mt-12">
-                <h2 className="text-lg font-semibold mb-4 md:text-xl">Șabloane Standard</h2>
-                 {loading ? <p>Se încarcă...</p> : templateForms.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {templateForms.map(form => (
-                             <FormCard 
+            </section>
+            
+            {/* Secțiune Șabloane */}
+            <section className="mt-12">
+                 <h2 className="text-lg font-semibold mb-4 border-b pb-2">Șabloane Standard</h2>
+                 {loading ? (
+                    <p>Se încarcă...</p>
+                ) : templateForms.length > 0 ? (
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                         {templateForms.map(form => (
+                            <FormCard
                                 key={form.id}
                                 form={form}
                                 isTemplate={true}
@@ -802,107 +815,42 @@ export default function FormsPage() {
                             />
                         ))}
                     </div>
-                ) : (
-                    <p className="text-muted-foreground text-sm">Nu există șabloane disponibile.</p>
-                )}
-            </div>
+                 ) : (
+                    <p className="text-muted-foreground text-sm">Nu s-au găsit șabloane standard.</p>
+                 )}
+            </section>
 
-             <div className="mt-12 border-t pt-8">
-                 <Card className="bg-muted/30 border-dashed">
-                    <CardHeader>
-                        <CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="text-destructive h-5 w-5"/> Zonă de Mentenanță</CardTitle>
-                        <CardDescription className="text-xs">Acțiunile din această secțiune sunt pentru depanare. Folosește-le cu precauție.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex flex-col sm:flex-row gap-4">
-                         <div>
-                             <Button variant="destructive" size="sm" onClick={restoreDatabase}>
-                                Resetează Șablonul Standard
-                            </Button>
-                            <p className="text-xs text-muted-foreground mt-2">
-                                Suprascrie șablonul "Deces (Standard)" cu versiunea originală.
-                            </p>
-                        </div>
-                        <div>
-                             <Button variant="destructive" size="sm" onClick={restoreFullMaster}>
-                                Creează Șablonul Master
-                            </Button>
-                            <p className="text-xs text-muted-foreground mt-2">
-                                Creează/Resetează șablonul "Analiză Completă (Master)" cu 3 ramuri.
-                            </p>
-                        </div>
-                    </CardContent>
-                 </Card>
-            </div>
-
-            <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-                <DialogContent className="sm:max-w-[480px]">
-                    <DialogHeader>
-                        <DialogTitle>Configurează Noul Formular</DialogTitle>
-                        <DialogDescription>
-                            Dă un nume noului tău formular și alege cum vrei să începi.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-6 py-4">
-                        <div className="grid gap-2">
-                            <Label htmlFor="form-title">Numele Formularului</Label>
-                            <Input
-                                id="form-title"
-                                placeholder="Ex: Analiză Protecție Familie"
-                                value={newFormTitle}
-                                onChange={(e) => setNewFormTitle(e.target.value)}
-                            />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="source-template">Punct de plecare</Label>
-                            <Select onValueChange={setSourceTemplateId} value={sourceTemplateId}>
-                                <SelectTrigger id="source-template">
-                                    <SelectValue placeholder="Selectează o opțiune" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="blank">Formular Gol (de la zero)</SelectItem>
-                                    {templateForms.map(template => (
-                                        <SelectItem key={template.id} value={template.id}>
-                                            Șablon: {template.title}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+             {/* Zona de Mentenanță */}
+            <section className="mt-12">
+                <h2 className="text-lg font-semibold mb-4 border-b pb-2">Mentenanță (Admin)</h2>
+                <div className="bg-muted/30 p-4 rounded-lg flex flex-col sm:flex-row gap-4 items-center">
+                    <div className="flex-grow">
+                        <h3 className="font-semibold">Resetare Șabloane</h3>
+                        <p className="text-sm text-muted-foreground">Folosește aceste butoane pentru a restaura șabloanele standard în baza de date dacă acestea sunt corupte sau au fost șterse.</p>
                     </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>Anulează</Button>
-                        <Button onClick={handleCreateForm} disabled={isCreating || !newFormTitle.trim() || !sourceTemplateId}>
-                            {isCreating ? "Se creează..." : "Creează și Editează"}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-             <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                        <Button variant="outline" size="sm" onClick={restoreDatabase}>Resetează Șablonul Deces (Standard)</Button>
+                        <Button variant="destructive" size="sm" onClick={restoreMasterTemplate}>Creează Șablonul Master</Button>
+                    </div>
+                </div>
+            </section>
+            
+            <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Ștergere Formular</DialogTitle>
+                        <DialogTitle className="flex items-center gap-2"><AlertTriangle className="text-destructive"/> Ești absolut sigur?</DialogTitle>
                         <DialogDescription>
-                           Ești sigur că vrei să ștergi acest formular? Această acțiune este ireversibilă și va șterge toate datele asociate.
+                           Această acțiune este ireversibilă și va șterge permanent formularul. Dacă formularul este activ, link-ul tău va deveni inactiv până selectezi alt formular.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>Anulează</Button>
-                        <Button variant="destructive" onClick={confirmDelete}>Șterge Definitiv</Button>
+                         <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>Anulează</Button>
+                         <Button variant="destructive" onClick={confirmDelete}>Da, Șterge Formularul</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-
-        </>
+        </div>
     );
 }
 
-    
-
-
-
-    
-
-    
-
-    
+```
