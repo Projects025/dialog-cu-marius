@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -10,6 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import Navbar from "@/components/ui/Navbar";
+import Footer from "@/components/ui/Footer";
+
 
 export default function LoginPage() {
   const router = useRouter();
@@ -94,75 +96,79 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
-      <Card className="w-full max-w-md mx-4">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">
-            {isSignUp ? "Creează Cont Agent" : "Autentificare Agent"}
-          </CardTitle>
-           <CardDescription>
-            {isSignUp ? "Completează datele pentru a începe" : "Introdu credențialele pentru a accesa panoul"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleAuth} className="space-y-6">
-            {isSignUp && (
-              <div className="space-y-2">
-                <Label htmlFor="name">Nume Prenume</Label>
+    <div className="flex flex-col min-h-screen bg-background">
+      <Navbar />
+      <div className="flex-grow flex items-center justify-center">
+        <Card className="w-full max-w-md mx-4">
+            <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-bold">
+                {isSignUp ? "Creează Cont Agent" : "Autentificare Agent"}
+            </CardTitle>
+            <CardDescription>
+                {isSignUp ? "Completează datele pentru a începe" : "Introdu credențialele pentru a accesa panoul"}
+            </CardDescription>
+            </CardHeader>
+            <CardContent>
+            <form onSubmit={handleAuth} className="space-y-6">
+                {isSignUp && (
+                <div className="space-y-2">
+                    <Label htmlFor="name">Nume Prenume</Label>
+                    <Input
+                    id="name"
+                    type="text"
+                    placeholder="Ex: Popescu Ion"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    className="h-12"
+                    />
+                </div>
+                )}
+                <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="name"
-                  type="text"
-                  placeholder="Ex: Popescu Ion"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  className="h-12"
+                    id="email"
+                    type="email"
+                    placeholder="agent@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="h-12"
                 />
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="agent@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="h-12"
-              />
+                </div>
+                <div className="space-y-2">
+                <Label htmlFor="password">Parolă</Label>
+                <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    placeholder="Minim 6 caractere"
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="h-12"
+                />
+                </div>
+                {error && (
+                <p className="text-sm text-center text-destructive">{error}</p>
+                )}
+                <Button type="submit" className="w-full h-12 font-semibold" disabled={loading}>
+                {loading ? "Se procesează..." : (isSignUp ? "Creează Cont" : "Intră în cont")}
+                </Button>
+            </form>
+            <div className="mt-6 text-center text-sm">
+                <button
+                onClick={toggleAuthMode}
+                className="cursor-pointer font-medium text-primary hover:underline"
+                >
+                {isSignUp
+                    ? "Ai deja cont? Autentifică-te"
+                    : "Nu ai cont? Creează unul acum"}
+                </button>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Parolă</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                placeholder="Minim 6 caractere"
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="h-12"
-              />
-            </div>
-            {error && (
-              <p className="text-sm text-center text-destructive">{error}</p>
-            )}
-            <Button type="submit" className="w-full h-12 font-semibold" disabled={loading}>
-              {loading ? "Se procesează..." : (isSignUp ? "Creează Cont" : "Intră în cont")}
-            </Button>
-          </form>
-          <div className="mt-6 text-center text-sm">
-            <button
-              onClick={toggleAuthMode}
-              className="cursor-pointer font-medium text-primary hover:underline"
-            >
-              {isSignUp
-                ? "Ai deja cont? Autentifică-te"
-                : "Nu ai cont? Creează unul acum"}
-            </button>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+        </Card>
+      </div>
+      <Footer />
     </div>
   );
 }

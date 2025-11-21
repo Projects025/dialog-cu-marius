@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
@@ -13,6 +12,7 @@ import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/errors";
 import type { FinancialData } from "@/lib/calculation";
 import SaaSLandingView from "@/components/marketing/SaaSLandingView";
+import Footer from "@/components/ui/Footer";
 
 
 async function saveLeadToFirestore(data: any, agentId: string | null) {
@@ -431,8 +431,8 @@ export default function ChatAppClient() {
     }
 
     return (
-        <>
-            <div className="container mx-auto h-full max-h-[-webkit-fill-available] p-0 flex flex-col">
+        <div className="flex flex-col h-full">
+            <div className="container mx-auto h-full max-h-[-webkit-fill-available] p-0 flex flex-col flex-grow">
                 {view === "landing" ? (
                     <LandingView onStart={handleStart} isFadingOut={isFadingOut} />
                 ) : (
@@ -466,6 +466,7 @@ export default function ChatAppClient() {
                     </>
                 )}
             </div>
-        </>
+            <Footer />
+        </div>
     );
 }

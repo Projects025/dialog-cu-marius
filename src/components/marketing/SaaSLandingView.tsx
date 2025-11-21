@@ -1,6 +1,9 @@
 "use client";
 import React from 'react';
 import Link from 'next/link';
+import Navbar from '@/components/ui/Navbar';
+import Footer from '@/components/ui/Footer';
+
 
 const SaaSLandingView = () => {
   const handleContactSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -14,14 +17,7 @@ const SaaSLandingView = () => {
 
   return (
     <div className='min-h-screen bg-background text-white'>
-      {/* Navbar Simplu */}
-      <nav className="absolute top-0 left-0 w-full z-50 px-6 py-6 flex justify-between items-center max-w-7xl mx-auto left-0 right-0">
-        <div className="font-bold text-xl tracking-tight">Dialog cu Marius<span className="text-amber-500">.</span></div>
-        <div className="flex gap-4 items-center">
-            <Link href="/login" className="px-5 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors">Autentificare</Link>
-            <Link href="/login?mode=signup" className="px-5 py-2 text-sm font-medium bg-white text-slate-950 rounded-full hover:bg-slate-200 transition-colors">Creează Cont</Link>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Fundal Dinamic */}
       <div className="absolute inset-0 w-full h-full pointer-events-none">
@@ -162,11 +158,7 @@ const SaaSLandingView = () => {
            </div>
         </section>
 
-         {/* Footer */}
-        <footer className="py-12 px-4 text-center border-t border-white/10">
-            <p className="text-sm text-slate-400">&copy; {new Date().getFullYear()} Dialog cu Marius. Toate drepturile rezervate.</p>
-        </footer>
-
+        <Footer />
       </div>
     </div>
   );
