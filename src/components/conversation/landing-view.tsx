@@ -83,15 +83,15 @@ const LandingView = ({ onStart, isFadingOut }: LandingViewProps) => {
         </div>
 
         {/* Conținutul principal al paginii */}
-        <main className="relative z-10 text-center p-6 max-w-2xl mx-auto flex flex-col items-center">
+        <main className="relative z-10 text-center p-6 max-w-xl mx-auto flex flex-col items-center">
 
-            <h1 className="text-3xl md:text-5xl font-bold text-white drop-shadow-lg mb-6">
+            <h1 className="text-3xl md:text-4xl font-bold text-white drop-shadow-lg mb-4">
                 <span>Cât ești de pregătit financiar</span>
-                <span className="block mt-2">pentru surprizele vieții?</span>
+                <span className="block mt-1">pentru surprizele vieții?</span>
             </h1>
 
-            <div className="mb-10 text-center">
-                <p className="text-lg md:text-xl text-gray-300 drop-shadow-md">
+            <div className="mb-8 text-center">
+                <p className="text-base md:text-lg text-gray-300 drop-shadow-md leading-relaxed">
                     <span>Fă o scurtă analiză și</span>
                     <span className="block mt-1">descoperă unde ești vulnerabil.</span>
                 </p>

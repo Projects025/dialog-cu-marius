@@ -68,7 +68,7 @@ const UserInput = ({ options, onResponse }: { options: any, onResponse: (value: 
                 value={inputValue}
                 onChange={handleInputChange}
                 onKeyPress={handleInputKeyPress}
-                className="bg-background h-12 text-base"
+                className="bg-background h-12 text-sm"
                 autoFocus
             />
             <Button type="submit" onClick={handleSendInput} disabled={!inputValue.trim() && options?.type !== 'number'} size="icon" className="h-12 w-12 flex-shrink-0">
@@ -81,7 +81,7 @@ const UserInput = ({ options, onResponse }: { options: any, onResponse: (value: 
 
 const ActionButtons = ({ options, onResponse }: { options: any[], onResponse: (value: any) => void }) => {
     return (
-        <div className="flex flex-col gap-3 w-full animate-in fade-in-50">
+        <div className="flex flex-col gap-2.5 w-full animate-in fade-in-50">
             {options?.map((option: any, index: number) => {
                 const isComplexOption = typeof option === 'object' && option !== null;
                 const label = isComplexOption ? option.label : option;
@@ -96,7 +96,7 @@ const ActionButtons = ({ options, onResponse }: { options: any[], onResponse: (v
                         variant={isPrimary ? "default" : "outline"}
                         disabled={isDisabled}
                         className={cn(
-                            "shadow-md justify-center py-3 min-h-[52px] h-auto text-base",
+                            "shadow-md justify-center py-2.5 min-h-[48px] h-auto text-sm",
                             isPrimary 
                                 ? "bg-amber-400 text-gray-900 font-bold hover:bg-amber-300"
                                 : "bg-background/80 backdrop-blur-sm border-border text-foreground hover:bg-accent",
@@ -147,27 +147,27 @@ const DateOfBirthPicker = ({ onDateSelect }: { onDateSelect: (date: Date) => voi
         <div className="flex flex-col gap-4 p-4 rounded-lg bg-transparent w-full">
              <div className="grid grid-cols-3 gap-3">
                 <div className="flex flex-col gap-1.5">
-                    <label htmlFor="day" className="text-sm font-medium text-foreground/80">Ziua</label>
+                    <label htmlFor="day" className="text-xs font-medium text-foreground/80">Ziua</label>
                     <Select onValueChange={setDay} value={day}>
-                        <SelectTrigger id="day" className="bg-background"><SelectValue placeholder="Zi" /></SelectTrigger>
+                        <SelectTrigger id="day" className="bg-background h-9 text-xs"><SelectValue placeholder="Zi" /></SelectTrigger>
                         <SelectContent>
                             {days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
                         </SelectContent>
                     </Select>
                 </div>
                  <div className="flex flex-col gap-1.5">
-                    <label htmlFor="month" className="text-sm font-medium text-foreground/80">Luna</label>
+                    <label htmlFor="month" className="text-xs font-medium text-foreground/80">Luna</label>
                     <Select onValueChange={setMonth} value={month}>
-                        <SelectTrigger id="month" className="bg-background"><SelectValue placeholder="Lună" /></SelectTrigger>
+                        <SelectTrigger id="month" className="bg-background h-9 text-xs"><SelectValue placeholder="Lună" /></SelectTrigger>
                         <SelectContent>
                             {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
                         </SelectContent>
                     </Select>
                 </div>
                  <div className="flex flex-col gap-1.5">
-                    <label htmlFor="year" className="text-sm font-medium text-foreground/80">Anul</label>
+                    <label htmlFor="year" className="text-xs font-medium text-foreground/80">Anul</label>
                     <Select onValueChange={setYear} value={year}>
-                        <SelectTrigger id="year" className="bg-background"><SelectValue placeholder="An" /></SelectTrigger>
+                        <SelectTrigger id="year" className="bg-background h-9 text-xs"><SelectValue placeholder="An" /></SelectTrigger>
                         <SelectContent>
                             {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
                         </SelectContent>
@@ -175,7 +175,7 @@ const DateOfBirthPicker = ({ onDateSelect }: { onDateSelect: (date: Date) => voi
                 </div>
             </div>
             {error && <p className="text-sm text-red-600">{error}</p>}
-            <Button onClick={handleConfirm} className="w-full h-12 mt-2">Confirmă</Button>
+            <Button onClick={handleConfirm} className="w-full h-11 mt-2">Confirmă</Button>
         </div>
     );
 };
@@ -244,7 +244,7 @@ const MultiChoiceList = ({ options, onConfirm }: { options: {id: string, label: 
 
     return (
         <div className="flex flex-col w-full bg-transparent max-h-96 animate-in fade-in-50">
-             <div className="flex-grow space-y-3">
+             <div className="flex-grow space-y-2.5">
                 {options.map((option, index) => {
                     const label = isComplexOption ? option.label : option;
                     const id = isComplexOption ? option.id : option;
@@ -256,17 +256,17 @@ const MultiChoiceList = ({ options, onConfirm }: { options: {id: string, label: 
                             key={index}
                             onClick={() => !isDisabled && toggleOption({id, label})}
                             className={cn(
-                                "flex items-center space-x-3 p-3 rounded-md cursor-pointer transition-colors duration-200 bg-background/80 backdrop-blur-sm border border-border text-foreground shadow-md justify-center min-h-[52px] h-auto text-base",
+                                "flex items-center space-x-3 p-3 rounded-md cursor-pointer transition-colors duration-200 bg-background/80 backdrop-blur-sm border border-border text-foreground shadow-md justify-center min-h-[48px] h-auto text-sm",
                                 selected.some(item => item.id === id) ? "bg-primary/20 text-primary-foreground border-primary" : "hover:bg-accent/50",
                                 isDisabled && "opacity-50 cursor-not-allowed hover:bg-transparent"
                             )}
                         >
-                            <span className="text-base font-medium text-center">{displayText}</span>
+                            <span className="font-medium text-center">{displayText}</span>
                         </div>
                     )
                 })}
             </div>
-            <div className="pt-3 flex-shrink-0">
+            <div className="pt-4 flex-shrink-0">
                 <Button
                     onClick={() => onConfirm(selected.map(s => s.id))}
                     disabled={selected.length === 0}
@@ -327,14 +327,14 @@ const ContactForm = ({ options, onResponse }: { options: any, onResponse: (data:
                         type={field.type}
                         placeholder={field.placeholder}
                         onChange={handleInputChange}
-                        className="bg-background h-12 text-base"
+                        className="bg-background h-12 text-sm"
                     />
                     {errors[field.name] && <p className="text-sm text-red-600 mt-1">{errors[field.name]}</p>}
                 </div>
             ))}
             <div className="flex items-center space-x-2">
                 <Checkbox id="gdpr" checked={gdprChecked} onCheckedChange={(checked) => setGdprChecked(checked as boolean)} />
-                <Label htmlFor="gdpr" className="text-sm font-medium leading-none text-foreground/80 cursor-pointer">{options?.gdpr || 'Sunt de acord cu prelucrarea datelor.'}</Label>
+                <Label htmlFor="gdpr" className="text-xs font-medium leading-none text-foreground/80 cursor-pointer">{options?.gdpr || 'Sunt de acord cu prelucrarea datelor.'}</Label>
             </div>
             {errors.gdpr && <p className="text-sm text-red-600">{errors.gdpr}</p>}
             <Button onClick={handleSubmit} className="w-full h-12 mt-2">{options?.buttonText || 'Trimite'}</Button>
@@ -464,7 +464,7 @@ const ChatView = ({ conversation, userAction, onResponse, progress, isConversati
         </div>
         
         <ScrollArea id="dialog-flow" className="flex-grow w-full px-4 md:px-6">
-            <div className="space-y-6">
+            <div className="space-y-3">
                 {conversation.map((message) => {
                     const content = renderMessageContent(message.content);
                     if (!content && message.content !== 0) return null;
@@ -473,7 +473,7 @@ const ChatView = ({ conversation, userAction, onResponse, progress, isConversati
                         <div
                             key={message.id}
                             className={cn(
-                            "flex items-end gap-3 w-full animate-in fade-in slide-in-from-bottom-5 duration-500",
+                            "flex items-end gap-2.5 w-full animate-in fade-in slide-in-from-bottom-5 duration-500",
                             message.author === "Marius" ? "justify-start" : "justify-end"
                             )}
                         >
@@ -486,7 +486,7 @@ const ChatView = ({ conversation, userAction, onResponse, progress, isConversati
                             )}
                             <div
                             className={cn(
-                                "max-w-md md:max-w-lg rounded-2xl px-4 py-3 shadow-md text-base",
+                                "max-w-md md:max-w-lg rounded-2xl px-4 py-2.5 shadow-md text-sm leading-relaxed",
                                 message.author === "Marius"
                                 ? "bg-secondary text-secondary-foreground rounded-bl-none"
                                 : "bg-primary text-primary-foreground rounded-br-none"
@@ -515,5 +515,3 @@ const ChatView = ({ conversation, userAction, onResponse, progress, isConversati
 };
 
 export default ChatView;
-
-    
