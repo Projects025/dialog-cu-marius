@@ -25,6 +25,133 @@ type StepData = {
     [key: string]: any;
 };
 
+// Componenta pentru cardul unui pas, extrasa pentru a gestiona starea locala
+const StepCard = ({ step, index, totalSteps, onStepChange, onMove, onDelete }: {
+    step: StepData,
+    index: number,
+    totalSteps: number,
+    onStepChange: (index: number, field: keyof StepData, value: any) => void,
+    onMove: (index: number, direction: 'up' | 'down') => void,
+    onDelete: (index: number) => void
+}) => {
+    // Stare locala pentru input-ul de optiuni, pentru a permite tastarea virgulei
+    const initialOptionsString = Array.isArray(step.options)
+        ? step.options.map(opt => typeof opt === 'object' ? opt.label : opt).join(', ')
+        : '';
+    const [optionsInput, setOptionsInput] = useState(initialOptionsString);
+
+    // Sincronizeaza starea locala daca pasul se schimba din exterior
+    useEffect(() => {
+        const newOptionsString = Array.isArray(step.options)
+            ? step.options.map(opt => typeof opt === 'object' ? opt.label : opt).join(', ')
+            : '';
+        setOptionsInput(newOptionsString);
+    }, [step.options]);
+
+    const handleOptionsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setOptionsInput(e.target.value); // Doar actualizeaza string-ul
+    };
+
+    const handleOptionsBlur = () => {
+        // La onBlur, proceseaza string-ul si trimite array-ul catre parinte
+        onStepChange(index, 'options', optionsInput);
+    };
+
+    return (
+        <div key={step.id} className="border-l-4 border-primary pl-4 py-4 rounded-r-lg bg-muted/30">
+            <div className="flex justify-between items-center mb-4">
+                <div className="flex items-center gap-4">
+                    <span className="font-bold text-lg text-foreground">Pasul {index + 1}</span>
+                    <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onMove(index, 'up')} disabled={index === 0}>
+                            <ArrowUp className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onMove(index, 'down')} disabled={index === totalSteps - 1}>
+                            <ArrowDown className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </div>
+                <Button variant="destructive" size="sm" onClick={() => onDelete(index)}>
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Șterge
+                </Button>
+            </div>
+            <div className="space-y-4 p-4 bg-background rounded-md">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor={`id-${step.id}`}>ID Pas (nemodificabil)</Label>
+                        <Input id={`id-${step.id}`} value={step.id} disabled className="font-mono text-muted-foreground"/>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor={`actionType-${step.id}`}>Tip Răspuns Utilizator</Label>
+                        <Select
+                            value={step.actionType}
+                            onValueChange={(value) => onStepChange(index, 'actionType', value)}
+                        >
+                            <SelectTrigger id={`actionType-${step.id}`}>
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="buttons">Butoane (Opțiuni Simple)</SelectItem>
+                                <SelectItem value="multi_choice">Butoane (Selecție Multiplă)</SelectItem>
+                                <SelectItem value="input">Câmp de text (Input)</SelectItem>
+                                <SelectItem value="date">Selector de Dată</SelectItem>
+                                <SelectItem value="form">Formular Contact (Final)</SelectItem>
+                                <SelectItem value="end">Final Conversație</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor={`message-${step.id}`}>Mesaj Agent</Label>
+                    <Textarea
+                        id={`message-${step.id}`}
+                        value={step.message}
+                        onChange={(e) => onStepChange(index, 'message', e.target.value)}
+                        rows={3}
+                        placeholder="Ce mesaj vede utilizatorul în acest pas?"
+                    />
+                </div>
+                {(step.actionType === 'buttons' || step.actionType === 'multi_choice') && (
+                    <div className="space-y-2">
+                        <Label htmlFor={`options-${step.id}`}>Opțiuni Butoane (separate prin virgulă)</Label>
+                        <Input
+                            id={`options-${step.id}`}
+                            value={optionsInput}
+                            onChange={handleOptionsChange}
+                            onBlur={handleOptionsBlur}
+                            placeholder="Ex: Da, Nu, Poate"
+                        />
+                    </div>
+                )}
+                {step.actionType === 'form' && step.options && (
+                    <div className="space-y-4 border-t border-dashed pt-4 mt-4">
+                        <p className="text-sm text-muted-foreground">Acest pas va afișa formularul standard de contact (Nume, Email, Telefon).</p>
+                        <div className="space-y-2">
+                            <Label htmlFor={`form-button-${step.id}`}>Text Buton Trimitere</Label>
+                            <Input
+                                id={`form-button-${step.id}`}
+                                value={step.options.buttonText || ""}
+                                onChange={(e) => onStepChange(index, 'options', { ...step.options, buttonText: e.target.value })}
+                                placeholder="Ex: Trimite datele"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor={`form-gdpr-${step.id}`}>Text Acord GDPR</Label>
+                            <Textarea
+                                id={`form-gdpr-${step.id}`}
+                                value={step.options.gdpr || ""}
+                                onChange={(e) => onStepChange(index, 'options', { ...step.options, gdpr: e.target.value })}
+                                rows={2}
+                            />
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
 // Algoritm de sortare a pașilor ca o listă înlănțuită
 const sortStepsByFlow = (flowObject: { [key: string]: any }, startStepId?: string): StepData[] => {
     if (!flowObject || Object.keys(flowObject).length === 0) {
@@ -160,21 +287,27 @@ function FormEditor() {
                         ]
                     };
                 } else if (value === 'buttons' || value === 'multi_choice') {
-                    stepToUpdate.options = [];
+                    // Când schimbăm la buttons/multi_choice, inițializăm cu un array gol sau păstrăm ce e compatibil.
+                    stepToUpdate.options = Array.isArray(stepToUpdate.options) ? stepToUpdate.options : [];
                 } else {
                     delete stepToUpdate.options;
                 }
             } else if (field === 'options') {
-                if (stepToUpdate.actionType === 'buttons' || stepToUpdate.actionType === 'multi_choice') {
+                 if (stepToUpdate.actionType === 'buttons' || stepToUpdate.actionType === 'multi_choice') {
+                    // Această logică este acum gestionată de onBlur în StepCard
                     if (typeof value === 'string') {
                         const optionsArray = value.split(',').map(s => s.trim()).filter(Boolean);
                          if (stepToUpdate.actionType === 'multi_choice') {
-                            stepToUpdate.options = optionsArray.map(opt => ({ label: opt, id: opt.toLowerCase().replace(/\s+/g, '_') }));
+                            // Convertește în format { label, id } dacă nu este deja
+                            stepToUpdate.options = optionsArray.map(opt => {
+                                if (typeof opt === 'object' && opt.label) return opt;
+                                return { label: opt, id: opt.toLowerCase().replace(/\s+/g, '_') };
+                            });
                         } else {
                             stepToUpdate.options = optionsArray;
                         }
                     }
-                } else if (stepToUpdate.actionType === 'form') {
+                 } else if (stepToUpdate.actionType === 'form') {
                      // Asigură că 'options' este un obiect înainte de a-l actualiza
                     const currentOptions = typeof stepToUpdate.options === 'object' && stepToUpdate.options !== null && !Array.isArray(stepToUpdate.options)
                         ? stepToUpdate.options
@@ -308,103 +441,17 @@ function FormEditor() {
                     </div>
                     
                     <div className="space-y-4">
-                        {steps.map((step, index) => {
-                             const optionsAsString = Array.isArray(step.options) 
-                                ? step.options.map(opt => typeof opt === 'object' ? opt.label : opt).join(', ')
-                                : '';
-                            
-                            return (
-                            <div key={step.id} className="border-l-4 border-primary pl-4 py-4 rounded-r-lg bg-muted/30">
-                                <div className="flex justify-between items-center mb-4">
-                                    <div className="flex items-center gap-4">
-                                        <span className="font-bold text-lg text-foreground">Pasul {index + 1}</span>
-                                        <div className="flex gap-1">
-                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => moveStep(index, 'up')} disabled={index === 0}>
-                                                <ArrowUp className="h-4 w-4" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => moveStep(index, 'down')} disabled={index === steps.length - 1}>
-                                                <ArrowDown className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </div>
-                                    <Button variant="destructive" size="sm" onClick={() => handleDeleteStep(index)}>
-                                        <Trash2 className="mr-2 h-4 w-4" />
-                                        Șterge
-                                    </Button>
-                                </div>
-                                <div className="space-y-4 p-4 bg-background rounded-md">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                         <div className="space-y-2">
-                                            <Label htmlFor={`id-${step.id}`}>ID Pas (nemodificabil)</Label>
-                                            <Input id={`id-${step.id}`} value={step.id} disabled className="font-mono text-muted-foreground"/>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor={`actionType-${step.id}`}>Tip Răspuns Utilizator</Label>
-                                            <Select
-                                                value={step.actionType}
-                                                onValueChange={(value) => handleStepChange(index, 'actionType', value)}
-                                            >
-                                                <SelectTrigger id={`actionType-${step.id}`}>
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="buttons">Butoane (Opțiuni Simple)</SelectItem>
-                                                    <SelectItem value="multi_choice">Butoane (Selecție Multiplă)</SelectItem>
-                                                    <SelectItem value="input">Câmp de text (Input)</SelectItem>
-                                                    <SelectItem value="date">Selector de Dată</SelectItem>
-                                                    <SelectItem value="form">Formular Contact (Final)</SelectItem>
-                                                    <SelectItem value="end">Final Conversație</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor={`message-${step.id}`}>Mesaj Agent</Label>
-                                        <Textarea
-                                            id={`message-${step.id}`}
-                                            value={step.message}
-                                            onChange={(e) => handleStepChange(index, 'message', e.target.value)}
-                                            rows={3}
-                                            placeholder="Ce mesaj vede utilizatorul în acest pas?"
-                                        />
-                                    </div>
-                                     {(step.actionType === 'buttons' || step.actionType === 'multi_choice') && (
-                                        <div className="space-y-2">
-                                            <Label htmlFor={`options-${step.id}`}>Opțiuni Butoane (separate prin virgulă)</Label>
-                                            <Input
-                                                id={`options-${step.id}`}
-                                                value={optionsAsString}
-                                                onChange={(e) => handleStepChange(index, 'options', e.target.value)}
-                                                placeholder="Ex: Da, Nu, Poate"
-                                            />
-                                        </div>
-                                    )}
-                                     {step.actionType === 'form' && step.options && (
-                                        <div className="space-y-4 border-t border-dashed pt-4 mt-4">
-                                            <p className="text-sm text-muted-foreground">Acest pas va afișa formularul standard de contact (Nume, Email, Telefon).</p>
-                                            <div className="space-y-2">
-                                                <Label htmlFor={`form-button-${step.id}`}>Text Buton Trimitere</Label>
-                                                <Input
-                                                    id={`form-button-${step.id}`}
-                                                    value={step.options.buttonText || ""}
-                                                    onChange={(e) => handleStepChange(index, 'options', { buttonText: e.target.value })}
-                                                    placeholder="Ex: Trimite datele"
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor={`form-gdpr-${step.id}`}>Text Acord GDPR</Label>
-                                                <Textarea
-                                                    id={`form-gdpr-${step.id}`}
-                                                    value={step.options.gdpr || ""}
-                                                    onChange={(e) => handleStepChange(index, 'options', { gdpr: e.target.value })}
-                                                    rows={2}
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        )})}
+                        {steps.map((step, index) => (
+                           <StepCard
+                                key={step.id}
+                                step={step}
+                                index={index}
+                                totalSteps={steps.length}
+                                onStepChange={handleStepChange}
+                                onMove={moveStep}
+                                onDelete={handleDeleteStep}
+                           />
+                        ))}
                     </div>
 
                     <div className="mt-8 border-t pt-6 flex justify-center">
@@ -462,3 +509,5 @@ export default function FormEditorPage() {
         </Suspense>
     );
 }
+
+    
