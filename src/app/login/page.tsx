@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
@@ -12,8 +12,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import Navbar from "@/components/ui/Navbar";
 import Footer from "@/components/ui/Footer";
 
-
-export default function LoginPage() {
+// Componenta care conține logica, pentru a putea fi înfășurată în Suspense
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isSignUp, setIsSignUp] = useState(false);
@@ -171,4 +171,13 @@ export default function LoginPage() {
       <Footer />
     </div>
   );
+}
+
+// Componenta principală exportată, care înfășoară logica în Suspense
+export default function LoginPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background text-foreground">Se încarcă...</div>}>
+            <LoginContent />
+        </Suspense>
+    );
 }
