@@ -15,6 +15,22 @@ import SaaSLandingView from "@/components/marketing/SaaSLandingView";
 import Footer from "@/components/ui/Footer";
 
 
+async function trackConversationStart(agentId: string, templateId: string) {
+    try {
+        const analyticsCollection = collection(db, "analytics");
+        await addDoc(analyticsCollection, {
+            agentId,
+            templateId,
+            type: 'conversation_start',
+            timestamp: serverTimestamp()
+        });
+    } catch (error) {
+        // We don't want to block the user if tracking fails, so just log it.
+        console.error("Error tracking conversation start:", error);
+    }
+}
+
+
 async function saveLeadToFirestore(data: any, agentId: string | null) {
     if (!agentId) {
         console.error("Eroare critică: ID-ul agentului lipsește la trimitere.");
@@ -171,6 +187,7 @@ const formatMessage = (template: string, data: any): string => {
 export default function ChatAppClient() {
     const searchParams = useSearchParams();
     const agentIdRef = useRef<string | null>(null);
+    const hasTrackedStartRef = useRef(false);
     const [hasCheckedParams, setHasCheckedParams] = useState(false);
 
     useEffect(() => {
@@ -380,6 +397,12 @@ export default function ChatAppClient() {
             const activeFormId = agentDoc.data().activeFormId;
             if (!activeFormId) {
                 throw new Error("Acest agent nu are un formular activ configurat.");
+            }
+
+            // Track conversation start
+            if (!hasTrackedStartRef.current) {
+                await trackConversationStart(agentId, activeFormId);
+                hasTrackedStartRef.current = true;
             }
 
             const formRef = doc(db, "formTemplates", activeFormId);

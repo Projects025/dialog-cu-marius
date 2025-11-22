@@ -3,27 +3,22 @@
 
 import { useState, useEffect } from "react";
 import { User, onAuthStateChanged } from "firebase/auth";
-import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, getDoc, Timestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebaseConfig";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Users, Target, AreaChart, Copy } from 'lucide-react';
+import { Users, Target, AreaChart, Copy, Eye, BarChart, CalendarClock } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
 interface Stats {
-    totalClients: number;
-    convertedClients: number;
+    totalVisitors: number;
+    totalLeads: number;
     conversionRate: number;
+    leadsThisWeek: number;
 }
 
-const StatCard = ({ title, value, icon: Icon, formatAsPercent=false }: { title: string, value: string | number, icon: React.ElementType, formatAsPercent?: boolean }) => {
-    
-    let displayValue: string | number = value;
-     if (formatAsPercent) {
-        displayValue = `${value}%`;
-    }
-
+const StatCard = ({ title, value, icon: Icon, description }: { title: string, value: string | number, icon: React.ElementType, description?: string }) => {
     return (
         <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
@@ -31,7 +26,8 @@ const StatCard = ({ title, value, icon: Icon, formatAsPercent=false }: { title: 
                 <Icon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent className="p-4 pt-0">
-                <div className="text-2xl font-bold">{displayValue}</div>
+                <div className="text-2xl font-bold">{value}</div>
+                {description && <p className="text-xs text-muted-foreground">{description}</p>}
             </CardContent>
         </Card>
     )
@@ -68,30 +64,42 @@ export default function DashboardSummaryPage() {
                         setActiveFormId(agentDoc.data().activeFormId);
                     }
 
-                    // Fetch Leads for Stats
+                    // --- Fetch Analytics Data ---
+                    const analyticsQuery = query(
+                        collection(db, "analytics"),
+                        where("agentId", "==", user.uid)
+                    );
+                    const analyticsSnapshot = await getDocs(analyticsQuery);
+                    const totalVisitors = analyticsSnapshot.size;
+
+                    // --- Fetch Leads Data ---
                     const leadsQuery = query(
                         collection(db, "leads"),
                         where("agentId", "==", user.uid)
                     );
-                    const querySnapshot = await getDocs(leadsQuery);
-                    
-                    let totalClients = 0;
-                    let convertedClients = 0;
+                    const leadsSnapshot = await getDocs(leadsQuery);
+                    const totalLeads = leadsSnapshot.size;
 
-                    querySnapshot.forEach(doc => {
-                        const lead = doc.data();
-                        totalClients++;
-                        if (lead.status === 'Convertit') {
-                            convertedClients++;
+                    // --- Calculate Metrics ---
+                    const conversionRate = totalVisitors > 0 ? ((totalLeads / totalVisitors) * 100).toFixed(1) + '%' : "0%";
+                    
+                    const sevenDaysAgo = new Date();
+                    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                    
+                    let leadsThisWeek = 0;
+                    leadsSnapshot.forEach(doc => {
+                        const leadData = doc.data();
+                        const timestamp = (leadData.timestamp as Timestamp)?.toDate();
+                        if (timestamp && timestamp >= sevenDaysAgo) {
+                            leadsThisWeek++;
                         }
                     });
 
-                    const conversionRate = totalClients > 0 ? (convertedClients / totalClients) * 100 : 0;
-                    
                     setStats({
-                        totalClients,
-                        convertedClients,
-                        conversionRate: Math.round(conversionRate * 100) / 100, // round to 2 decimals
+                        totalVisitors,
+                        totalLeads,
+                        conversionRate: parseFloat(conversionRate), // Store as number for potential future use
+                        leadsThisWeek,
                     });
 
                 } catch (error) {
@@ -131,10 +139,11 @@ export default function DashboardSummaryPage() {
             {loading ? (
                 <p>Se încarcă statisticile...</p>
             ) : stats ? (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                   <StatCard title="Total Clienți" value={stats.totalClients} icon={Users} />
-                   <StatCard title="Clienți Convertiți" value={stats.convertedClients} icon={Target} />
-                   <StatCard title="Rata de Conversie" value={stats.conversionRate} icon={AreaChart} formatAsPercent={true} />
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                   <StatCard title="Conversații Începute" value={stats.totalVisitors} icon={Eye} description="Vizitatori care au deschis chat-ul" />
+                   <StatCard title="Lead-uri Generate" value={stats.totalLeads} icon={Target} description="Clienți care au finalizat formularul" />
+                   <StatCard title="Rata de Conversie" value={`${stats.conversionRate}%`} icon={BarChart} description="Vizitatori → Lead-uri" />
+                   <StatCard title="Lead-uri Noi" value={stats.leadsThisWeek} icon={CalendarClock} description="În ultimele 7 zile"/>
                 </div>
             ) : (
                 <p>Nu s-au putut încărca statisticile.</p>
