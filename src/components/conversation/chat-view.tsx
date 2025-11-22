@@ -422,30 +422,44 @@ const ChatView = ({ conversation, userAction, onResponse, progress, isConversati
     }
   };
   
-  const renderMessageContent = (content: any) => {
+  const renderMessageContent = (content: any, author: 'Marius' | 'user') => {
+    // Ignorăm conținutul non-string (componente, null, etc.)
     if (typeof content !== 'string') {
-        if (typeof content === 'number' && content !== 0) {
-            return content.toLocaleString('ro-RO');
-        }
-        if (content === 0) return null;
-        return content;
+      return content;
     }
 
-    if (!content.trim()) return null;
+    // PASUL 1: Normalizare
+    // Transformăm secvențele literale "\n" (două caractere) în caracterul real de linie nouă
+    // Asta rezolvă problema textului "Salut!\n\nSunt Marius"
+    const normalizedContent = content.replace(/\\n/g, '\n');
 
-    const lines = content.split('\\n');
+    // PASUL 2: Împărțire pe linii
+    const lines = normalizedContent.split('\n');
 
     return (
-        <p className="whitespace-pre-wrap">
-            {lines.map((line, index) => (
-                <React.Fragment key={index}>
-                    {line}
-                    {index < lines.length - 1 && <br />}
-                </React.Fragment>
-            ))}
-        </p>
+      <div className="text-sm md:text-base leading-relaxed text-white">
+        {lines.map((line, i) => {
+          // PASUL 3: Detectare Bold (**text**)
+          // Spargem linia în bucăți bazat pe markerii de bold
+          const parts = line.split(/\*\*(.*?)\*\*/g);
+
+          return (
+            <span key={i} className="block min-h-[1.2em]">
+              {parts.map((part, j) => {
+                // Elementele impare (1, 3, 5...) sunt cele dintre steluțe -> BOLD
+                if (j % 2 === 1) {
+                  return <strong key={j} className="font-bold text-amber-400">{part}</strong>;
+                }
+                // Elementele pare sunt text normal
+                return <span key={j}>{part}</span>;
+              })}
+            </span>
+          );
+        })}
+      </div>
     );
   };
+
 
   if (isLoading) {
     return (
@@ -481,8 +495,8 @@ const ChatView = ({ conversation, userAction, onResponse, progress, isConversati
         <ScrollArea id="dialog-flow" className="flex-grow w-full px-4 md:px-6">
             <div className="space-y-3">
                 {conversation.map((message) => {
-                    const content = renderMessageContent(message.content);
-                    if (!content) return null;
+                    const content = renderMessageContent(message.content, message.author);
+                    if (!content && typeof content !== 'number') return null;
 
                     return (
                         <div
