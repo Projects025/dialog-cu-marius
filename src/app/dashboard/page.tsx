@@ -6,14 +6,14 @@ import { User, onAuthStateChanged } from "firebase/auth";
 import { collection, query, where, getDocs, doc, getDoc, Timestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebaseConfig";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Users, Target, AreaChart, Copy, Eye, BarChart, CalendarClock } from 'lucide-react';
+import { Users, Target, BarChart, Copy, CalendarClock, UserCheck } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
 interface Stats {
-    totalVisitors: number;
     totalLeads: number;
+    convertedLeads: number;
     conversionRate: number;
     leadsThisWeek: number;
 }
@@ -64,40 +64,30 @@ export default function DashboardSummaryPage() {
                         setActiveFormId(agentDoc.data().activeFormId);
                     }
 
-                    // --- Fetch Analytics Data ---
-                    const analyticsQuery = query(
-                        collection(db, "analytics"),
-                        where("agentId", "==", user.uid)
-                    );
-                    const analyticsSnapshot = await getDocs(analyticsQuery);
-                    const totalVisitors = analyticsSnapshot.size;
-
                     // --- Fetch Leads Data ---
                     const leadsQuery = query(
                         collection(db, "leads"),
                         where("agentId", "==", user.uid)
                     );
                     const leadsSnapshot = await getDocs(leadsQuery);
-                    const totalLeads = leadsSnapshot.size;
+                    const allLeads = leadsSnapshot.docs.map(doc => doc.data());
+                    const totalLeads = allLeads.length;
 
                     // --- Calculate Metrics ---
-                    const conversionRate = totalVisitors > 0 ? ((totalLeads / totalVisitors) * 100).toFixed(1) + '%' : "0%";
+                    const convertedLeads = allLeads.filter(lead => lead.status === 'Convertit').length;
+                    const conversionRate = totalLeads > 0 ? ((convertedLeads / totalLeads) * 100).toFixed(1) + '%' : "0%";
                     
                     const sevenDaysAgo = new Date();
                     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
                     
-                    let leadsThisWeek = 0;
-                    leadsSnapshot.forEach(doc => {
-                        const leadData = doc.data();
-                        const timestamp = (leadData.timestamp as Timestamp)?.toDate();
-                        if (timestamp && timestamp >= sevenDaysAgo) {
-                            leadsThisWeek++;
-                        }
-                    });
+                    const leadsThisWeek = allLeads.filter(lead => {
+                         const timestamp = (lead.timestamp as Timestamp)?.toDate();
+                         return timestamp && timestamp >= sevenDaysAgo;
+                    }).length;
 
                     setStats({
-                        totalVisitors,
                         totalLeads,
+                        convertedLeads,
                         conversionRate: parseFloat(conversionRate), // Store as number for potential future use
                         leadsThisWeek,
                     });
@@ -140,9 +130,9 @@ export default function DashboardSummaryPage() {
                 <p>Se încarcă statisticile...</p>
             ) : stats ? (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                   <StatCard title="Conversații Începute" value={stats.totalVisitors} icon={Eye} description="Vizitatori care au deschis chat-ul" />
-                   <StatCard title="Lead-uri Generate" value={stats.totalLeads} icon={Target} description="Clienți care au finalizat formularul" />
-                   <StatCard title="Rata de Conversie" value={`${stats.conversionRate}%`} icon={BarChart} description="Vizitatori → Lead-uri" />
+                   <StatCard title="Total Clienți" value={stats.totalLeads} icon={Users} description="Numărul total de lead-uri generate" />
+                   <StatCard title="Clienți Convertiți" value={stats.convertedLeads} icon={UserCheck} description="Lead-uri cu status 'Convertit'" />
+                   <StatCard title="Rata de Conversie" value={`${stats.conversionRate}%`} icon={BarChart} description="Din totalul lead-urilor" />
                    <StatCard title="Lead-uri Noi" value={stats.leadsThisWeek} icon={CalendarClock} description="În ultimele 7 zile"/>
                 </div>
             ) : (
