@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
 interface Stats {
+    totalVisitors: number;
     totalLeads: number;
     convertedLeads: number;
     conversionRate: number;
@@ -72,6 +73,15 @@ export default function DashboardSummaryPage() {
                     const leadsSnapshot = await getDocs(leadsQuery);
                     const allLeads = leadsSnapshot.docs.map(doc => doc.data());
                     const totalLeads = allLeads.length;
+                    
+                    // --- Fetch Analytics Data (Visitors) ---
+                    const analyticsQuery = query(
+                        collection(db, 'analytics'),
+                        where('agentId', '==', user.uid),
+                        where('type', '==', 'conversation_start')
+                    );
+                    const analyticsSnapshot = await getDocs(analyticsQuery);
+                    const totalVisitors = analyticsSnapshot.size;
 
                     // --- Calculate Metrics ---
                     const convertedLeads = allLeads.filter(lead => lead.status === 'Convertit').length;
@@ -86,6 +96,7 @@ export default function DashboardSummaryPage() {
                     }).length;
 
                     setStats({
+                        totalVisitors,
                         totalLeads,
                         convertedLeads,
                         conversionRate: parseFloat(conversionRate), // Store as number for potential future use
@@ -120,6 +131,9 @@ export default function DashboardSummaryPage() {
             });
         });
     };
+    
+    const abandonRate = stats ? (stats.totalVisitors > 0 ? (((stats.totalVisitors - stats.totalLeads) / stats.totalVisitors) * 100).toFixed(0) : 0) : 0;
+
 
     return (
         <>
@@ -130,9 +144,9 @@ export default function DashboardSummaryPage() {
                 <p>Se încarcă statisticile...</p>
             ) : stats ? (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                   <StatCard title="Total Clienți" value={stats.totalLeads} icon={Users} description="Numărul total de lead-uri generate" />
+                   <StatCard title="Conversații Începute" value={stats.totalVisitors} icon={Users} description={`${stats.totalVisitors - stats.totalLeads} nu au finalizat (${abandonRate}% abandon)`} />
+                   <StatCard title="Lead-uri Generate" value={stats.totalLeads} icon={Target} description="Clienți care au completat formularul" />
                    <StatCard title="Clienți Convertiți" value={stats.convertedLeads} icon={UserCheck} description="Lead-uri cu status 'Convertit'" />
-                   <StatCard title="Rata de Conversie" value={`${stats.conversionRate}%`} icon={BarChart} description="Din totalul lead-urilor" />
                    <StatCard title="Lead-uri Noi" value={stats.leadsThisWeek} icon={CalendarClock} description="În ultimele 7 zile"/>
                 </div>
             ) : (
@@ -163,5 +177,3 @@ export default function DashboardSummaryPage() {
         </>
     );
 }
-
-    
