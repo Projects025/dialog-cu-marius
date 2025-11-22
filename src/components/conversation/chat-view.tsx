@@ -12,6 +12,7 @@ import { Checkbox } from "../ui/checkbox";
 import { Label } from "../ui/label";
 import TypingIndicator from "./typing-indicator";
 import { ScrollArea } from "../ui/scroll-area";
+import React from "react";
 
 
 export type Message = {
@@ -422,15 +423,29 @@ const ChatView = ({ conversation, userAction, onResponse, progress, isConversati
   };
   
   const renderMessageContent = (content: any) => {
-    if ((typeof content !== 'string' || !content.trim()) && typeof content !== 'number') {
-        return null;
+    if (typeof content !== 'string') {
+        if (typeof content === 'number' && content !== 0) {
+            return content.toLocaleString('ro-RO');
+        }
+        if (content === 0) return null;
+        return content;
     }
-    const createMarkup = () => {
-        const contentString = typeof content === 'number' ? content.toLocaleString('ro-RO') : content;
-        return { __html: contentString.replace(/\n/g, '<br />') };
-    };
-    return <p className="whitespace-pre-wrap" dangerouslySetInnerHTML={createMarkup()} />;
-};
+
+    if (!content.trim()) return null;
+
+    const lines = content.split('\\n');
+
+    return (
+        <p className="whitespace-pre-wrap">
+            {lines.map((line, index) => (
+                <React.Fragment key={index}>
+                    {line}
+                    {index < lines.length - 1 && <br />}
+                </React.Fragment>
+            ))}
+        </p>
+    );
+  };
 
   if (isLoading) {
     return (
@@ -467,7 +482,7 @@ const ChatView = ({ conversation, userAction, onResponse, progress, isConversati
             <div className="space-y-3">
                 {conversation.map((message) => {
                     const content = renderMessageContent(message.content);
-                    if (!content && message.content !== 0) return null;
+                    if (!content) return null;
 
                     return (
                         <div
@@ -515,3 +530,5 @@ const ChatView = ({ conversation, userAction, onResponse, progress, isConversati
 };
 
 export default ChatView;
+
+    
