@@ -4,9 +4,19 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, type User } from "firebase/auth";
-import {
-  db, auth, doc, getDoc, setDoc, addDoc, deleteDoc, updateDoc, collection, query, getDocs, serverTimestamp
-} from "@/lib/firebaseConfig";
+import { db, auth } from "@/lib/firebaseConfig";
+import { 
+  doc, 
+  getDoc, 
+  setDoc, 
+  addDoc, 
+  deleteDoc, 
+  updateDoc, 
+  collection, 
+  query, 
+  getDocs, 
+  serverTimestamp 
+} from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -328,7 +338,6 @@ export default function FormsPage() {
         </Button>
       </div>
 
-      {/* --- Forms Grid --- */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {userForms.map(form => (
            <Card key={form.id} className={`bg-gray-900 border ${activeFormId === form.id ? 'border-green-500' : 'border-gray-800'}`}>
@@ -349,7 +358,6 @@ export default function FormsPage() {
         ))}
       </div>
 
-      {/* --- Templates --- */}
       <div className="mt-8">
           <h2 className="text-xl font-semibold mb-4 text-gray-300">Șabloane Standard</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -364,7 +372,6 @@ export default function FormsPage() {
           </div>
       </div>
 
-      {/* --- Admin Zone --- */}
       <div className="mt-12 pt-6 border-t border-gray-800">
         <button onClick={() => setShowMaintenance(!showMaintenance)} className="text-xs text-gray-600 hover:text-gray-400">
             🛠️ Opțiuni Avansate
