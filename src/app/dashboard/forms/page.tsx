@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -37,7 +38,7 @@ interface FormTemplate {
 }
 
 // Definim email-ul administratorului aici
-const ADMIN_EMAIL = "admin@email.com";
+const ADMIN_EMAIL = "alinmflavius@gmail.com";
 
 export default function FormsPage() {
   const router = useRouter();
@@ -412,18 +413,20 @@ export default function FormsPage() {
       </div>
 
       {/* --- Zona de Administrare --- */}
-      <div className="mt-12 pt-6 border-t border-gray-800">
-        <button onClick={() => setShowMaintenance(!showMaintenance)} className="text-xs text-gray-600 hover:text-gray-400">
-            🛠️ Opțiuni Avansate
-        </button>
-        {showMaintenance && (
-            <div className="mt-4 p-4 bg-red-900/10 border border-red-900/30 rounded">
-                <Button variant="destructive" onClick={restoreMasterTemplate}>
-                    <AlertTriangle className="w-4 h-4 mr-2"/> Regenerează Șablon Master
-                </Button>
-            </div>
-        )}
-      </div>
+      {isAdmin && (
+        <div className="mt-12 pt-6 border-t border-gray-800">
+          <button onClick={() => setShowMaintenance(!showMaintenance)} className="text-xs text-gray-600 hover:text-gray-400">
+              🛠️ Opțiuni Avansate
+          </button>
+          {showMaintenance && (
+              <div className="mt-4 p-4 bg-red-900/10 border border-red-900/30 rounded">
+                  <Button variant="destructive" onClick={restoreMasterTemplate}>
+                      <AlertTriangle className="w-4 h-4 mr-2"/> Regenerează Șablon Master
+                  </Button>
+              </div>
+          )}
+        </div>
+      )}
 
       {/* --- DIALOGURI MODALE --- */}
       <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
