@@ -36,12 +36,16 @@ interface FormTemplate {
   createdAt?: any;
 }
 
+// Definim email-ul administratorului aici
+const ADMIN_EMAIL = "admin@email.com";
+
 export default function FormsPage() {
   const router = useRouter();
   const { toast } = useToast();
   
   // State principal
   const [user, setUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [formTemplates, setFormTemplates] = useState<FormTemplate[]>([]);
   const [activeFormId, setActiveFormId] = useState<string | null>(null);
@@ -73,6 +77,8 @@ export default function FormsPage() {
         router.push("/login");
       } else {
         setUser(currentUser);
+        // Verificăm dacă utilizatorul este admin
+        setIsAdmin(currentUser.email === ADMIN_EMAIL);
         // Fetch data imediat ce avem userul
         fetchData(currentUser);
       }
@@ -199,7 +205,7 @@ export default function FormsPage() {
 
   const restoreMasterTemplate = () => {
     setConfirmTitle("Regenerare Master");
-    setConfirmDescription("ATENȚIE: Se va regenera formularul Master cu toate cele 4 fluxuri (Deces, Pensie, Studii, Sănătate) și logica nouă. Ești sigur?");
+    setConfirmDescription("ATENȚIE: Se va regenera formularul Master cu cele 4 fluxuri. Ești sigur?");
     setConfirmButtonText("Da, Regenerează");
     setConfirmButtonVariant("destructive");
 
@@ -321,9 +327,9 @@ export default function FormsPage() {
                 buttonText: "Trimite",
                 gdpr: "Sunt de acord.",
                 fields: [
-                  { name: "name", placeholder: "Nume", type: "text", required: true },
-                  { name: "phone", placeholder: "Telefon", type: "tel", required: true },
-                  { name: "email", placeholder: "Email", type: "email", required: true }
+                  { name: "name", placeholder: "Nume Prenume", type: "text", required: true },
+                  { name: "email", placeholder: "Email", type: "email", required: true },
+                  { name: "phone", placeholder: "Telefon", type: "tel", required: true }
                 ]
               },
               nextStep: "thank_you_final"
