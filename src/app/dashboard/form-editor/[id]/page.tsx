@@ -1,7 +1,8 @@
+
 "use client";
 
 import { useState, useEffect, Suspense, useCallback } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { db, auth } from '@/lib/firebaseConfig';
@@ -241,8 +242,9 @@ const sortStepsByFlow = (flowObject: { [key: string]: any }, startStepId?: strin
 };
 
 
-function FormEditor({ params }: { params: { id: string } }) {
-    const formId = params.id;
+function FormEditor() {
+    const params = useParams();
+    const formId = params.id as string;
     const [user, setUser] = useState<User | null>(null);
     const [formTemplate, setFormTemplate] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
@@ -447,6 +449,8 @@ function FormEditor({ params }: { params: { id: string } }) {
     );
 }
 
-export default function FormEditorPage({ params }: { params: { id: string } }) {
-    return ( <Suspense fallback={<div className="text-center mt-8">Se încarcă...</div>}> <FormEditor params={params}/> </Suspense> );
+export default function FormEditorPage() {
+    return ( <Suspense fallback={<div className="text-center mt-8">Se încarcă...</div>}> <FormEditor /> </Suspense> );
 }
+
+    
