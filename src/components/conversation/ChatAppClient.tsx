@@ -134,57 +134,83 @@ const calculateDynamicDelay = (text: string): number => {
 
 const performDynamicCalculations = (data: any) => {
     const newData = { ...data };
-
+    
+    // Helper: Extrage numere din string-uri (ex: "15 ani" -> 15, "4.322" -> 4322)
     const parse = (val: any) => {
         if (!val) return 0;
         if (typeof val === 'number') return val;
-        // Parse numbers that might have dots for thousands
+        // Păstrează doar cifrele și punctul zecimal
         const clean = String(val).replace(/\./g, '').replace(/,/g, '.').replace(/[^0-9.]/g, '');
         return Number(clean) || 0;
     };
-    
-    // Convert '3 ani' to 3
-    const parseYears = (val: any) => {
-        if (!val) return 0;
-        if (typeof val === 'number') return val;
-        const match = String(val).match(/\d+/);
-        return match ? Number(match[0]) : 0;
-    }
 
-    // === SCENARIUL 1: DECES ===
-    const deces_period = parseYears(newData.deces_ask_period);
-    const deces_monthly = parse(newData.deces_ask_monthly_sum);
-    if (deces_monthly && deces_period) {
-        newData.deficit1_deces = deces_monthly * deces_period * 12;
+    // =================================================
+    // 1. CALCULE PENTRU DECES
+    // =================================================
+    // Verificăm dacă suntem pe fluxul de deces (dacă avem date specifice)
+    if (newData.deces_ask_monthly_sum || newData.deces_ask_period) {
+        // Deficit 1: Suma Lunară * Ani * 12
+        const sum = parse(newData.deces_ask_monthly_sum);
+        const years = parse(newData.deces_ask_period);
+        newData.deficit1 = sum * years * 12;
         
-        const bruteDeficit = newData.deficit1_deces + parse(newData.deces_ask_event_costs) + parse(newData.deces_ask_projects) + parse(newData.deces_ask_debts);
-        newData.bruteDeficit_deces = bruteDeficit;
-
-        newData.finalDeficit_deces = bruteDeficit - (parse(newData.deces_ask_insurance) + parse(newData.deces_ask_savings));
+        // Deficit Brut: Deficit 1 + Eveniment + Proiecte + Datorii
+        const costs = parse(newData.deces_ask_event_costs) + 
+                      parse(newData.deces_ask_projects) + 
+                      parse(newData.deces_ask_debts);
+        newData.bruteDeficit = newData.deficit1 + costs;
+        
+        // Deficit Final: Brut - (Asigurări + Economii)
+        const resources = parse(newData.deces_ask_insurance) + parse(newData.deces_ask_savings);
+        newData.finalDeficit = newData.bruteDeficit - resources;
     }
 
-    // === SCENARIUL 2: PENSIE ===
-    const pensie_years = parseYears(newData.pensie_ask_years);
-    const pensie_monthly = parse(newData.pensie_ask_monthly_needed);
-    if (pensie_monthly && pensie_years) {
-        newData.deficit1_pensie = pensie_monthly * pensie_years * 12;
+    // =================================================
+    // 2. CALCULE PENTRU PENSIONARE
+    // =================================================
+    if (newData.pensie_ask_monthly_needed || newData.pensie_ask_years) {
+        // Deficit 1: Suma Lunară Necesară * Ani de viață * 12
+        const monthly = parse(newData.pensie_ask_monthly_needed);
+        const years = parse(newData.pensie_ask_years); 
+        newData.deficit1 = monthly * years * 12;
 
-        const totalNeed = newData.deficit1_pensie + (parse(newData.pensie_ask_projects) * pensie_years) + parse(newData.pensie_ask_debts);
-        newData.finalDeficit_pensie = totalNeed - (parse(newData.pensie_ask_insurance) + parse(newData.pensie_ask_savings));
+        // Deficit Final: (Deficit1 + Proiecte + Datorii) - (Asigurări + Economii)
+        const needs = newData.deficit1 + 
+                      parse(newData.pensie_ask_projects) + 
+                      parse(newData.pensie_ask_debts);
+        
+        const resources = parse(newData.pensie_ask_insurance) + 
+                          parse(newData.pensie_ask_savings);
+                          
+        newData.finalDeficit = needs - resources;
     }
 
-    // === SCENARIUL 3: STUDII COPII ===
-    const studii_years = parseYears(newData.studii_ask_years);
-    const studii_annual = parse(newData.studii_ask_annual_cost);
-    if (studii_annual && studii_years) {
-        newData.deficit1_studii = studii_annual * studii_years;
-        const perChildDeficit = newData.deficit1_studii + (parse(newData.studii_ask_extra) * studii_years) + parse(newData.studii_ask_projects) + parse(newData.studii_ask_wedding) - (parse(newData.studii_ask_savings) + parse(newData.studii_ask_insurance));
-        const childrenCount = parse(newData.studii_ask_children_count) || 1;
-        newData.finalDeficit_studii = perChildDeficit * childrenCount;
+    // =================================================
+    // 3. CALCULE PENTRU STUDII
+    // =================================================
+    if (newData.studii_ask_annual_cost || newData.studii_ask_years) {
+        // Cost Bază: Suma Anuală * Ani
+        const annual = parse(newData.studii_ask_annual_cost);
+        const years = parse(newData.studii_ask_years);
+        newData.deficit1 = annual * years;
+
+        // Total per copil: Bază + Extra + Proiecte + Nuntă - (Economii + Asigurări)
+        const extra = parse(newData.studii_ask_extra) + 
+                      parse(newData.studii_ask_projects) + 
+                      parse(newData.studii_ask_wedding);
+                      
+        const resources = parse(newData.studii_ask_savings) + 
+                          parse(newData.studii_ask_insurance);
+
+        const perChild = newData.deficit1 + extra - resources;
+        
+        // Deficit Final: Total per copil * Număr Copii
+        const children = parse(newData.studii_ask_children_count) || 1;
+        newData.finalDeficit = perChild * children;
     }
 
     return newData;
-};
+  };
 
 
 const formatMessage = (template: string, data: any): string => {
@@ -513,5 +539,3 @@ export default function ChatAppClient() {
         </div>
     );
 }
-
-    
