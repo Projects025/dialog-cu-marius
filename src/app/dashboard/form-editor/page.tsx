@@ -3,7 +3,7 @@
 
 import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { db, auth } from '@/lib/firebaseConfig';
 import { Button } from '@/components/ui/button';
@@ -18,10 +18,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 
 type StepData = {
     id: string;
-    message: string;
-    actionType: 'buttons' | 'input' | 'date' | 'multi_choice' | 'end' | 'form';
+    message: string | string[];
+    actionType: 'buttons' | 'input' | 'date' | 'multi_choice' | 'end' | 'form' | 'interactive_scroll_list';
     options?: any;
-    nextStep?: string; // Păstrat pentru compatibilitate și fluxuri liniare
+    nextStep?: string; 
     [key: string]: any;
 };
 
@@ -103,15 +103,16 @@ const StepCard = ({ step, index, totalSteps, onStepChange, onMove, onDelete, all
                         <Label htmlFor={`actionType-${step.id}`}>Tip Acțiune Utilizator</Label>
                         <Select
                             value={step.actionType}
-                            onValueChange={(value) => onStepChange(index, 'actionType', value)}
+                            onValueChange={(value) => onStepChange(index, 'actionType', value as StepData['actionType'])}
                         >
                             <SelectTrigger id={`actionType-${step.id}`}>
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="buttons">Butoane (Ramificație)</SelectItem>
-                                <SelectItem value="multi_choice">Selecție Multiplă</SelectItem>
                                 <SelectItem value="input">Câmp de text</SelectItem>
+                                <SelectItem value="interactive_scroll_list">Listă interactivă (Scroll)</SelectItem>
+                                <SelectItem value="multi_choice">Selecție Multiplă</SelectItem>
                                 <SelectItem value="date">Selector de Dată</SelectItem>
                                 <SelectItem value="form">Formular Contact (Final)</SelectItem>
                                 <SelectItem value="end">Final Conversație</SelectItem>
@@ -120,17 +121,16 @@ const StepCard = ({ step, index, totalSteps, onStepChange, onMove, onDelete, all
                     </div>
                 </div>
                  <div className="space-y-2">
-                    <Label htmlFor={`message-${step.id}`}>Mesaj Agent</Label>
+                    <Label htmlFor={`message-${step.id}`}>Mesaj Agent (suportă linii goale pentru mesaje multiple)</Label>
                     <Textarea
                         id={`message-${step.id}`}
-                        value={step.message}
+                        value={Array.isArray(step.message) ? step.message.join('\n\n') : step.message}
                         onChange={(e) => onStepChange(index, 'message', e.target.value)}
-                        rows={3}
+                        rows={5}
                         placeholder="Ce mesaj vede utilizatorul în acest pas?"
                     />
                 </div>
 
-                {/* Branching Buttons Editor */}
                 {step.actionType === 'buttons' && (
                     <div className="space-y-4 border-t border-dashed pt-4 mt-4">
                         <Label className="font-semibold">Configurare Butoane și Ramificații</Label>
@@ -157,6 +157,7 @@ const StepCard = ({ step, index, totalSteps, onStepChange, onMove, onDelete, all
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="end_dialog_friendly">Final Prietenos</SelectItem>
+                                                <SelectItem value="final_contact">Formular Contact</SelectItem>
                                                 {allStepIds.filter(id => id !== step.id).map(stepId => (
                                                     <SelectItem key={stepId} value={stepId}>{stepId}</SelectItem>
                                                 ))}
@@ -177,34 +178,6 @@ const StepCard = ({ step, index, totalSteps, onStepChange, onMove, onDelete, all
                          <Button variant="outline" size="sm" onClick={handleAddButtonOption}>
                             <PlusCircle className="mr-2 h-4 w-4" /> Adaugă Opțiune Buton
                         </Button>
-                    </div>
-                )}
-                
-                {/* Fallback for old simple buttons/multi_choice for migration */}
-                 {(step.actionType === 'multi_choice') && (
-                    <div className="space-y-2">
-                        <Label htmlFor={`options-${step.id}`}>Opțiuni (separate prin virgulă)</Label>
-                        <Input
-                            id={`options-${step.id}`}
-                            value={Array.isArray(step.options) ? step.options.map(opt => typeof opt === 'object' ? opt.label : opt).join(', ') : ''}
-                            onChange={(e) => onStepChange(index, 'options', e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
-                            placeholder="Ex: Opțiune 1, Opțiune 2"
-                        />
-                    </div>
-                )}
-
-                {step.actionType === 'form' && step.options && (
-                    <div className="space-y-4 border-t border-dashed pt-4 mt-4">
-                        <p className="text-sm text-muted-foreground">Acest pas va afișa formularul standard de contact.</p>
-                        <div className="space-y-2">
-                            <Label htmlFor={`form-button-${step.id}`}>Text Buton Trimitere</Label>
-                            <Input
-                                id={`form-button-${step.id}`}
-                                value={step.options.buttonText || ""}
-                                onChange={(e) => onStepChange(index, 'options', { ...step.options, buttonText: e.target.value })}
-                                placeholder="Ex: Trimite datele"
-                            />
-                        </div>
                     </div>
                 )}
             </div>
@@ -244,15 +217,13 @@ const sortStepsByFlow = (flowObject: { [key: string]: any }, startStepId?: strin
 
     while(queue.length > 0) {
         const currentId = queue.shift();
-        if (!currentId || visited.has(currentId)) continue;
+        if (!currentId || visited.has(currentId) || !stepsMap.has(currentId)) continue;
         
-        const currentStep = stepsMap.get(currentId);
-        if (!currentStep) continue;
+        const currentStep = stepsMap.get(currentId)!;
 
         visited.add(currentId);
         sorted.push(currentStep);
 
-        // Adaugă următorii pași în coadă, dând prioritate celor lineari
         const nextSteps = new Set<string>();
         if (currentStep.nextStep && !visited.has(currentStep.nextStep)) {
              nextSteps.add(currentStep.nextStep);
@@ -265,7 +236,6 @@ const sortStepsByFlow = (flowObject: { [key: string]: any }, startStepId?: strin
              });
         }
         
-        // Adaugă la începutul cozii pentru a păstra ordinea vizuală
         queue.unshift(...Array.from(nextSteps));
     }
     
@@ -278,8 +248,9 @@ function FormEditor() {
     const searchParams = useSearchParams();
     const formId = searchParams.get('id');
     const [user, setUser] = useState<User | null>(null);
-    const [form, setForm] = useState<any | null>(null);
+    const [formTemplate, setFormTemplate] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [steps, setSteps] = useState<StepData[]>([]);
     const [formTitle, setFormTitle] = useState("");
@@ -296,7 +267,7 @@ function FormEditor() {
             if (!formDoc.exists()) throw new Error("Formularul nu a fost găsit.");
             const formData = formDoc.data();
             if (formData.ownerId !== user.uid) throw new Error("Nu ai permisiunea de a edita acest formular.");
-            setForm(formData); setFormTitle(formData.title);
+            setFormTemplate(formData); setFormTitle(formData.title);
             if (formData.flow) { setSteps(sortStepsByFlow(formData.flow, formData.startStepId)); }
         } catch (err: any) { setError(err.message); } finally { setLoading(false); }
     }, [formId, user]);
@@ -312,26 +283,6 @@ function FormEditor() {
     
             if (field === 'actionType') {
                 stepToUpdate.actionType = value;
-                if (value === 'form') {
-                    stepToUpdate.options = { buttonText: "Trimite", fields: [ { name: "name", placeholder: "Nume", type: "text", required: true }, { name: "email", placeholder: "Email", type: "email", required: true }, { name: "phone", placeholder: "Telefon", type: "tel", required: true } ] };
-                } else if (value === 'buttons') {
-                    // Când trecem la butoane, verificăm dacă opțiunile vechi pot fi migrate.
-                    if(Array.isArray(stepToUpdate.options) && typeof stepToUpdate.options[0] === 'string') {
-                       // Migrează de la array de string-uri la array de obiecte
-                        stepToUpdate.options = stepToUpdate.options.map(label => ({ label, nextStep: stepToUpdate.nextStep || '' }));
-                    } else if (!Array.isArray(stepToUpdate.options)) {
-                       stepToUpdate.options = [{ label: 'Opțiune 1', nextStep: '' }];
-                    }
-                } else if (value === 'multi_choice') {
-                    // Pentru multi-choice, revenim la un array simplu de string-uri sau obiecte {label, id}
-                    if(Array.isArray(stepToUpdate.options) && typeof stepToUpdate.options[0] === 'object' && stepToUpdate.options[0].label) {
-                        stepToUpdate.options = stepToUpdate.options.map((opt:any) => ({ label: opt.label, id: opt.label.toLowerCase().replace(/\s+/g, '_') }));
-                    } else {
-                        stepToUpdate.options = [];
-                    }
-                } else {
-                    delete stepToUpdate.options;
-                }
             } else {
                 stepToUpdate[field as string] = value;
             }
@@ -366,41 +317,69 @@ function FormEditor() {
         });
     };
 
-    const handleSaveAll = async () => {
-        if (!formId || !user) { toast({ variant: "destructive", title: "Eroare", description: "Formular sau utilizator neidentificat." }); return; }
-        if (steps.length === 0) { toast({ variant: "destructive", title: "Atenție", description: "Nu există niciun pas de salvat." }); return; }
+      const handleSaveAll = async () => {
+    if (!formTemplate || !formId) return;
 
-        const startStepId = steps[0].id;
+    setSaving(true);
+    try {
+      // 1. Procesăm pașii pentru a stabili legăturile și formatul mesajelor
+      const processedStepsArray = steps.map((step, index) => {
+        const newStep = { ...step };
 
-        // Construim obiectul `flow` corect, eliminând `nextStep` dacă avem butoane ramificate
-        const flowObject = steps.reduce((acc: {[key: string]: any}, step) => {
-            const { id, ...data } = step;
-            // Dacă acțiunea e butoane, nu mai avem nevoie de un `nextStep` global pentru pas
-            if (data.actionType === 'buttons') {
-                delete data.nextStep;
-            } else if (data.actionType !== 'end' && (index < steps.length - 1)) {
-                 // Pentru pașii lineari, asigurăm legătura
-                 data.nextStep = steps[steps.indexOf(step) + 1]?.id || 'end_dialog_friendly';
-            }
-            
-            acc[id] = data;
-            return acc;
-        }, {});
-        
-        try {
-            const formRef = doc(db, 'formTemplates', formId);
-            await updateDoc(formRef, { title: formTitle, flow: flowObject, startStepId: startStepId });
-            toast({ title: "Salvat!", description: `Formularul și logica de ramificare au fost actualizate.` });
-            await fetchForm();
-        } catch (err) {
-            console.error("Error saving form:", err);
-            toast({ variant: "destructive", title: "Eroare la salvare", description: "Nu s-au putut salva modificările." });
+        // A. AUTO-LINKING: Doar pentru pașii non-ramificați
+        if (newStep.actionType !== 'buttons' && index < steps.length - 1) {
+          newStep.nextStep = steps[index + 1].id;
+        } else if (newStep.actionType !== 'buttons' && index === steps.length - 1 && newStep.actionType !== 'end') {
+          newStep.nextStep = 'final_contact'; 
         }
-    };
+
+        // B. SMART SPLIT: Gestionăm mesajele multiple
+        if (typeof newStep.message === 'string') {
+           if (newStep.message.includes('\n\n')) {
+               newStep.message = newStep.message.split('\n\n').map(s => s.trim()).filter(Boolean);
+           }
+        }
+        
+        if (Array.isArray(newStep.message) && newStep.message.length === 1) {
+            newStep.message = newStep.message[0];
+        }
+
+        return newStep;
+      });
+
+      // 2. Convertim Array-ul înapoi în Obiect (Map) pentru Firestore
+      const flowObject = processedStepsArray.reduce((acc, step) => {
+        const {id, ...data} = step;
+        acc[id] = data;
+        return acc;
+      }, {} as any);
+
+      // 3. Pregătim datele de update
+      const updateData = {
+        title: formTitle,
+        flow: flowObject,
+        startStepId: steps.length > 0 ? steps[0].id : null,
+        lastModified: serverTimestamp()
+      };
+
+      // 4. Trimitem la Firestore
+      const formRef = doc(db, "formTemplates", formId as string);
+      await updateDoc(formRef, updateData);
+
+      toast({title: "Salvat!", description: "Formularul a fost actualizat. Legăturile automate au fost aplicate."});
+      fetchForm();
+
+    } catch (error: any) {
+      console.error("Error saving form:", error);
+      toast({variant: "destructive", title: "Eroare la salvare", description: error.message});
+    } finally {
+      setSaving(false);
+    }
+  };
 
     if (loading) return <p className="text-center mt-8">Se încarcă editorul...</p>;
     if (error) return <p className="text-destructive text-center mt-8">{error}</p>;
-    if (!form) return <p className="text-center mt-8">Selectează un formular pentru a-l edita.</p>;
+    if (!formTemplate) return <p className="text-center mt-8">Selectează un formular pentru a-l edita.</p>;
 
     const allStepIds = steps.map(s => s.id);
 
@@ -437,8 +416,9 @@ function FormEditor() {
 
             <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-sm border-t z-50">
                  <div className="max-w-4xl mx-auto flex justify-center">
-                    <Button size="lg" onClick={handleSaveAll} className="shadow-2xl w-full sm:w-auto">
-                        <Save className="mr-2 h-5 w-5" /> Salvează Fluxul
+                    <Button size="lg" onClick={handleSaveAll} disabled={saving} className="shadow-2xl w-full sm:w-auto">
+                        <Save className="mr-2 h-5 w-5" /> 
+                        {saving ? "Se salvează..." : "Salvează Fluxul"}
                     </Button>
                  </div>
             </div>
@@ -468,6 +448,8 @@ function FormEditor() {
 export default function FormEditorPage() {
     return ( <Suspense fallback={<div className="text-center mt-8">Se încarcă...</div>}> <FormEditor /> </Suspense> );
 }
+    
+
     
 
     
