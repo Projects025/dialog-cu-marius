@@ -119,8 +119,8 @@ const commonFlow: ConversationFlow = {
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 const calculateDynamicDelay = (text: string): number => {
-    const BASE_DELAY = 500; 
-    const WORDS_PER_SECOND = 3; 
+    const BASE_DELAY = 400; 
+    const WORDS_PER_SECOND = 10; 
 
     if (!text) return BASE_DELAY;
 
@@ -129,88 +129,67 @@ const calculateDynamicDelay = (text: string): number => {
 
     const readingTime = (wordCount / WORDS_PER_SECOND) * 1000;
     
-    return Math.max(BASE_DELAY, Math.min(readingTime, 4000));
+    return Math.max(BASE_DELAY, Math.min(readingTime, 2000));
 }
 
 const performDynamicCalculations = (data: any) => {
     const newData = { ...data };
     
-    // Helper: Extrage numere din string-uri (ex: "15 ani" -> 15, "4.322" -> 4322)
+    // Helper Robust: Transformă orice string "12.000" sau "12,000" în numărul 12000
     const parse = (val: any) => {
         if (!val) return 0;
         if (typeof val === 'number') return val;
-        // Păstrează doar cifrele și punctul zecimal
-        const clean = String(val).replace(/\./g, '').replace(/,/g, '.').replace(/[^0-9.]/g, '');
+        // Păstrează doar cifrele (0-9), elimină tot restul
+        const clean = String(val).replace(/[^0-9]/g, '');
         return Number(clean) || 0;
     };
-
-    // =================================================
-    // 1. CALCULE PENTRU DECES
-    // =================================================
-    // Verificăm dacă suntem pe fluxul de deces (dacă avem date specifice)
-    if (newData.deces_ask_monthly_sum || newData.deces_ask_period) {
-        // Deficit 1: Suma Lunară * Ani * 12
-        const sum = parse(newData.deces_ask_monthly_sum);
-        const years = parse(newData.deces_ask_period);
-        newData.deficit1 = sum * years * 12;
-        
-        // Deficit Brut: Deficit 1 + Eveniment + Proiecte + Datorii
-        const costs = parse(newData.deces_ask_event_costs) + 
-                      parse(newData.deces_ask_projects) + 
-                      parse(newData.deces_ask_debts);
-        newData.bruteDeficit = newData.deficit1 + costs;
-        
-        // Deficit Final: Brut - (Asigurări + Economii)
-        const resources = parse(newData.deces_ask_insurance) + parse(newData.deces_ask_savings);
-        newData.finalDeficit = newData.bruteDeficit - resources;
-    }
-
-    // =================================================
-    // 2. CALCULE PENTRU PENSIONARE
-    // =================================================
-    if (newData.pensie_ask_monthly_needed || newData.pensie_ask_years) {
-        // Deficit 1: Suma Lunară Necesară * Ani de viață * 12
-        const monthly = parse(newData.pensie_ask_monthly_needed);
-        const years = parse(newData.pensie_ask_years); 
-        newData.deficit1 = monthly * years * 12;
-
-        // Deficit Final: (Deficit1 + Proiecte + Datorii) - (Asigurări + Economii)
-        const needs = newData.deficit1 + 
-                      parse(newData.pensie_ask_projects) + 
-                      parse(newData.pensie_ask_debts);
-        
-        const resources = parse(newData.pensie_ask_insurance) + 
-                          parse(newData.pensie_ask_savings);
-                          
-        newData.finalDeficit = needs - resources;
-    }
-
-    // =================================================
-    // 3. CALCULE PENTRU STUDII
-    // =================================================
+    // === 1. STUDII COPII (Fix pentru problema ta curentă) ===
     if (newData.studii_ask_annual_cost || newData.studii_ask_years) {
-        // Cost Bază: Suma Anuală * Ani
         const annual = parse(newData.studii_ask_annual_cost);
-        const years = parse(newData.studii_ask_years);
+        // Extragem doar prima cifra din "5 ani" -> 5
+        const yearsString = String(newData.studii_ask_years || "0");
+        const years = parseInt(yearsString) || 0;
         newData.deficit1 = annual * years;
-
-        // Total per copil: Bază + Extra + Proiecte + Nuntă - (Economii + Asigurări)
+        // Calcul Final Studii
         const extra = parse(newData.studii_ask_extra) + 
                       parse(newData.studii_ask_projects) + 
                       parse(newData.studii_ask_wedding);
-                      
         const resources = parse(newData.studii_ask_savings) + 
                           parse(newData.studii_ask_insurance);
-
         const perChild = newData.deficit1 + extra - resources;
-        
-        // Deficit Final: Total per copil * Număr Copii
         const children = parse(newData.studii_ask_children_count) || 1;
         newData.finalDeficit = perChild * children;
     }
-
+    // === 2. DECES ===
+    if (newData.deces_ask_monthly_sum || newData.deces_ask_period) {
+        const sum = parse(newData.deces_ask_monthly_sum);
+        const yearsString = String(newData.deces_ask_period || "0");
+        const years = parseInt(yearsString) || 0;
+        
+        newData.deficit1 = sum * years * 12;
+        const costs = parse(newData.deces_ask_event_costs) + 
+                      parse(newData.deces_ask_projects) + 
+                      parse(newData.deces_ask_debts);
+        const resources = parse(newData.deces_ask_insurance) + parse(newData.deces_ask_savings);
+        
+        newData.bruteDeficit = newData.deficit1 + costs;
+        newData.finalDeficit = newData.bruteDeficit - resources;
+    }
+    // === 3. PENSIONARE ===
+    if (newData.pensie_ask_monthly_needed || newData.pensie_ask_years) {
+        const monthly = parse(newData.pensie_ask_monthly_needed);
+        const yearsString = String(newData.pensie_ask_years || "0");
+        const years = parseInt(yearsString) || 0;
+        newData.deficit1 = monthly * years * 12;
+        const needs = newData.deficit1 + 
+                      parse(newData.pensie_ask_projects) + 
+                      parse(newData.pensie_ask_debts);
+        const resources = parse(newData.pensie_ask_insurance) + 
+                          parse(newData.pensie_ask_savings);
+        newData.finalDeficit = needs - resources;
+    }
     return newData;
-  };
+};
 
 
 const formatMessage = (template: string, data: any): string => {
@@ -287,8 +266,7 @@ export default function ChatAppClient() {
     const renderStep = useCallback(async (stepId: string) => {
         currentStateRef.current = stepId;
         
-        const calculatedData = performDynamicCalculations(userDataRef.current);
-        userDataRef.current = { ...userDataRef.current, ...calculatedData };
+        userDataRef.current = performDynamicCalculations(userDataRef.current);
         
         const step = getStep(stepId);
     
