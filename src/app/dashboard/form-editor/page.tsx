@@ -193,9 +193,8 @@ const sortStepsByFlow = (flowObject: { [key: string]: any }, startStepId?: strin
     const allStepsArray: StepData[] = Object.entries(flowObject).map(([id, data]) => ({ id, ...(data as any) }));
     const stepsMap = new Map(allStepsArray.map(step => [step.id, step]));
     
-    let startNode = startStepId ? stepsMap.get(startStepId) : null;
-    
-    if (!startNode) {
+    let effectiveStartStepId = startStepId;
+    if (!effectiveStartStepId || !stepsMap.has(effectiveStartStepId)) {
         const allNextSteps = new Set<string>();
         allStepsArray.forEach(step => {
             if (step.nextStep) allNextSteps.add(step.nextStep);
@@ -205,39 +204,38 @@ const sortStepsByFlow = (flowObject: { [key: string]: any }, startStepId?: strin
                 });
             }
         });
-        
-        startNode = allStepsArray.find(step => !allNextSteps.has(step.id)) || allStepsArray[0];
+        const startNode = allStepsArray.find(step => !allNextSteps.has(step.id));
+        effectiveStartStepId = startNode ? startNode.id : allStepsArray[0]?.id;
     }
     
-    if (!startNode) return allStepsArray;
+    if (!effectiveStartStepId) return allStepsArray;
 
     const sorted: StepData[] = [];
     const visited = new Set<string>();
-    const queue: string[] = [startNode.id];
 
-    while(queue.length > 0) {
-        const currentId = queue.shift();
-        if (!currentId || visited.has(currentId) || !stepsMap.has(currentId)) continue;
-        
-        const currentStep = stepsMap.get(currentId)!;
-
-        visited.add(currentId);
-        sorted.push(currentStep);
-
-        const nextSteps = new Set<string>();
-        if (currentStep.nextStep && !visited.has(currentStep.nextStep)) {
-             nextSteps.add(currentStep.nextStep);
+    const traverse = (stepId: string) => {
+        if (!stepId || visited.has(stepId) || !stepsMap.has(stepId)) {
+            return;
         }
-        if (currentStep.actionType === 'buttons' && Array.isArray(currentStep.options)) {
-             currentStep.options.forEach((opt: any) => {
-                if (opt.nextStep && !visited.has(opt.nextStep)) {
-                    nextSteps.add(opt.nextStep);
+
+        const step = stepsMap.get(stepId)!;
+        visited.add(stepId);
+        sorted.push(step);
+
+        if (step.actionType === 'buttons' && Array.isArray(step.options)) {
+            step.options.forEach((opt: any) => {
+                if (opt.nextStep) {
+                    traverse(opt.nextStep);
                 }
-             });
+            });
         }
         
-        queue.unshift(...Array.from(nextSteps));
-    }
+        if (step.nextStep) {
+             traverse(step.nextStep);
+        }
+    };
+    
+    traverse(effectiveStartStepId);
     
     const orphanedSteps = allStepsArray.filter(step => !visited.has(step.id));
     return [...sorted, ...orphanedSteps];
@@ -326,11 +324,17 @@ function FormEditor() {
       const processedStepsArray = steps.map((step, index) => {
         const newStep = { ...step };
 
-        // A. AUTO-LINKING: Doar pentru pașii non-ramificați
+        // A. AUTO-LINKING: Doar pentru pașii non-ramificați, se bazează pe ordinea vizuală
         if (newStep.actionType !== 'buttons' && index < steps.length - 1) {
-          newStep.nextStep = steps[index + 1].id;
+          // Nu suprascrie un nextStep deja setat manual
+          if (!newStep.nextStep) {
+            newStep.nextStep = steps[index + 1].id;
+          }
         } else if (newStep.actionType !== 'buttons' && index === steps.length - 1 && newStep.actionType !== 'end') {
-          newStep.nextStep = 'final_contact'; 
+          // Dacă e ultimul pas non-ramificat, duce la contact
+          if (!newStep.nextStep) {
+            newStep.nextStep = 'final_contact'; 
+          }
         }
 
         // B. SMART SPLIT: Gestionăm mesajele multiple
@@ -366,8 +370,8 @@ function FormEditor() {
       const formRef = doc(db, "formTemplates", formId as string);
       await updateDoc(formRef, updateData);
 
-      toast({title: "Salvat!", description: "Formularul a fost actualizat. Legăturile automate au fost aplicate."});
-      fetchForm();
+      toast({title: "Salvat!", description: "Formularul a fost actualizat cu succes."});
+      fetchForm(); // Re-sincronizează starea locală cu cea din DB
 
     } catch (error: any) {
       console.error("Error saving form:", error);
