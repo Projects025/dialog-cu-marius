@@ -88,7 +88,7 @@ async function saveLeadToFirestore(data: any, agentId: string | null) {
 
 
 type ConversationStep = {
-    message: ((data: any) => string) | string;
+    message: ((data: any) => string | string[]) | string | string[];
     actionType: UserAction['type'] | 'end';
     options?: any;
     handler?: ((response: any, data: any) => void) | string;
@@ -119,17 +119,17 @@ const commonFlow: ConversationFlow = {
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 const calculateDynamicDelay = (text: string): number => {
-    const BASE_DELAY = 50; 
-    const WORDS_PER_SECOND = 4; 
+    const BASE_DELAY = 500; 
+    const WORDS_PER_SECOND = 3; 
 
     if (!text) return BASE_DELAY;
 
-    const cleanText = text.replace(/&lt;[^&gt;]*&gt;?/gm, '');
+    const cleanText = text.replace(/<[^>]*>?/gm, '');
     const wordCount = cleanText.split(/\s+/).filter(Boolean).length;
 
     const readingTime = (wordCount / WORDS_PER_SECOND) * 1000;
     
-    return Math.max(BASE_DELAY, Math.min(readingTime, 400));
+    return Math.max(BASE_DELAY, Math.min(readingTime, 4000));
 }
 
 const performDynamicCalculations = (data: any) => {
@@ -138,32 +138,49 @@ const performDynamicCalculations = (data: any) => {
     const parse = (val: any) => {
         if (!val) return 0;
         if (typeof val === 'number') return val;
+        // Parse numbers that might have dots for thousands
         const clean = String(val).replace(/\./g, '').replace(/,/g, '.').replace(/[^0-9.]/g, '');
         return Number(clean) || 0;
     };
+    
+    // Convert '3 ani' to 3
+    const parseYears = (val: any) => {
+        if (!val) return 0;
+        if (typeof val === 'number') return val;
+        const match = String(val).match(/\d+/);
+        return match ? Number(match[0]) : 0;
+    }
 
     // === SCENARIUL 1: DECES ===
-    if (newData.deces_ask_monthly_sum && newData.deces_ask_period) {
-        newData.deficit1_deces = parse(newData.deces_ask_monthly_sum) * parse(newData.deces_ask_period) * 12;
-        newData.bruteDeficit_deces = newData.deficit1_deces + parse(newData.deces_ask_event_costs) + parse(newData.deces_ask_projects) + parse(newData.deces_ask_debts);
-        newData.finalDeficit_deces = newData.bruteDeficit_deces - (parse(newData.deces_ask_insurance) + parse(newData.deces_ask_savings));
+    const deces_period = parseYears(newData.deces_ask_period);
+    const deces_monthly = parse(newData.deces_ask_monthly_sum);
+    if (deces_monthly && deces_period) {
+        newData.deficit1_deces = deces_monthly * deces_period * 12;
+        
+        const bruteDeficit = newData.deficit1_deces + parse(newData.deces_ask_event_costs) + parse(newData.deces_ask_projects) + parse(newData.deces_ask_debts);
+        newData.bruteDeficit_deces = bruteDeficit;
+
+        newData.finalDeficit_deces = bruteDeficit - (parse(newData.deces_ask_insurance) + parse(newData.deces_ask_savings));
     }
 
     // === SCENARIUL 2: PENSIE ===
-    if (newData.pensie_ask_monthly_needed && newData.pensie_ask_years) {
-        const years = parse(newData.pensie_ask_years) || 20; 
-        newData.deficit1_pensie = parse(newData.pensie_ask_monthly_needed) * years * 12;
+    const pensie_years = parseYears(newData.pensie_ask_years);
+    const pensie_monthly = parse(newData.pensie_ask_monthly_needed);
+    if (pensie_monthly && pensie_years) {
+        newData.deficit1_pensie = pensie_monthly * pensie_years * 12;
 
-        const totalNeed = newData.deficit1_pensie + parse(newData.pensie_ask_projects) + parse(newData.pensie_ask_debts);
+        const totalNeed = newData.deficit1_pensie + (parse(newData.pensie_ask_projects) * pensie_years) + parse(newData.pensie_ask_debts);
         newData.finalDeficit_pensie = totalNeed - (parse(newData.pensie_ask_insurance) + parse(newData.pensie_ask_savings));
     }
 
     // === SCENARIUL 3: STUDII COPII ===
-    if (newData.studii_ask_annual_cost && newData.studii_ask_years) {
-        newData.deficit1_studii = parse(newData.studii_ask_annual_cost) * parse(newData.studii_ask_years);
-        const perChild = newData.deficit1_studii + parse(newData.studii_ask_extra) + parse(newData.studii_ask_projects) + parse(newData.studii_ask_wedding) - (parse(newData.studii_ask_savings) + parse(newData.studii_ask_insurance));
-        const children = parse(newData.studii_ask_children_count) || 1;
-        newData.finalDeficit_studii = perChild * children;
+    const studii_years = parseYears(newData.studii_ask_years);
+    const studii_annual = parse(newData.studii_ask_annual_cost);
+    if (studii_annual && studii_years) {
+        newData.deficit1_studii = studii_annual * studii_years;
+        const perChildDeficit = newData.deficit1_studii + (parse(newData.studii_ask_extra) * studii_years) + parse(newData.studii_ask_projects) + parse(newData.studii_ask_wedding) - (parse(newData.studii_ask_savings) + parse(newData.studii_ask_insurance));
+        const childrenCount = parse(newData.studii_ask_children_count) || 1;
+        newData.finalDeficit_studii = perChildDeficit * childrenCount;
     }
 
     return newData;
@@ -180,7 +197,7 @@ const formatMessage = (template: string, data: any): string => {
             }
             return String(value);
         }
-        return match; // Lasă placeholder-ul dacă data nu există
+        return match; // Keep placeholder if data not available
     });
 };
 
@@ -244,37 +261,39 @@ export default function ChatAppClient() {
     const renderStep = useCallback(async (stepId: string) => {
         currentStateRef.current = stepId;
         
-        // 1. Calculează datele dinamice
-        userDataRef.current = performDynamicCalculations(userDataRef.current);
+        const calculatedData = performDynamicCalculations(userDataRef.current);
+        userDataRef.current = { ...userDataRef.current, ...calculatedData };
         
         const step = getStep(stepId);
     
         if (!step) {
             setIsTyping(false);
             setCurrentUserAction(null);
+            console.error(`Step "${stepId}" not found in flow.`);
             return;
         }
     
         setCurrentUserAction(null);
     
-        let messageContent = "";
+        let rawMessageContent;
         if (typeof step.message === 'function') {
-            messageContent = step.message(userDataRef.current);
+            rawMessageContent = step.message(userDataRef.current);
         } else {
-            messageContent = step.message;
+            rawMessageContent = step.message;
         }
-    
-        // 2. Formatează mesajul cu datele calculate
-        const formattedMessage = formatMessage(messageContent, userDataRef.current);
 
-        if (formattedMessage) {
+        const messagesToShow = Array.isArray(rawMessageContent) ? rawMessageContent : (rawMessageContent ? [rawMessageContent] : []);
+
+        for (const [index, msg] of messagesToShow.entries()) {
+            const formattedMessage = formatMessage(msg, userDataRef.current);
             setIsTyping(true);
-            await delay(step.delay || 1000);
+            await delay(step.delay || 800);
             setIsTyping(false);
             addMessage({ author: "Marius", type: "text" }, formattedMessage);
-            
-            const dynamicDelay = calculateDynamicDelay(formattedMessage);
-            await delay(dynamicDelay);
+
+             if (index < messagesToShow.length - 1) {
+                await delay(calculateDynamicDelay(formattedMessage));
+            }
         }
 
         if (step.actionType === 'end') {
@@ -283,15 +302,14 @@ export default function ChatAppClient() {
             return;
         }
     
-        const actionOptions = step.options;
-    
-        if (step.autoContinue) {
-             const nextStepId = typeof step.nextStep === 'function' ? step.nextStep() : step.nextStep;
+        if (step.autoContinue && step.nextStep) {
+             const nextStepId = typeof step.nextStep === 'function' ? step.nextStep(undefined, userDataRef.current, loadedFlow) : step.nextStep;
+             await delay(500); // Small pause before auto-continuing
              await renderStep(nextStepId);
         } else {
-            setCurrentUserAction({ type: step.actionType, options: actionOptions });
+            setCurrentUserAction({ type: step.actionType, options: step.options });
         }
-    }, [addMessage, getStep]);
+    }, [addMessage, getStep, loadedFlow]);
 
     const processUserResponse = useCallback(async (response: any) => {
         setCurrentUserAction(null);
@@ -385,7 +403,8 @@ export default function ChatAppClient() {
         try {
             const agentId = agentIdRef.current;
             if (!agentId) {
-                // This case should be handled by the parent component, but as a fallback:
+                // This case is handled by the parent component (shows SaaS landing)
+                // but as a fallback, we throw an error that can be displayed.
                 throw new Error("Link invalid sau incomplet. Te rog contactează consultantul tău.");
             }
 
@@ -415,7 +434,7 @@ export default function ChatAppClient() {
             const formData = formDoc.data();
             setLoadedFlow(formData.flow as ConversationFlow);
             
-            setStartStepId(formData.startStepId || 'welcome_1');
+            setStartStepId(formData.startStepId || Object.keys(formData.flow)[0]);
 
         } catch (error: any) {
             setErrorMessage(error.message);
@@ -494,3 +513,5 @@ export default function ChatAppClient() {
         </div>
     );
 }
+
+    
