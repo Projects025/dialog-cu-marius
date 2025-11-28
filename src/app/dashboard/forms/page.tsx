@@ -360,7 +360,8 @@ export default function FormsPage() {
       };
 
       await setDoc(doc(db, "formTemplates", "master_standard_v1"), masterData);
-      alert("Master Form (Versiunea Finală Corectată) a fost restaurat!");
+      toast({ title: "Succes!", description: "Șablonul Master a fost regenerat." });
+      setConfirmModalOpen(false);
       window.location.reload();
 
     } catch (error: any) {
