@@ -196,7 +196,7 @@ export default function FormsPage() {
         await deleteDoc(doc(db, "formTemplates", "master_standard_v1")).catch(() => {});
 
         const masterData = {
-          title: "Analiză Completă (Master - Texte Finale)",
+          title: "Analiză Completă (Master)",
           description: "Versiunea finală cu textele complete pentru Deces, Pensie, Studii și Sănătate.",
           startStepId: "intro_sequence",
           ownerId: null, 
