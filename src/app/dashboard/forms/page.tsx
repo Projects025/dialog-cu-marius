@@ -61,8 +61,7 @@ export default function FormsPage() {
   const [formToDelete, setFormToDelete] = useState<string | null>(null);
 
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
-  // FIX STATE INIT: Inițializăm cu o funcție goală, nu async
-  const [confirmAction, setConfirmAction] = useState<() => void>(() => {});
+  const [confirmAction, setConfirmAction] = useState<(() => void) | (() => Promise<void>)>(() => {});
   const [confirmTitle, setConfirmTitle] = useState("");
   const [confirmDescription, setConfirmDescription] = useState("");
   const [confirmButtonText, setConfirmButtonText] = useState("Confirmă");
@@ -71,16 +70,14 @@ export default function FormsPage() {
   // Admin
   const [showMaintenance, setShowMaintenance] = useState(false);
 
-  // 1. Auth & Data Fetching (Simplificat pentru a evita loop-uri)
+  // 1. Auth & Data Fetching
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (!currentUser) {
         router.push("/login");
       } else {
         setUser(currentUser);
-        // Verificăm dacă utilizatorul este admin
         setIsAdmin(currentUser.email === ADMIN_EMAIL);
-        // Fetch data imediat ce avem userul
         fetchData(currentUser);
       }
     });
@@ -90,24 +87,24 @@ export default function FormsPage() {
   const fetchData = async (currentUser: User) => {
     try {
       setLoading(true);
-      // 1. Formular Activ Agent
       const agentDoc = await getDoc(doc(db, "agents", currentUser.uid));
       if (agentDoc.exists()) {
         setActiveFormId(agentDoc.data().activeFormId || null);
       }
 
-      // 2. Toate Formularele
       const q = query(collection(db, "formTemplates"));
       const snap = await getDocs(q);
       const forms = snap.docs.map(d => ({ id: d.id, ...d.data() })) as FormTemplate[];
       setFormTemplates(forms);
 
-      // 3. Default selection
       const standard = forms.filter(f => f.isTemplate);
-      if (standard.length > 0) setSourceTemplateId(standard[0].id);
+      if (standard.length > 0 && !sourceTemplateId) {
+        setSourceTemplateId(standard[0].id);
+      }
 
     } catch (e) {
       console.error("Fetch error:", e);
+      toast({ variant: "destructive", title: "Eroare la încărcare", description: "Nu s-au putut prelua datele." });
     } finally {
       setLoading(false);
     }
@@ -121,7 +118,6 @@ export default function FormsPage() {
     setConfirmButtonText("Setează Activ");
     setConfirmButtonVariant("default");
     
-    // Setăm acțiunea ca un callback simplu
     setConfirmAction(() => () => {
       if (!auth.currentUser) return;
       updateDoc(doc(db, "agents", auth.currentUser.uid), { activeFormId: formId })
@@ -134,6 +130,11 @@ export default function FormsPage() {
     });
     
     setConfirmModalOpen(true);
+  };
+
+  const handleDeleteClick = (formId: string) => {
+    setFormToDelete(formId);
+    setIsDeleteModalOpen(true);
   };
 
   const confirmDelete = async () => {
@@ -151,19 +152,19 @@ export default function FormsPage() {
       toast({ variant: "destructive", title: "Eroare", description: e.message });
     } finally {
       setIsDeleteModalOpen(false);
+      setFormToDelete(null);
     }
   };
 
-  const handleCreateForm = async () => {
+  const handleCreateAndEdit = async () => {
     if (!newFormTitle.trim() || !user) return;
     setIsCreating(true);
     try {
       let flowData = {};
       let startStep = "welcome_1";
-
       if (sourceTemplateId === 'blank') {
           flowData = {
-              welcome_1: { message: "Salut!", actionType: "buttons", options: ["Start"], nextStep: "end" },
+              welcome_1: { message: "Salut!", actionType: "buttons", options: [{label: "Start"}], nextStep: "end" },
               end: { message: "Final.", actionType: "end", nextStep: "" }
           };
       } else {
@@ -173,7 +174,6 @@ export default function FormsPage() {
               startStep = tmpl.data().startStepId || "welcome_1";
           }
       }
-
       const newForm = {
         title: newFormTitle,
         ownerId: user.uid,
@@ -182,18 +182,16 @@ export default function FormsPage() {
         flow: flowData,
         startStepId: startStep
       };
-
       const ref = await addDoc(collection(db, "formTemplates"), newForm);
-      setFormTemplates(prev => [...prev, { id: ref.id, ...newForm } as any]);
       
-      await updateDoc(doc(db, "agents", user.uid), { activeFormId: ref.id });
-      setActiveFormId(ref.id);
-
       setIsCreateModalOpen(false);
       setNewFormTitle("");
+      
+      await fetchData(user);
       router.push(`/dashboard/form-editor/${ref.id}`);
-    } catch (e) {
-      console.error(e);
+
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Eroare la creare", description: e.message });
     } finally {
       setIsCreating(false);
     }
@@ -207,7 +205,6 @@ export default function FormsPage() {
 
     setConfirmAction(() => async () => {
       try {
-        // Ștergem pentru a rescrie curat
         await deleteDoc(doc(db, "formTemplates", "master_standard_v1")).catch(() => {});
 
         const masterData = {
@@ -218,7 +215,6 @@ export default function FormsPage() {
           isTemplate: true,
           createdAt: new Date(),
           flow: {
-            // === 1. INTRODUCERE GENERALĂ ===
             intro_sequence: {
               message: [
                 "Viața produce pierderi financiare semnificative în patru situații majore.",
@@ -242,10 +238,6 @@ export default function FormsPage() {
                 { label: "Sănătate (Boli Grave)", nextStep: "sanatate_intro_1" }
               ]
             },
-
-            // =================================================
-            // 2. SCENARIUL DECES (Texte din Marius_09.10.md)
-            // =================================================
             deces_intro_1: { 
                 message: ["Un deces afectează negativ profund și pe termen lung atât **planul existențial** (drama care însoțește pierderea persoanei dragi), cât și **planul financiar** (dispariția opțiunilor, apariția presiunilor financiare și a necesității de a ajusta nivelul de trai la noile realități)."], 
                 actionType: "buttons", options: ["Continuă"], nextStep: "deces_intro_2" 
@@ -292,7 +284,7 @@ export default function FormsPage() {
             },
             deces_show_final_result: { 
                 message: ["Calcul finalizat.", "Deficitul financiar cu care familia ta ar păși în acest viitor sumbru dacă n-ar mai putea conta pe sprijinul tău financiar este:\n\n<span class=\"text-2xl font-bold\">{finalDeficit} lei</span>"], 
-                actionType: "buttons", options: ["Vezi Rezultatul"], nextStep: "deces_ask_feeling" 
+                actionType: 'end', autoContinue: true, nextStep: "deces_ask_feeling" 
             },
             deces_ask_feeling: { 
                 message: "Cum ți se pare această sumă?", 
@@ -312,10 +304,6 @@ export default function FormsPage() {
                 message: ["Dacă nu ești foarte mulțumit cu opțiunile pe care familia ta le are, ai fi interesat să vezi o soluție personalizată care să ofere celor dragi ție o a doua șansă la o viață relativ normală, fără poveri financiare?", "Practic, o soluție prin care dragostea ta și grija ta pentru ei va continua chiar și după tine.", "Poți crea instant o moștenire care să îi ajute financiar pe cei dragi ție chiar și (mai ales!) în absența ta!"], 
                 actionType: "buttons", options: ["Da, vreau detalii", "Nu"], nextStep: "final_contact" 
             },
-
-            // =================================================
-            // 3. SCENARIUL PENSIE (Texte din Marius_pensionare.md.txt)
-            // =================================================
             pensie_intro_1: { 
                 message: ["Pensionarea poate fi cel mai lung concediu al vieții sau cel mai chinuitor concediu al vieții.", "Reducerea semnificativă a veniturilor la vârsta pensionării va afecta calitatea și standardul vieții tale în cel puțin 3 domenii:\n\n1. opțiunile personale (stil de viață, hobby-uri)\n2. demnitatea și stima de sine (dependență)\n3. tranziția de la rolul de susținător la susținut"], 
                 actionType: "buttons", options: ["Continuă"], nextStep: "pensie_ask_start_time" 
@@ -340,7 +328,6 @@ export default function FormsPage() {
                 message: "<span class=\"text-2xl font-bold\">{deficit1} lei</span>\n(calcul: sumă lunară x perioadă x 12).\n\nContinuăm.", 
                 actionType: "buttons", options: ["Continuă"], nextStep: "pensie_ask_projects_list" 
             },
-            
             pensie_ask_projects_list: { 
                 message: "2. Ce planuri / proiecte / obiective personale ți-ai propus pentru perioada pensionării?\n\nBifează activitățile de interes:", 
                 actionType: "interactive_scroll_list", options: { buttonText: "Am selectat", options: ["Călătorii și excursii culturale", "Cursuri și workshop-uri de dezvoltare", "Activități sportive moderate", "Voluntariat în comunitate", "Hobby-uri creative", "Întâlniri sociale și cluburi", "Sprijin pentru familie și nepoți", "Participare la asociații culturale sau civice", "Grădinărit și îngrijirea casei", "Consultanță și mentoring", "Investitii imobiliare", "Deschiderea unui business"] }, nextStep: "pensie_ask_projects_sum" 
@@ -349,7 +336,6 @@ export default function FormsPage() {
                 message: "Acum, fă un calcul total mental pentru aceste activități, apoi notează care ar fi suma de bani anuală necesară (în lei)?", 
                 actionType: "input", options: { type: "number", placeholder: "Ex: 5000" }, nextStep: "pensie_ask_debts" 
             },
-
             pensie_ask_debts: { 
                 message: "3. La vârsta pensionării, te aștepți să mai ai de plătit credite sau alte obligații financiare? Care ar fi suma necesară achitarea integrală (în lei)?", 
                 actionType: "input", options: { type: "number", placeholder: "Ex: 0" }, nextStep: "pensie_ask_insurance" 
@@ -363,8 +349,8 @@ export default function FormsPage() {
                 actionType: "input", options: { type: "number", placeholder: "Ex: 40000" }, nextStep: "pensie_show_final_result" 
             },
             pensie_show_final_result: { 
-                message: "Calcul finalizat. Deficitul financiar cu care tu ai ieși la pensie este:\n\n<span class=\"text-2xl font-bold\">{finalDeficit} lei</span>", 
-                actionType: "buttons", options: ["Vezi Rezultatul"], nextStep: "pensie_ask_feeling" 
+                message: ["Calcul finalizat.", "Deficitul financiar cu care tu ai ieși la pensie este:\n\n<span class=\"text-2xl font-bold\">{finalDeficit} lei</span>"], 
+                actionType: 'end', autoContinue: true, nextStep: "pensie_ask_feeling" 
             },
             pensie_ask_feeling: { 
                 message: "Cum ți se pare această sumă?", 
@@ -382,10 +368,6 @@ export default function FormsPage() {
                 message: "Dacă nu ești foarte mulțumit cu aceste opțiuni, ai fi interesat să vezi o soluție personalizată care să-ți ofere posibilitatea de a-ți menține standardul de viață, opțiunile personale, demnitatea și statutul de susținător al familiei chiar și în etapa pensionării?", 
                 actionType: "buttons", options: ["Da, vreau detalii", "Nu"], nextStep: "final_contact" 
             },
-
-            // =================================================
-            // 4. SCENARIUL STUDII (Texte din Viitorul copiilor.md)
-            // =================================================
             studii_intro_1: { 
                 message: ["Menirea ta ca părinte nu e doar să-ți crești copilul până va fi major, ci menirea ta este să îi dai aripi în viață!", "Ești de acord cu afirmația: „Cu cât vrei să zboare mai sus în viață, cu atât sunt mai scumpe aripile”?"], 
                 actionType: "buttons", options: ["De acord"], nextStep: "studii_intro_2" 
@@ -402,7 +384,6 @@ export default function FormsPage() {
                 message: "1. Câți ani ești dispus să-ți susții financiar copilul în studenție?", 
                 actionType: "buttons", options: ["3 ani", "4 ani", "5 ani", "6 ani"], nextStep: "studii_ask_annual_cost_list" 
             },
-            
             studii_ask_annual_cost_list: { 
                 message: "Bifează cheltuielile pe care le-ar avea copilul tău dacă azi ar fi student:", 
                 actionType: "interactive_scroll_list", options: { buttonText: "Am selectat", options: ["Taxa de școlarizare anuală", "Cazare în cămin sau chirie", "Utilități și întreținere cazare", "Transport (combustibil)", "Gadgeturi (smartphone, laptop, tableta)", "Software și licențe profesionale", "Recuzită pentru laboratoare sau proiecte", "Cărți și manuale", "Formări și certificări profesionale", "Conferințe și training-uri", "Restanțe / Re-restanțe :)"] }, nextStep: "studii_ask_annual_cost" 
@@ -415,7 +396,6 @@ export default function FormsPage() {
                 message: "Am calculat costul de bază: **{deficit1} lei** (Sumă anuală x Ani). Continuăm.", 
                 actionType: "buttons", options: ["Continuă"], nextStep: "studii_ask_extra_list" 
             },
-            
             studii_ask_extra_list: { 
                 message: "2. Pe lângă formarea academică, copilul tău se va dezvolta personal și social prin activități extra-curriculare. Bifează activitățile de interes:", 
                 actionType: "interactive_scroll_list", options: { buttonText: "Am selectat", options: ["Tabere și schimburi culturale (internaționale)", "Hobby-uri (pescuit, vlogging, lifestyle, gym)", "Activități recreative (sport, artă, muzică)", "Evenimente sociale și culturale", "Chefuri, majorate, aniversări, nunți", "Ieșiri cu prietenii – cafenele, restaurante, cluburi", "Călătorii și excursii (în țară sau în străinătate)", "Haine și accesorii", "Cadouri și atenții pentru prieteni/familie"] }, nextStep: "studii_ask_extra" 
@@ -424,7 +404,6 @@ export default function FormsPage() {
                 message: "Fă un calcul total mental, apoi notează care ar fi suma de bani anuală necesară (în lei)?", 
                 actionType: "input", options: { type: "number", placeholder: "Ex: 5000" }, nextStep: "studii_ask_projects_list" 
             },
-            
             studii_ask_projects_list: { 
                 message: "3. Debutul în viață profesională a studentului / a absolventului poate fi asociat unor proiecte majore, costisitoare. Bifează activitățile de interes:", 
                 actionType: "interactive_scroll_list", options: { buttonText: "Am selectat", options: ["Începerea unei afaceri personale", "Achiziționarea unui autoturism", "Achiziționarea unui imobil", "Avans pentru achiziționarea unui bun", "Altele"] }, nextStep: "studii_ask_projects" 
@@ -433,7 +412,6 @@ export default function FormsPage() {
                 message: "Fă un calcul total mental, apoi notează care ar fi suma de bani de care ar fi nevoie (în lei)?", 
                 actionType: "input", options: { type: "number", placeholder: "Ex: 10000" }, nextStep: "studii_ask_wedding" 
             },
-            
             studii_ask_wedding: { 
                 message: "4. La un moment dat, copilul tău va îmbrăca rochia de mireasă / costumul de mire.\nCare ar fi contribuția ta financiară (în lei)?", 
                 actionType: "input", options: { type: "number", placeholder: "Ex: 20000" }, nextStep: "studii_ask_savings" 
@@ -452,7 +430,7 @@ export default function FormsPage() {
             },
             studii_show_final_result: { 
                 message: "Deficitul financiar TOTAL pe care trebuie să îl acoperi este:\n\n<span class=\"text-2xl font-bold\">{finalDeficit} lei</span>", 
-                actionType: "buttons", options: ["Vezi Rezultatul"], nextStep: "studii_ask_feeling" 
+                actionType: 'end', autoContinue: true, nextStep: "studii_ask_feeling" 
             },
             studii_ask_feeling: { 
                 message: "Cum ți se pare această sumă?", 
@@ -474,10 +452,6 @@ export default function FormsPage() {
                 message: "Cel mai probabil, nu ești foarte mulțumit cu opțiunile pe care copilul tău le-ar avea.\n\nAi fi interesat să vezi o soluție personalizată care îți oferă\n1. posibilitatea de a-ți eșalona efortul financiar pe 10 - 15 - 20 ani și\n2. garanția ca în permanență copilul tău va avea un tutore financiar care să îi asigure viitorul?", 
                 actionType: "buttons", options: ["Da, vreau detalii", "Nu"], nextStep: "final_contact" 
             },
-
-            // =================================================
-            // 5. SCENARIUL SĂNĂTATE (Texte din Marius_Sanatate.md)
-            // =================================================
             sanatate_intro_1: { 
                 message: ["„Un om sănătos are 1.000 de gânduri, un om bolnav are un singur gând.”", "Când sănătatea este pusă la încercare, ai nevoie să ai atât bani, cât și acces rapid la tratament."], 
                 actionType: "buttons", options: ["Continuă"], nextStep: "sanatate_intro_2" 
@@ -522,10 +496,6 @@ export default function FormsPage() {
                 message: "CONVERSIA CĂTRE SOLUȚIE\nPe baza răspunsurilor tale, se poate construi o soluție care să îți ofere bani, acces și siguranță.\n\nAi vrea să vezi ce tip de protecție ți s-ar potrivi cel mai bine?", 
                 actionType: "buttons", options: ["Da", "Nu"], nextStep: "final_contact" 
             },
-
-            // =================================================
-            // 6. FINAL COMUN
-            // =================================================
             final_contact: {
               message: "Am nevoie de datele tale de contact (nume, telefon, email), iar în cel mai scurt timp posibil, te voi contacta pentru construirea soluției.\n\nDe asemenea, am rugămintea să semnezi și un acord GDPR.",
               actionType: "form",
@@ -557,58 +527,13 @@ export default function FormsPage() {
         await setDoc(doc(db, "formTemplates", "master_standard_v1"), masterData);
         setConfirmModalOpen(false);
         toast({ title: "Succes", description: "Master Form a fost regenerat!" });
-        window.location.reload();
-
+        fetchData(auth.currentUser as User);
       } catch (e: any) {
         setConfirmModalOpen(false);
         toast({ variant: "destructive", title: "Eroare la regenerare", description: e.message });
       }
     });
     setConfirmModalOpen(true);
-  };
-
-  const handleCreateAndEdit = async () => {
-    if (!newFormTitle.trim() || !user) return;
-    setIsCreating(true);
-    try {
-      // Logic from handleCreateForm
-      let flowData = {};
-      let startStep = "welcome_1";
-      if (sourceTemplateId === 'blank') {
-          flowData = {
-              welcome_1: { message: "Salut!", actionType: "buttons", options: ["Start"], nextStep: "end" },
-              end: { message: "Final.", actionType: "end", nextStep: "" }
-          };
-      } else {
-          const tmpl = await getDoc(doc(db, "formTemplates", sourceTemplateId));
-          if (tmpl.exists()) {
-              flowData = tmpl.data().flow || {};
-              startStep = tmpl.data().startStepId || "welcome_1";
-          }
-      }
-      const newForm = {
-        title: newFormTitle,
-        ownerId: user.uid,
-        isTemplate: false,
-        createdAt: serverTimestamp(),
-        flow: flowData,
-        startStepId: startStep
-      };
-      const ref = await addDoc(collection(db, "formTemplates"), newForm);
-      
-      // Close modal and reset
-      setIsCreateModalOpen(false);
-      setNewFormTitle("");
-      
-      // Fetch new data and navigate
-      await fetchData(user);
-      router.push(`/dashboard/form-editor/${ref.id}`);
-
-    } catch (e: any) {
-      toast({ variant: "destructive", title: "Eroare", description: e.message });
-    } finally {
-      setIsCreating(false);
-    }
   };
 
 
@@ -638,8 +563,8 @@ export default function FormsPage() {
                     {/* Aici poate veni un preview sau statistici */}
                 </CardContent>
                 <CardFooter className="flex flex-wrap gap-2 pt-4 border-t border-gray-800">
-                    <Button variant="destructive" size="sm" className="flex-1 min-w-[80px]" onClick={() => { setFormToDelete(form.id); setIsDeleteModalOpen(true); }}><Trash2 className="w-4 h-4 mr-1"/> Șterge</Button>
-                    <Button variant="secondary" size="sm" className="flex-1 min-w-[80px]" onClick={() => router.push(`/dashboard/form-editor/${form.id}`)}><Edit className="w-4 h-4 mr-1"/> Editează</Button>
+                    <Button variant="destructive" size="sm" className="flex-1 min-w-[80px]" onClick={() => handleDeleteClick(form.id)}><Trash2 className="w-4 h-4 mr-1"/> Șterge</Button>
+                    <Button variant="secondary" size="sm" className="flex-1 min-w-[80px]" onClick={() => router.push(`/dashboard/form-editor?id=${form.id}`)}><Edit className="w-4 h-4 mr-1"/> Editează</Button>
                     {activeFormId !== form.id ? (
                         <Button size="sm" className="flex-1 bg-amber-500 text-black min-w-[80px]" onClick={() => handleSetActiveForm(form.id)}>Setează Activ</Button>
                     ) : (
@@ -735,10 +660,12 @@ export default function FormsPage() {
               <DialogHeader><DialogTitle>{confirmTitle}</DialogTitle><DialogDescription>{confirmDescription}</DialogDescription></DialogHeader>
               <DialogFooter>
                   <Button variant="outline" onClick={() => setConfirmModalOpen(false)}>Anulează</Button>
-                  <Button variant={confirmButtonVariant} onClick={() => { confirmAction(); }}>{confirmButtonText}</Button>
+                  <Button variant={confirmButtonVariant} onClick={() => { if(confirmAction) confirmAction(); }}>{confirmButtonText}</Button>
               </DialogFooter>
           </DialogContent>
       </Dialog>
     </div>
   );
 }
+
+    

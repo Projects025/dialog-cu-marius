@@ -422,19 +422,19 @@ const ChatView = ({ conversation, userAction, onResponse, progress, isConversati
     }
   };
   
-const renderMessageContent = (content: any, author: 'Marius' | 'user') => {
+const renderMessageContent = (content: any) => {
     if (typeof content !== 'string') {
       return content;
     }
 
     const normalizedContent = content.replace(/\\n/g, '\n');
     const processedHtml = normalizedContent
-        .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-amber-400">$1</strong>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/\n/g, '<br />');
 
     return (
         <div
-            className="text-sm md:text-base leading-relaxed text-white"
+            className="text-sm md:text-base leading-relaxed"
             dangerouslySetInnerHTML={{ __html: processedHtml }}
         />
     );
@@ -475,7 +475,7 @@ const renderMessageContent = (content: any, author: 'Marius' | 'user') => {
         <ScrollArea id="dialog-flow" className="flex-grow w-full px-4 md:px-6">
             <div className="space-y-3">
                 {conversation.map((message) => {
-                    const content = renderMessageContent(message.content, message.author);
+                    const content = renderMessageContent(message.content);
                     if (!content && typeof content !== 'number') return null;
 
                     return (
@@ -524,5 +524,7 @@ const renderMessageContent = (content: any, author: 'Marius' | 'user') => {
 };
 
 export default ChatView;
+
+    
 
     
