@@ -355,7 +355,7 @@ export default function FormsPage() {
             },
 
             pensie_ask_debts: { 
-                message: "3. La vârsta pensionării, te aștepți să mai ai de plătit credite sau alte obligații financiare? Care ar fi suma necesară achitarea integrală (în lei)?", 
+                message: "3. La vârsta pensionării, te aștepți să mai ai de plătit credite sau alte obligații financiare? Care ar fi suma necesară achitării integrale (în lei)?", 
                 actionType: "input", options: { type: "number", placeholder: "Ex: 0" }, nextStep: "pensie_ask_insurance" 
             },
             pensie_ask_insurance: { 
