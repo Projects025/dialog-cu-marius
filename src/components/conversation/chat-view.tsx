@@ -422,43 +422,23 @@ const ChatView = ({ conversation, userAction, onResponse, progress, isConversati
     }
   };
   
-  const renderMessageContent = (content: any, author: 'Marius' | 'user') => {
-    // Ignorăm conținutul non-string (componente, null, etc.)
+const renderMessageContent = (content: any, author: 'Marius' | 'user') => {
     if (typeof content !== 'string') {
       return content;
     }
 
-    // PASUL 1: Normalizare
-    // Transformăm secvențele literale "\n" (două caractere) în caracterul real de linie nouă
-    // Asta rezolvă problema textului "Salut!\n\nSunt Marius"
     const normalizedContent = content.replace(/\\n/g, '\n');
-
-    // PASUL 2: Împărțire pe linii
-    const lines = normalizedContent.split('\n');
+    const processedHtml = normalizedContent
+        .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-amber-400">$1</strong>')
+        .replace(/\n/g, '<br />');
 
     return (
-      <div className="text-sm md:text-base leading-relaxed text-white">
-        {lines.map((line, i) => {
-          // PASUL 3: Detectare Bold (**text**)
-          // Spargem linia în bucăți bazat pe markerii de bold
-          const parts = line.split(/\*\*(.*?)\*\*/g);
-
-          return (
-            <span key={i} className="block min-h-[1.2em]">
-              {parts.map((part, j) => {
-                // Elementele impare (1, 3, 5...) sunt cele dintre steluțe -> BOLD
-                if (j % 2 === 1) {
-                  return <strong key={j} className="font-bold text-amber-400">{part}</strong>;
-                }
-                // Elementele pare sunt text normal
-                return <span key={j}>{part}</span>;
-              })}
-            </span>
-          );
-        })}
-      </div>
+        <div
+            className="text-sm md:text-base leading-relaxed text-white"
+            dangerouslySetInnerHTML={{ __html: processedHtml }}
+        />
     );
-  };
+};
 
 
   if (isLoading) {
