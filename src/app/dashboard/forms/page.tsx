@@ -1,10 +1,10 @@
 
+
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, type User } from "firebase/auth";
-// 1. FIX IMPORTURI: Separăm config-ul de funcțiile SDK
 import { db, auth } from "@/lib/firebaseConfig";
 import { 
   doc, 
@@ -37,21 +37,18 @@ interface FormTemplate {
   createdAt?: any;
 }
 
-// Definim email-ul administratorului aici
 const ADMIN_EMAIL = "alinmflavius@gmail.com";
 
 export default function FormsPage() {
   const router = useRouter();
   const { toast } = useToast();
   
-  // State principal
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [formTemplates, setFormTemplates] = useState<FormTemplate[]>([]);
   const [activeFormId, setActiveFormId] = useState<string | null>(null);
 
-  // Modale
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newFormTitle, setNewFormTitle] = useState("");
   const [sourceTemplateId, setSourceTemplateId] = useState<string>("");
@@ -67,10 +64,8 @@ export default function FormsPage() {
   const [confirmButtonText, setConfirmButtonText] = useState("Confirmă");
   const [confirmButtonVariant, setConfirmButtonVariant] = useState<"default" | "destructive">("default");
   
-  // Admin
   const [showMaintenance, setShowMaintenance] = useState(false);
 
-  // 1. Auth & Data Fetching
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (!currentUser) {
@@ -110,8 +105,6 @@ export default function FormsPage() {
     }
   };
 
-  // --- HANDLERS ---
-
   const handleSetActiveForm = (formId: string) => {
     setConfirmTitle("Activare Formular");
     setConfirmDescription("Vrei să activezi acest formular pe link-ul tău?");
@@ -130,11 +123,6 @@ export default function FormsPage() {
     });
     
     setConfirmModalOpen(true);
-  };
-
-  const handleDeleteClick = (formId: string) => {
-    setFormToDelete(formId);
-    setIsDeleteModalOpen(true);
   };
 
   const confirmDelete = async () => {
@@ -280,11 +268,19 @@ export default function FormsPage() {
             },
             deces_ask_savings: { 
                 message: "6. În cazul unui posibil deces, familia ta ar putea accesa anumite economii sau investiții (ex. chirii, vânzarea unui imobil etc.) pentru standardului de viață?\nDacă da, care este suma de bani disponibilă?", 
-                actionType: "input", options: { type: "number", placeholder: "Ex: 10000" }, nextStep: "deces_show_final_result" 
+                actionType: "input", options: { type: "number", placeholder: "Ex: 10000" }, nextStep: "deces_prepare_to_show_result" 
+            },
+            deces_prepare_to_show_result: {
+                message: "Calcul finalizat.",
+                actionType: 'buttons',
+                options: ["Vezi Rezultatul"],
+                nextStep: "deces_show_final_result"
             },
             deces_show_final_result: { 
-                message: ["Calcul finalizat.", "Deficitul financiar cu care familia ta ar păși în acest viitor sumbru dacă n-ar mai putea conta pe sprijinul tău financiar este:\n\n<span class=\"text-2xl font-bold\">{finalDeficit} lei</span>"], 
-                actionType: 'end', autoContinue: true, nextStep: "deces_ask_feeling" 
+                message: "Deficitul financiar cu care familia ta ar păși în acest viitor sumbru dacă n-ar mai putea conta pe sprijinul tău financiar este:\n\n<span class=\"text-2xl font-bold\">{finalDeficit} lei</span>", 
+                actionType: 'end',
+                autoContinue: true,
+                nextStep: "deces_ask_feeling" 
             },
             deces_ask_feeling: { 
                 message: "Cum ți se pare această sumă?", 
@@ -346,11 +342,19 @@ export default function FormsPage() {
             },
             pensie_ask_savings: { 
                 message: "5. La acest moment, ai economii (ex. pensie pilon 2 sau pilonul 3) sau investiții pe care să le accesezi la pensionare? Ce sumă (în lei)?", 
-                actionType: "input", options: { type: "number", placeholder: "Ex: 40000" }, nextStep: "pensie_show_final_result" 
+                actionType: "input", options: { type: "number", placeholder: "Ex: 40000" }, nextStep: "pensie_prepare_to_show_result" 
+            },
+             pensie_prepare_to_show_result: {
+                message: "Calcul finalizat.",
+                actionType: 'buttons',
+                options: ["Vezi Rezultatul"],
+                nextStep: "pensie_show_final_result"
             },
             pensie_show_final_result: { 
-                message: ["Calcul finalizat.", "Deficitul financiar cu care tu ai ieși la pensie este:\n\n<span class=\"text-2xl font-bold\">{finalDeficit} lei</span>"], 
-                actionType: 'end', autoContinue: true, nextStep: "pensie_ask_feeling" 
+                message: "Deficitul financiar cu care tu ai ieși la pensie este:\n\n<span class=\"text-2xl font-bold\">{finalDeficit} lei</span>",
+                actionType: 'end', 
+                autoContinue: true,
+                nextStep: "pensie_ask_feeling" 
             },
             pensie_ask_feeling: { 
                 message: "Cum ți se pare această sumă?", 
@@ -426,11 +430,19 @@ export default function FormsPage() {
             },
             studii_ask_children_count: { 
                 message: "Deficitul financiar pe care trebuie să îl acoperi pentru a asigura copilului tău un start cu dreptul în viață este calculat.\n\nPentru a finaliza gradul tău de expunere financiară, ultima întrebare: **Câți copii ai?**\n(Vom înmulți deficitul cu acest număr).", 
-                actionType: "input", options: { type: "number", placeholder: "Ex: 1" }, nextStep: "studii_show_final_result" 
+                actionType: "input", options: { type: "number", placeholder: "Ex: 1" }, nextStep: "studii_prepare_to_show_result" 
+            },
+             studii_prepare_to_show_result: {
+                message: "Calcul finalizat.",
+                actionType: 'buttons',
+                options: ["Vezi Rezultatul"],
+                nextStep: "studii_show_final_result"
             },
             studii_show_final_result: { 
                 message: "Deficitul financiar TOTAL pe care trebuie să îl acoperi este:\n\n<span class=\"text-2xl font-bold\">{finalDeficit} lei</span>", 
-                actionType: 'end', autoContinue: true, nextStep: "studii_ask_feeling" 
+                actionType: 'end',
+                autoContinue: true,
+                nextStep: "studii_ask_feeling" 
             },
             studii_ask_feeling: { 
                 message: "Cum ți se pare această sumă?", 
@@ -551,7 +563,6 @@ export default function FormsPage() {
         </Button>
       </div>
 
-      {/* FORMS GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
          {userForms.map(form => (
             <Card key={form.id} className={`flex flex-col bg-gray-900 border ${activeFormId === form.id ? 'border-green-500' : 'border-gray-800'}`}>
@@ -560,11 +571,10 @@ export default function FormsPage() {
                     <CardDescription>Personalizat</CardDescription>
                 </CardHeader>
                  <CardContent className="flex-grow">
-                    {/* Aici poate veni un preview sau statistici */}
                 </CardContent>
                 <CardFooter className="flex flex-wrap gap-2 pt-4 border-t border-gray-800">
-                    <Button variant="destructive" size="sm" className="flex-1 min-w-[80px]" onClick={() => handleDeleteClick(form.id)}><Trash2 className="w-4 h-4 mr-1"/> Șterge</Button>
-                    <Button variant="secondary" size="sm" className="flex-1 min-w-[80px]" onClick={() => router.push(`/dashboard/form-editor?id=${form.id}`)}><Edit className="w-4 h-4 mr-1"/> Editează</Button>
+                    <Button variant="destructive" size="sm" className="flex-1 min-w-[80px]" onClick={() => { setFormToDelete(form.id); setIsDeleteModalOpen(true); }}><Trash2 className="w-4 h-4 mr-1"/> Șterge</Button>
+                    <Button variant="secondary" size="sm" className="flex-1 min-w-[80px]" onClick={() => router.push(`/dashboard/form-editor/${form.id}`)}><Edit className="w-4 h-4 mr-1"/> Editează</Button>
                     {activeFormId !== form.id ? (
                         <Button size="sm" className="flex-1 bg-amber-500 text-black min-w-[80px]" onClick={() => handleSetActiveForm(form.id)}>Setează Activ</Button>
                     ) : (
@@ -575,7 +585,6 @@ export default function FormsPage() {
          ))}
       </div>
 
-      {/* TEMPLATES */}
       <div className="mt-8">
           <h2 className="text-xl font-semibold mb-4 text-gray-300">Șabloane Standard</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -590,7 +599,6 @@ export default function FormsPage() {
           </div>
       </div>
 
-      {/* ADMIN ZONE */}
       {isAdmin && (
         <div className="mt-12 pt-6 border-t border-gray-800">
             <button onClick={() => setShowMaintenance(!showMaintenance)} className="text-xs text-gray-600 hover:text-gray-400">
@@ -606,8 +614,6 @@ export default function FormsPage() {
         </div>
       )}
 
-
-      {/* MODALS (Create, Delete, Confirm) */}
       <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
           <DialogContent>
               <DialogHeader>
@@ -667,5 +673,3 @@ export default function FormsPage() {
     </div>
   );
 }
-
-    
