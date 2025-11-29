@@ -119,17 +119,8 @@ const commonFlow: ConversationFlow = {
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 const calculateDynamicDelay = (text: string): number => {
-    const BASE_DELAY = 400; 
-    const WORDS_PER_SECOND = 10; 
-
-    if (!text) return BASE_DELAY;
-
-    const cleanText = text.replace(/<[^>]*>?/gm, '');
-    const wordCount = cleanText.split(/\s+/).filter(Boolean).length;
-
-    const readingTime = (wordCount / WORDS_PER_SECOND) * 1000;
-    
-    return Math.max(BASE_DELAY, Math.min(readingTime, 2000));
+    const FAST_DELAY = 150; // Delay foarte scurt, in milisecunde
+    return FAST_DELAY;
 }
 
 const performDynamicCalculations = (data: any) => {
