@@ -136,11 +136,6 @@ export default function FormsPage() {
     setConfirmModalOpen(true);
   };
 
-  const handleDeleteClick = (formId: string) => {
-    setFormToDelete(formId);
-    setIsDeleteModalOpen(true);
-  };
-
   const confirmDelete = async () => {
     if (!formToDelete || !user) return;
     try {
@@ -203,7 +198,7 @@ export default function FormsPage() {
       setIsCreating(false);
     }
   };
-
+  
   const restoreMasterTemplate = () => {
     setConfirmTitle("Actualizare Texte Master");
     setConfirmDescription("Această acțiune va actualiza toate textele din formularul Master cu versiunea finală din documente. Structura logică se păstrează. Continui?");
@@ -356,7 +351,7 @@ export default function FormsPage() {
             },
 
             pensie_ask_debts: { 
-                message: "3. La vârsta pensionării, te aștepți să mai ai de plătit credite sau alte obligații financiare? Care ar fi suma necesară achitării integrale (în lei)?", 
+                message: "3. La vârsta pensionării, te aștepți să mai ai de plătit credite sau alte obligații financiare? Care ar fi suma necesară achitarea integrală (în lei)?", 
                 actionType: "input", options: { type: "number", placeholder: "Ex: 0" }, nextStep: "pensie_ask_insurance" 
             },
             pensie_ask_insurance: { 
@@ -571,3 +566,179 @@ export default function FormsPage() {
     });
     setConfirmModalOpen(true);
   };
+
+  const handleCreateAndEdit = async () => {
+    if (!newFormTitle.trim() || !user) return;
+    setIsCreating(true);
+    try {
+      // Logic from handleCreateForm
+      let flowData = {};
+      let startStep = "welcome_1";
+      if (sourceTemplateId === 'blank') {
+          flowData = {
+              welcome_1: { message: "Salut!", actionType: "buttons", options: ["Start"], nextStep: "end" },
+              end: { message: "Final.", actionType: "end", nextStep: "" }
+          };
+      } else {
+          const tmpl = await getDoc(doc(db, "formTemplates", sourceTemplateId));
+          if (tmpl.exists()) {
+              flowData = tmpl.data().flow || {};
+              startStep = tmpl.data().startStepId || "welcome_1";
+          }
+      }
+      const newForm = {
+        title: newFormTitle,
+        ownerId: user.uid,
+        isTemplate: false,
+        createdAt: serverTimestamp(),
+        flow: flowData,
+        startStepId: startStep
+      };
+      const ref = await addDoc(collection(db, "formTemplates"), newForm);
+      
+      // Close modal and reset
+      setIsCreateModalOpen(false);
+      setNewFormTitle("");
+      
+      // Fetch new data and navigate
+      await fetchData(user);
+      router.push(`/dashboard/form-editor/${ref.id}`);
+
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Eroare", description: e.message });
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+
+  if (loading) return <div className="p-8 text-white text-center">Se încarcă...</div>;
+
+  const userForms = formTemplates.filter(f => f.ownerId === user?.uid);
+  const standardForms = formTemplates.filter(f => f.isTemplate);
+
+  return (
+    <div className="p-4 md:p-8 max-w-7xl mx-auto text-white space-y-8">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Management Formulare</h1>
+        <Button onClick={() => setIsCreateModalOpen(true)} className="bg-amber-500 text-black font-bold">
+           <FilePlus2 className="mr-2 h-4 w-4"/> Creează Formular Nou
+        </Button>
+      </div>
+
+      {/* FORMS GRID */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+         {userForms.map(form => (
+            <Card key={form.id} className={`flex flex-col bg-gray-900 border ${activeFormId === form.id ? 'border-green-500' : 'border-gray-800'}`}>
+                <CardHeader>
+                    <CardTitle>{form.title}</CardTitle>
+                    <CardDescription>Personalizat</CardDescription>
+                </CardHeader>
+                 <CardContent className="flex-grow">
+                    {/* Aici poate veni un preview sau statistici */}
+                </CardContent>
+                <CardFooter className="flex flex-wrap gap-2 pt-4 border-t border-gray-800">
+                    <Button variant="destructive" size="sm" className="flex-1 min-w-[80px]" onClick={() => { setFormToDelete(form.id); setIsDeleteModalOpen(true); }}><Trash2 className="w-4 h-4 mr-1"/> Șterge</Button>
+                    <Button variant="secondary" size="sm" className="flex-1 min-w-[80px]" onClick={() => router.push(`/dashboard/form-editor/${form.id}`)}><Edit className="w-4 h-4 mr-1"/> Editează</Button>
+                    {activeFormId !== form.id ? (
+                        <Button size="sm" className="flex-1 bg-amber-500 text-black min-w-[80px]" onClick={() => handleSetActiveForm(form.id)}>Setează Activ</Button>
+                    ) : (
+                         <Button size="sm" disabled className="flex-1 bg-green-600/20 text-green-500 border border-green-500 min-w-[80px]">Activ</Button>
+                    )}
+                </CardFooter>
+            </Card>
+         ))}
+      </div>
+
+      {/* TEMPLATES */}
+      <div className="mt-8">
+          <h2 className="text-xl font-semibold mb-4 text-gray-300">Șabloane Standard</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {standardForms.map(form => (
+                  <div key={form.id} className="flex items-center justify-between p-4 bg-gray-800 rounded-lg border border-gray-700">
+                      <span className="font-medium">{form.title}</span>
+                      <Button size="sm" variant="outline" onClick={() => { setSourceTemplateId(form.id); setNewFormTitle(form.title + " (Copie)"); setIsCreateModalOpen(true); }}>
+                          <Copy className="w-4 h-4 mr-2"/> Clonează
+                      </Button>
+                  </div>
+              ))}
+          </div>
+      </div>
+
+      {/* ADMIN ZONE */}
+      {isAdmin && (
+        <div className="mt-12 pt-6 border-t border-gray-800">
+            <button onClick={() => setShowMaintenance(!showMaintenance)} className="text-xs text-gray-600 hover:text-gray-400">
+                🛠️ Opțiuni Avansate
+            </button>
+            {showMaintenance && (
+                <div className="mt-4 p-4 bg-red-900/10 border border-red-900/30 rounded">
+                    <Button variant="destructive" onClick={restoreMasterTemplate}>
+                        <AlertTriangle className="w-4 h-4 mr-2"/> Regenerează Șablon Master
+                    </Button>
+                </div>
+            )}
+        </div>
+      )}
+
+
+      {/* MODALS (Create, Delete, Confirm) */}
+      <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+          <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Creează un formular nou</DialogTitle>
+                <DialogDescription>
+                    Poți porni de la un șablon sau de la zero.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="py-4 space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="form-title">Numele formularului</Label>
+                    <Input id="form-title" placeholder="Ex: Analiză Deces v2" value={newFormTitle} onChange={e => setNewFormTitle(e.target.value)} />
+                  </div>
+                   <div className="space-y-2">
+                    <Label htmlFor="form-source">Pornește de la</Label>
+                    <Select value={sourceTemplateId} onValueChange={setSourceTemplateId}>
+                        <SelectTrigger id="form-source"><SelectValue placeholder="Sursă" /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="blank">Formular Gol</SelectItem>
+                            {standardForms.map(f => <SelectItem key={f.id} value={f.id}>{f.title}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                  </div>
+              </div>
+              <DialogFooter className="sm:justify-between gap-2">
+                    <Button variant="secondary" onClick={handleCreateAndEdit} disabled={isCreating}>
+                      {isCreating ? "Se creează..." : "Creează și Editează"}
+                    </Button>
+              </DialogFooter>
+          </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+          <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Ești absolut sigur?</DialogTitle>
+                <DialogDescription>
+                    Această acțiune nu poate fi anulată. Formularul va fi șters permanent.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>Anulează</Button>
+                  <Button variant="destructive" onClick={confirmDelete}>Da, Șterge</Button>
+              </DialogFooter>
+          </DialogContent>
+      </Dialog>
+
+      <Dialog open={confirmModalOpen} onOpenChange={setConfirmModalOpen}>
+          <DialogContent>
+              <DialogHeader><DialogTitle>{confirmTitle}</DialogTitle><DialogDescription>{confirmDescription}</DialogDescription></DialogHeader>
+              <DialogFooter>
+                  <Button variant="outline" onClick={() => setConfirmModalOpen(false)}>Anulează</Button>
+                  <Button variant={confirmButtonVariant} onClick={() => { confirmAction(); }}>{confirmButtonText}</Button>
+              </DialogFooter>
+          </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
