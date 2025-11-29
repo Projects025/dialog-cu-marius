@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -443,7 +444,7 @@ export default function FormsPage() {
                 actionType: "input", options: { type: "number", placeholder: "Ex: 20000" }, nextStep: "studii_ask_savings" 
             },
             studii_ask_savings: { 
-                message: "5. La acest moment, există economii sau investiții pe care copilul tău le-ar putea accesa pentru a acoperi cele 4 tipuri de cheltuieli discutate anterior?\nDacă da, care este suma (în lei)?", 
+                message: "5. La acest moment, există economii sau investiții pe care copilul tău le-ar putea accesa pentru a acoperi cele 4 tipuri de cheltuielile discutate anterior?\nDacă da, care este suma (în lei)?", 
                 actionType: "input", options: { type: "number", placeholder: "Ex: 5000" }, nextStep: "studii_ask_insurance" 
             },
             studii_ask_insurance: { 
