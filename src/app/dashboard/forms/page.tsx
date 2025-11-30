@@ -483,31 +483,30 @@ export default function FormsPage() {
                 message: "Deficitul financiar TOTAL pe care trebuie să îl acoperi este:\n\n<span class=\"text-2xl font-bold\">{finalDeficit} lei</span>", 
                 actionType: 'buttons',
                 options: ["Continuă"],
-                nextStep: "studii_ask_feeling" 
-            },
-            studii_ask_feeling: { 
-                isProgressStep: true,
-                message: "Cum ți se pare această sumă?", 
-                actionType: "input", options: { type: "text", placeholder: "Scrie..." }, nextStep: "studii_ask_feeling_2" 
-            },
-            studii_ask_feeling_2: { 
-                isProgressStep: true,
-                message: "Ce simți?", 
-                actionType: "input", options: { type: "text", placeholder: "Scrie..." }, nextStep: "studii_dramatic_intro" 
+                nextStep: "studii_dramatic_intro" 
             },
             studii_dramatic_intro: { 
+                isProgressStep: true,
                 message: ["Ar mai fi o nuanță aici... și nu e pozitivă...", "Ca părinte, pentru copiii tău trăiești. Pentru ei și pentru viitorul lor, orice sacrifiu pare natural.", "Dar cum s-ar schimba prezentul și viitorul copiilor tăi dacă nu ar mai putea conta pe sprijinul tău financiar?"], 
-                actionType: "buttons", options: ["Continuă"], nextStep: "studii_dramatic_options" 
+                actionType: "buttons", 
+                options: ["Continuă"], 
+                nextStep: "studii_dramatic_options" 
             },
             studii_dramatic_options: { 
                 isProgressStep: true,
                 message: "Bifează scenariile posibile:", 
-                actionType: "interactive_scroll_list", options: { buttonText: "Am înțeles", options: ["Renunțarea la hobby-uri", "Renunțarea la activități sportive", "Abandon sau dezinteres școlar", "Acces limitat la activități educaționale", "Izolare față de prieteni", "Responsabilități asumate prea devreme", "Scăderea încrederii în sine", "Anxietate și teamă de viitor", "Frustrare față de colegi", "Dependență emoțională de părintele rămas", "Muncă excesivă și absența celuilalt părinte", "Sentiment de pierdere", "Vulnerabilitate la influențe", "Altceva"] }, nextStep: "studii_solution" 
+                actionType: "interactive_scroll_list", 
+                options: { buttonText: "Am înțeles", options: ["Renunțarea la hobby-uri", "Renunțarea la activități sportive", "Abandon sau dezinteres școlar", "Acces limitat la activități educaționale", "Izolare față de prieteni", "Responsabilități asumate prea devreme", "Scăderea încrederii în sine", "Anxietate și teamă de viitor", "Frustrare față de colegi", "Dependență emoțională de părintele rămas", "Muncă excesivă și absența celuilalt părinte", "Sentiment de pierdere", "Vulnerabilitate la influențe", "Altceva"] }, 
+                nextStep: "studii_solution" 
             },
             studii_solution: { 
                 isProgressStep: true,
-                message: "Cel mai probabil, nu ești foarte mulțumit cu opțiunile pe care copilul tău le-ar avea.\n\nAi fi interesat să vezi o soluție personalizată care îți oferă\n1. posibilitatea de a-ți eșalona efortul financiar pe 10 - 15 - 20 ani și\n2. garanția ca în permanență copilul tău va avea un tutore financiar care să îi asigure viitorul?", 
-                actionType: "buttons", options: ["Da, vreau detalii", "Nu"], nextStep: "final_contact" 
+                message: ["Cel mai probabil, nu ești foarte mulțumit cu opțiunile pe care copilul tău le-ar avea.", "Ai fi interesat să vezi o soluție personalizată care îți oferă\n1. posibilitatea de a-ți eșalona efortul financiar pe 10 - 15 - 20 ani și\n2. garanția ca în permanență copilul tău va avea un tutore financiar care să îi asigure viitorul?"],
+                actionType: "buttons", 
+                options: [
+                    { label: "Da, vreau detalii", nextStep: "final_contact" },
+                    { label: "Nu", nextStep: "end_dialog_friendly" }
+                ]
             },
             sanatate_intro_1: { 
                 isProgressStep: true,
@@ -517,7 +516,11 @@ export default function FormsPage() {
             sanatate_intro_2: { 
                 isProgressStep: true,
                 message: "Boala nu așteaptă să fii pregătit financiar sau emoțional – apare pur și simplu, schimbând totul peste noapte.\n\nAr fi de interes pentru tine să vezi cât de pregătită este familia ta pentru un scenariu medical sever?", 
-                actionType: "buttons", options: ["Da", "Nu"], nextStep: "sanatate_info_1" 
+                actionType: "buttons", 
+                options: [
+                    { label: "Da", nextStep: "sanatate_info_1" },
+                    { label: "Nu", nextStep: "end_dialog_friendly" }
+                ]
             },
             sanatate_info_1: { 
                 message: ["Unele situații medicale sunt mai ușoare, apar frecvent și pun familia în dificultate, dar sunt dificultăți pe care le poți gestiona cu resursele potrivite.", "Alte situații sunt grave, mai rare, dar când apar pot schimba destinul unei familii pentru totdeauna, necesitând resurse substanțiale și acces rapid la tratament.\n\n**Forme frecvente:** Fracturi, arsuri, spitalizare, intervenții chirurgicale minore.\n**Forme grave / critice:** Cancer, Infarct, AVC, Transplant, Boli autoimune severe."], 
@@ -560,7 +563,11 @@ export default function FormsPage() {
             sanatate_solution_2: { 
                 isProgressStep: true,
                 message: "CONVERSIA CĂTRE SOLUȚIE\nPe baza răspunsurilor tale, se poate construi o soluție care să îți ofere bani, acces și siguranță.\n\nAi vrea să vezi ce tip de protecție ți s-ar potrivi cel mai bine?", 
-                actionType: "buttons", options: ["Da", "Nu"], nextStep: "final_contact" 
+                actionType: "buttons", 
+                options: [
+                    { label: "Da", nextStep: "final_contact" },
+                    { label: "Nu", nextStep: "end_dialog_friendly" }
+                ]
             },
             final_contact: {
               isProgressStep: true,
