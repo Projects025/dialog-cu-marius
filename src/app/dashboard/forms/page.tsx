@@ -313,7 +313,11 @@ export default function FormsPage() {
             deces_present_solution: { 
                 isProgressStep: true,
                 message: ["Dacă nu ești foarte mulțumit cu opțiunile pe care familia ta le are, ai fi interesat să vezi o soluție personalizată care să ofere celor dragi ție o a doua șansă la o viață relativ normală, fără poveri financiare?", "Practic, o soluție prin care dragostea ta și grija ta pentru ei va continua chiar și după tine.", "Poți crea instant o moștenire care să îi ajute financiar pe cei dragi ție chiar și (mai ales!) în absența ta!"], 
-                actionType: "buttons", options: ["Da, vreau detalii", "Nu"], nextStep: "final_contact" 
+                actionType: "buttons", 
+                options: [
+                  { label: "Da, vreau detalii", nextStep: "final_contact" },
+                  { label: "Nu", nextStep: "end_dialog_friendly" }
+                ],
             },
             pensie_intro_1: { 
                 isProgressStep: true,
@@ -399,7 +403,11 @@ export default function FormsPage() {
             pensie_solution: { 
                 isProgressStep: true,
                 message: "Dacă nu ești foarte mulțumit cu aceste opțiuni, ai fi interesat să vezi o soluție personalizată care să-ți ofere posibilitatea de a-ți menține standardul de viață, opțiunile personale, demnitatea și statutul de susținător al familiei chiar și în etapa pensionării?", 
-                actionType: "buttons", options: ["Da, vreau detalii", "Nu"], nextStep: "final_contact" 
+                 actionType: "buttons", 
+                options: [
+                  { label: "Da, vreau detalii", nextStep: "final_contact" },
+                  { label: "Nu", nextStep: "end_dialog_friendly" }
+                ],
             },
             studii_intro_1: { 
                 isProgressStep: true,

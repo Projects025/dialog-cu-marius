@@ -95,6 +95,7 @@ type ConversationStep = {
     nextStep: ((response?: any, data?: any, loadedFlow?: any) => string) | string;
     autoContinue?: boolean;
     isProgressStep?: boolean;
+    branchStart?: boolean;
     delay?: number;
 };
 
@@ -197,6 +198,52 @@ const formatMessage = (template: string, data: any): string => {
     });
 };
 
+const countProgressStepsInPath = (flow: ConversationFlow, startStepId: string): number => {
+    if (!startStepId || !flow[startStepId]) return 0;
+    
+    let count = 0;
+    const queue = [startStepId];
+    const visited = new Set([startStepId]);
+    
+    // Pași comuni care pot termina un flux, dar pe care dorim să-i explorăm
+    const commonEndPoints = ['final_contact', 'end_dialog_friendly', 'thank_you_contact', 'thank_you_final'];
+
+    while (queue.length > 0) {
+        const currentId = queue.shift()!;
+        const currentStep = flow[currentId];
+
+        if (!currentStep) continue;
+
+        if (currentStep.isProgressStep) {
+            count++;
+        }
+
+        const exploreNext = (nextId: string | undefined) => {
+            if (nextId && (!visited.has(nextId) || commonEndPoints.includes(nextId))) {
+                visited.add(nextId);
+                queue.push(nextId);
+            }
+        };
+
+        if (currentStep.actionType === 'buttons' && Array.isArray(currentStep.options)) {
+            currentStep.options.forEach(opt => {
+                if (typeof opt === 'object' && opt.nextStep) {
+                    exploreNext(opt.nextStep);
+                } else if (currentStep.nextStep) {
+                    // Cazul pentru butoane simple care folosesc nextStep principal
+                    exploreNext(currentStep.nextStep as string);
+                }
+            });
+        }
+        
+        if (typeof currentStep.nextStep === 'string') {
+            exploreNext(currentStep.nextStep);
+        }
+    }
+    return count;
+};
+
+
 
 export default function ChatAppClient() {
     const searchParams = useSearchParams();
@@ -222,174 +269,145 @@ export default function ChatAppClient() {
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     
-
-    const allFlows = useMemo(() => ({
-        ...(loadedFlow || {}),
-        ...commonFlow
-    }), [loadedFlow]);
-
-    const getStep = useCallback((stepId: string): ConversationStep | null => {
-        if (!stepId) return null;
-        
-        const step = allFlows[stepId];
-        if (step) {
-            return step;
-        }
-
-        console.error("Invalid stepId:", stepId);
-        return null;
-    }, [allFlows]);
-
-    const PROGRESS_STEPS_IDS = useMemo(() => Object.keys(allFlows).filter(key => allFlows[key]?.isProgressStep), [allFlows]);
-    const TOTAL_STEPS = PROGRESS_STEPS_IDS.length;
+    const allFlows = useMemo(() => ({ ...(loadedFlow || {}), ...commonFlow }), [loadedFlow]);
 
     const conversationIdRef = useRef(0);
     const currentStateRef = useRef<string | null>(null);
     const userDataRef = useRef<FinancialData>({});
     const currentProgressStep = useRef(0);
+    const totalProgressSteps = useRef(99); // Start with a high number
+    const initialProgressStepsCount = useRef(0);
 
     const addMessage = useCallback((message: Omit<Message, "id" | "content">, content: string = "") => {
         const newMessage = { ...message, id: conversationIdRef.current++, content };
         setConversation((prev) => [...prev, newMessage]);
         return newMessage.id;
     }, []);
-    
-    const renderStep = useCallback(async (stepId: string) => {
-        currentStateRef.current = stepId;
+
+    // Refs to hold function logic to break dependency cycles
+    const renderStepRef = useRef<(stepId: string) => Promise<void>>(async () => {});
+    const processUserResponseRef = useRef<(response: any) => Promise<void>>(async () => {});
+
+    const renderStep = useCallback((stepId: string) => renderStepRef.current(stepId), []);
+    const processUserResponse = useCallback((response: any) => processUserResponseRef.current(response), []);
+
+    useEffect(() => {
+        renderStepRef.current = async (stepId: string) => {
+            currentStateRef.current = stepId;
+            userDataRef.current = performDynamicCalculations(userDataRef.current);
+            const step = allFlows[stepId];
         
-        userDataRef.current = performDynamicCalculations(userDataRef.current);
-        
-        const step = getStep(stepId);
-    
-        if (!step) {
-            setIsTyping(false);
-            setCurrentUserAction(null);
-            console.error(`Step "${stepId}" not found in flow.`);
-            return;
-        }
-    
-        setCurrentUserAction(null);
-    
-        let rawMessageContent;
-        if (typeof step.message === 'function') {
-            rawMessageContent = step.message(userDataRef.current);
-        } else {
-            rawMessageContent = step.message;
-        }
-
-        const messagesToShow = Array.isArray(rawMessageContent) ? rawMessageContent : (rawMessageContent ? [rawMessageContent] : []);
-
-        for (const [index, msg] of messagesToShow.entries()) {
-            const formattedMessage = formatMessage(msg, userDataRef.current);
-            setIsTyping(true);
-            await delay(step.delay || 800);
-            setIsTyping(false);
-            addMessage({ author: "Marius", type: "text" }, formattedMessage);
-
-             if (index < messagesToShow.length - 1) {
-                await delay(calculateDynamicDelay(formattedMessage));
+            if (!step) {
+                setIsTyping(false);
+                setCurrentUserAction(null);
+                console.error(`Step "${stepId}" not found in flow.`);
+                return;
             }
-        }
+        
+            setCurrentUserAction(null);
+        
+            if (step.isProgressStep) {
+                currentProgressStep.current++;
+                const newProgress = totalProgressSteps.current > 0 ? (currentProgressStep.current / totalProgressSteps.current) * 100 : 0;
+                setProgress(Math.min(newProgress, 100)); // Ensure it doesn't exceed 100
+            }
 
-        if (step.actionType === 'end') {
-            setIsConversationDone(true);
-            setCurrentUserAction({ type: 'end' });
-            return;
-        }
-    
-        if (step.autoContinue && step.nextStep) {
-             const nextStepId = typeof step.nextStep === 'function' ? step.nextStep(undefined, userDataRef.current, loadedFlow) : step.nextStep;
-             await delay(500); // Small pause before auto-continuing
-             await renderStep(nextStepId);
-        } else {
-            setCurrentUserAction({ type: step.actionType, options: step.options });
-        }
-    }, [addMessage, getStep, loadedFlow]);
+            let rawMessageContent = typeof step.message === 'function' ? step.message(userDataRef.current) : step.message;
+            const messagesToShow = Array.isArray(rawMessageContent) ? rawMessageContent : (rawMessageContent ? [rawMessageContent] : []);
 
-    const processUserResponse = useCallback(async (response: any) => {
-        setCurrentUserAction(null);
+            for (const [index, msg] of messagesToShow.entries()) {
+                const formattedMessage = formatMessage(msg, userDataRef.current);
+                setIsTyping(true);
+                await delay(step.delay || 800);
+                setIsTyping(false);
+                addMessage({ author: "Marius", type: "text" }, formattedMessage);
     
-        const currentStepId = currentStateRef.current;
-        if (!currentStepId) {
-            console.error("Cannot process response without a current state.");
-            return;
-        }
+                if (index < messagesToShow.length - 1) {
+                    await delay(calculateDynamicDelay(formattedMessage));
+                }
+            }
     
-        const step = getStep(currentStepId);
-        if (!step) return;
+            if (step.actionType === 'end') {
+                setIsConversationDone(true);
+                setCurrentUserAction({ type: 'end' });
+                return;
+            }
         
-        if (step.isProgressStep) {
-            currentProgressStep.current++;
-            const newProgress = TOTAL_STEPS > 0 ? (currentProgressStep.current / TOTAL_STEPS) * 100 : 0;
-            setProgress(newProgress);
-        }
-        
-        const rawResponseValue = (typeof response === 'object' && response !== null && !Array.isArray(response)) 
-            ? (response.id || response.value || response.label) 
-            : response;
+            if (step.autoContinue && step.nextStep) {
+                 const nextStepId = typeof step.nextStep === 'function' ? step.nextStep(undefined, userDataRef.current, loadedFlow) : step.nextStep;
+                 await delay(500); 
+                 await renderStep(nextStepId);
+            } else {
+                setCurrentUserAction({ type: step.actionType, options: step.options });
+            }
+        };
 
-        const displayResponseValue = (typeof response === 'object' && response !== null && response.label) ? response.label : response;
+        processUserResponseRef.current = async (response: any) => {
+            setCurrentUserAction(null);
+            const currentStepId = currentStateRef.current;
+            if (!currentStepId) return;
         
-        let userMessageContent: string | null = null;
-    
-        if (step.actionType === 'input' && step.options?.type === 'number') {
-            const numValue = Number(displayResponseValue);
-            userMessageContent = isNaN(numValue) ? String(displayResponseValue) : numValue.toLocaleString('ro-RO');
-        } else if (typeof displayResponseValue === 'number') {
-            userMessageContent = displayResponseValue.toLocaleString('ro-RO');
-        } else if (typeof displayResponseValue === 'string' && displayResponseValue.trim() !== '') {
-            userMessageContent = displayResponseValue;
-        } else if (Array.isArray(response) && response.length > 0) {
-            userMessageContent = response.map(item => (item.label || item)).join(', ');
-        } else if (displayResponseValue instanceof Date) {
-            userMessageContent = format(displayResponseValue, "dd/MM/yyyy");
-        } else if (typeof response === 'object' && response !== null && response.name) { // Contact form
-            userMessageContent = `Datele au fost trimise.`;
-        }
-        
-        if (userMessageContent !== null && (userMessageContent.trim() !== '' || typeof displayResponseValue === 'number')) {
-             if (typeof displayResponseValue === 'number' && displayResponseValue === 0 && (step.options?.type === 'number' && step.options?.placeholder)) {
-                 // Don't show '0' for optional numeric fields, let it be silent
-             } else {
+            const step = allFlows[currentStepId];
+            if (!step) return;
+
+            const rawResponseValue = (typeof response === 'object' && response !== null && !Array.isArray(response)) ? (response.id || response.value || response.label) : response;
+            const displayResponseValue = (typeof response === 'object' && response !== null && response.label) ? response.label : response;
+            
+            let userMessageContent: string | null = null;
+            if (step.actionType === 'input') {
+                userMessageContent = (typeof displayResponseValue === 'number') ? displayResponseValue.toLocaleString('ro-RO') : String(displayResponseValue);
+            } else if (Array.isArray(response)) {
+                userMessageContent = response.map(item => (item.label || item)).join(', ');
+            } else if (displayResponseValue instanceof Date) {
+                userMessageContent = format(displayResponseValue, "dd/MM/yyyy");
+            } else if (typeof response === 'object' && response !== null && response.name) {
+                userMessageContent = `Datele au fost trimise.`;
+            } else {
+                userMessageContent = String(displayResponseValue);
+            }
+            
+            if (userMessageContent && userMessageContent.trim() !== '') {
                  addMessage({ author: "user", type: "response" }, userMessageContent);
-             }
-        }
-        
-        const isNavigationButton = 
-            step.actionType === 'buttons' && 
-            (typeof rawResponseValue === 'string') &&
-            ['Continuă', 'Start', 'Da, continuăm', 'Sunt gata', 'Da'].includes(rawResponseValue);
-    
-        if (currentStepId && !isNavigationButton) {
-            userDataRef.current[currentStepId as keyof FinancialData] = rawResponseValue;
-            console.log(`[Data Capture] Saved ${currentStepId}:`, rawResponseValue);
-        }
-    
-        if (step.handler && typeof step.handler === 'function') {
-            step.handler(rawResponseValue, userDataRef.current);
-        }
-    
-        if (step.actionType === 'form') {
-            userDataRef.current.contact = response;
-            await saveLeadToFirestore(userDataRef.current, agentIdRef.current);
-        }
-        
-        let nextStepId;
-        if (typeof response === 'object' && response !== null && response.nextStep) {
-            nextStepId = response.nextStep;
-        } 
-        else if (typeof step.nextStep === 'function') {
-            nextStepId = step.nextStep(rawResponseValue, userDataRef.current, loadedFlow);
-        } else if (typeof step.nextStep === 'string') {
-            nextStepId = step.nextStep;
-        } else {
-            console.error("Eroare critică: nextStep nu este nici funcție, nici string valid.", step);
-            return; 
-        }
-        
-        await renderStep(nextStepId);
-    
-    }, [addMessage, renderStep, getStep, TOTAL_STEPS, loadedFlow]);
+            }
+            
+            const isNavigationButton = step.actionType === 'buttons' && ['Continuă', 'Start', 'Da, continuăm', 'Sunt gata', 'Da'].includes(rawResponseValue);
+            if (currentStepId && !isNavigationButton) {
+                userDataRef.current[currentStepId as keyof FinancialData] = rawResponseValue;
+            }
+
+            // Aici salvăm datele, după ce am adăugat și preferința de contact
+            if (currentStepId === 'thank_you_contact') {
+                userDataRef.current['contact_preference'] = rawResponseValue;
+                await saveLeadToFirestore(userDataRef.current, agentIdRef.current);
+            }
+            
+            if (step.actionType === 'form') {
+                userDataRef.current.contact = response;
+            }
+            
+            if (step.branchStart) {
+                const nextStepIdForBranch = typeof response === 'object' && response.nextStep ? response.nextStep : (typeof step.nextStep === 'function' ? step.nextStep(response) : step.nextStep);
+                if (nextStepIdForBranch) {
+                    const stepsInBranch = countProgressStepsInPath(allFlows, nextStepIdForBranch);
+                    totalProgressSteps.current = initialProgressStepsCount.current + stepsInBranch;
+                }
+            }
+
+            let nextStepId;
+            if (typeof response === 'object' && response !== null && response.nextStep) {
+                nextStepId = response.nextStep;
+            } else if (typeof step.nextStep === 'function') {
+                nextStepId = step.nextStep(rawResponseValue, userDataRef.current, loadedFlow);
+            } else if (typeof step.nextStep === 'string') {
+                nextStepId = step.nextStep;
+            } else {
+                return; 
+            }
+            
+            await renderStep(nextStepId);
+        };
+    }, [allFlows, addMessage, loadedFlow]);
+
 
     const startConversation = useCallback(async () => {
         setIsLoading(true);
@@ -397,24 +415,14 @@ export default function ChatAppClient() {
         
         try {
             const agentId = agentIdRef.current;
-            if (!agentId) {
-                // This case is handled by the parent component (shows SaaS landing)
-                // but as a fallback, we throw an error that can be displayed.
-                throw new Error("Link invalid sau incomplet. Te rog contactează consultantul tău.");
-            }
-
+            if (!agentId) throw new Error("Link invalid sau incomplet. Te rog contactează consultantul tău.");
             const agentRef = doc(db, "agents", agentId);
             const agentDoc = await getDoc(agentRef);
-            if (!agentDoc.exists()) {
-                throw new Error("Agentul nu a fost găsit.");
-            }
+            if (!agentDoc.exists()) throw new Error("Agentul nu a fost găsit.");
 
             const activeFormId = agentDoc.data().activeFormId;
-            if (!activeFormId) {
-                throw new Error("Acest agent nu are un formular activ configurat.");
-            }
+            if (!activeFormId) throw new Error("Acest agent nu are un formular activ configurat.");
 
-            // Track conversation start
             if (!hasTrackedStartRef.current) {
                 await trackConversationStart(agentId, activeFormId);
                 hasTrackedStartRef.current = true;
@@ -422,14 +430,36 @@ export default function ChatAppClient() {
 
             const formRef = doc(db, "formTemplates", activeFormId);
             const formDoc = await getDoc(formRef);
-            if (!formDoc.exists()) {
-                throw new Error("Formularul configurat nu a fost găsit.");
+            if (!formDoc.exists()) throw new Error("Formularul configurat nu a fost găsit.");
+            
+            const flow = formDoc.data().flow as ConversationFlow;
+            const startId = formDoc.data().startStepId || Object.keys(flow)[0];
+            
+            // Calcul initial progres
+            let branchPointFound = false;
+            let stepsBeforeBranch = 0;
+            let currentId = startId;
+            const visited = new Set();
+
+            while(currentId && !branchPointFound && !visited.has(currentId)){
+                visited.add(currentId);
+                const step = flow[currentId];
+                if(!step) break;
+
+                if(step.isProgressStep) {
+                    stepsBeforeBranch++;
+                }
+                if(step.branchStart){
+                    branchPointFound = true;
+                }
+                currentId = typeof step.nextStep === 'string' ? step.nextStep : '';
             }
             
-            const formData = formDoc.data();
-            setLoadedFlow(formData.flow as ConversationFlow);
-            
-            setStartStepId(formData.startStepId || Object.keys(formData.flow)[0]);
+            initialProgressStepsCount.current = stepsBeforeBranch;
+            totalProgressSteps.current = countProgressStepsInPath(flow, startId);
+
+            setLoadedFlow(flow);
+            setStartStepId(startId);
 
         } catch (error: any) {
             setErrorMessage(error.message);
