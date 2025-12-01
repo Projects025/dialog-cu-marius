@@ -312,7 +312,7 @@ export default function LeadsPage() {
 
         {/* Lead Details Dialog */}
         <Dialog open={!!selectedLead} onOpenChange={(isOpen) => !isOpen && setSelectedLead(null)}>
-            <DialogContent className="sm:max-w-lg">
+            <DialogContent className="sm:max-w-lg no-print">
                  <DialogHeader>
                     <DialogTitle>Detalii Client</DialogTitle>
                     <DialogDescription>
