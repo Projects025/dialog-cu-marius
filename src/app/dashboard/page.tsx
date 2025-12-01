@@ -7,7 +7,7 @@ import { User, onAuthStateChanged } from "firebase/auth";
 import { collection, query, where, getDocs, doc, getDoc, Timestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebaseConfig";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Users, Target, BarChart, Copy, CalendarClock, UserCheck } from 'lucide-react';
+import { Users, Target, BarChart, Copy, CalendarClock, UserCheck, UserX } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,7 @@ interface LeadData {
 interface Stats {
     totalVisitors: number;
     totalLeads: number;
+    abandoned: number;
     convertedLeads: number;
     leadsThisWeek: number;
     leadsLast7Days: { date: string; count: number }[];
@@ -91,6 +92,7 @@ export default function DashboardSummaryPage() {
                     const totalVisitors = analyticsSnapshot.size;
 
                     // Calculate Metrics
+                    const abandoned = totalVisitors - totalLeads;
                     const convertedLeads = allLeads.filter(lead => lead.status === 'Convertit').length;
                     
                     const sevenDaysAgo = new Date();
@@ -129,6 +131,7 @@ export default function DashboardSummaryPage() {
                     setStats({
                         totalVisitors,
                         totalLeads,
+                        abandoned,
                         convertedLeads,
                         leadsThisWeek,
                         leadsLast7Days,
@@ -163,11 +166,12 @@ export default function DashboardSummaryPage() {
         });
     };
     
-    const abandonRate = stats ? (stats.totalVisitors > 0 ? (((stats.totalVisitors - stats.totalLeads) / stats.totalVisitors) * 100).toFixed(0) : 0) : 0;
+    const abandonRate = stats ? (stats.totalVisitors > 0 ? ((stats.abandoned / stats.totalVisitors) * 100).toFixed(0) : 0) : 0;
     
     const funnelData = stats ? [
         { name: 'Conversații', value: stats.totalVisitors, fill: 'hsl(var(--chart-1))' },
         { name: 'Lead-uri', value: stats.totalLeads, fill: 'hsl(var(--chart-2))' },
+        { name: 'Abandon', value: stats.abandoned, fill: 'hsl(var(--chart-4))' },
         { name: 'Convertiți', value: stats.convertedLeads, fill: 'hsl(var(--chart-3))' }
     ] : [];
 
@@ -181,17 +185,17 @@ export default function DashboardSummaryPage() {
             ) : stats ? (
                 <>
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                       <StatCard title="Conversații Începute" value={stats.totalVisitors} icon={Users} description={`${stats.totalVisitors - stats.totalLeads} nu au finalizat (${abandonRate}% abandon)`} />
+                       <StatCard title="Conversații Începute" value={stats.totalVisitors} icon={Users} description="Total vizitatori pe link-ul tău" />
                        <Link href="/dashboard/leads"><StatCard title="Lead-uri Generate" value={stats.totalLeads} icon={Target} description="Clienți care au completat formularul" /></Link>
+                       <StatCard title="Conversații Abandonate" value={stats.abandoned} icon={UserX} description={`${abandonRate}% din total conversații`} />
                        <Link href="/dashboard/leads"><StatCard title="Clienți Convertiți" value={stats.convertedLeads} icon={UserCheck} description="Lead-uri cu status 'Convertit'" /></Link>
-                       <Link href="/dashboard/leads"><StatCard title="Lead-uri Noi" value={stats.leadsThisWeek} icon={CalendarClock} description="În ultimele 7 zile"/></Link>
                     </div>
 
                     <div className="grid gap-6 grid-cols-1 lg:grid-cols-5">
                          <div className="lg:col-span-2">
                              <StatChart 
                                 title="Performanță Funnel"
-                                description="Comparativ: Conversații, Lead-uri, Clienți"
+                                description="Distribuția evenimentelor principale"
                                 type="bar"
                                 data={funnelData}
                                 dataKey="value"
