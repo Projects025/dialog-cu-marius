@@ -55,11 +55,11 @@ const StatCard = ({ title, value, icon: Icon, description }: { title: string, va
     )
 }
 
-const InsightCard = ({ icon: Icon, title, children }: { icon: React.ElementType, title: string, children: React.ReactNode }) => {
+const InsightCard = ({ icon: Icon, title, children }: { icon: React.ElementType, title: React.ReactNode, children: React.ReactNode }) => {
     return (
         <div className="flex items-start gap-4 p-4 rounded-lg bg-muted/30 border border-border/50">
             <Icon className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
-            <div className="flex-grow">
+            <div className="flex-grow min-w-0">
                 <h4 className="font-semibold text-foreground">{title}</h4>
                 <div className="text-sm text-muted-foreground">{children}</div>
             </div>
@@ -295,7 +295,12 @@ export default function DashboardSummaryPage() {
                                     </InsightCard>
                                 )}
                                  {insights?.priorityLead ? (
-                                    <InsightCard icon={Star} title={`Prioritizează pe ${insights.priorityLead.name}`}>
+                                    <InsightCard icon={Star} title={
+                                        <div className="flex items-center flex-wrap">
+                                            <span>Prioritizează pe&nbsp;</span>
+                                            <span className="font-bold truncate">{insights.priorityLead.name}</span>
+                                        </div>
+                                    }>
                                         Acest client are un deficit calculat de <span className="font-bold">{insights.priorityLead.deficit.toLocaleString('ro-RO')} lei</span>.
                                     </InsightCard>
                                 ) : (
