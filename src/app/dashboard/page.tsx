@@ -4,14 +4,16 @@
 import { useState, useEffect } from "react";
 import Link from 'next/link';
 import { User, onAuthStateChanged } from "firebase/auth";
-import { collection, query, where, getDocs, doc, getDoc, Timestamp } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, getDoc, Timestamp, updateDoc, setDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebaseConfig";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Users, Target, BarChart, Copy, CalendarClock, UserCheck, UserX } from 'lucide-react';
+import { Users, Target, BarChart, Copy, CalendarClock, UserCheck, UserX, TrendingUp, Goal, Edit } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import StatChart from "@/components/dashboard/StatChart";
+import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
 
 interface LeadData {
     status: string;
@@ -21,10 +23,10 @@ interface LeadData {
 interface Stats {
     totalVisitors: number;
     totalLeads: number;
-    abandoned: number;
+    conversionRate: number;
     convertedLeads: number;
-    leadsThisWeek: number;
-    leadsLast7Days: { date: string; count: number }[];
+    closingRate: number;
+    monthlyComparison: { name: string; 'Luna curentă': number; 'Luna trecută': number }[];
 }
 
 const StatCard = ({ title, value, icon: Icon, description }: { title: string, value: string | number, icon: React.ElementType, description?: string }) => {
@@ -48,6 +50,11 @@ export default function DashboardSummaryPage() {
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
     const [activeFormId, setActiveFormId] = useState<string | null>(null);
+    
+    const [monthlyGoal, setMonthlyGoal] = useState(10);
+    const [convertedThisMonth, setConvertedThisMonth] = useState(0);
+    const [isEditingGoal, setIsEditingGoal] = useState(false);
+    const [newGoal, setNewGoal] = useState(monthlyGoal);
 
 
     useEffect(() => {
@@ -66,73 +73,71 @@ export default function DashboardSummaryPage() {
             const fetchDashboardData = async () => {
                 setLoading(true);
                 try {
-                    // Fetch Agent Data
+                    // Fetch Agent Data (including monthly goal)
                     const agentRef = doc(db, "agents", user.uid);
                     const agentDoc = await getDoc(agentRef);
                     if (agentDoc.exists()) {
-                        setActiveFormId(agentDoc.data().activeFormId);
+                        const agentData = agentDoc.data();
+                        setActiveFormId(agentData.activeFormId);
+                        setMonthlyGoal(agentData.monthlyGoal || 10);
+                        setNewGoal(agentData.monthlyGoal || 10);
                     }
 
-                    // Fetch Leads Data
+                    // Fetch Leads Data for agent
                     const leadsQuery = query(
                         collection(db, "leads"),
                         where("agentId", "==", user.uid)
                     );
                     const leadsSnapshot = await getDocs(leadsQuery);
                     const allLeads: LeadData[] = leadsSnapshot.docs.map(doc => doc.data() as LeadData);
-                    const totalLeads = allLeads.length;
-                    
-                    // Fetch Analytics Data (Visitors)
+
+                    // Fetch Analytics Data (Visitors) for agent
                     const analyticsQuery = query(
                         collection(db, 'analytics'),
                         where('agentId', '==', user.uid),
                         where('type', '==', 'conversation_start')
                     );
                     const analyticsSnapshot = await getDocs(analyticsQuery);
-                    const totalVisitors = analyticsSnapshot.size;
+                    const allVisitors = analyticsSnapshot.docs.map(doc => doc.data() as { timestamp: Timestamp });
 
-                    // Calculate Metrics
-                    const abandoned = totalVisitors - totalLeads;
-                    const convertedLeads = allLeads.filter(lead => lead.status === 'Convertit').length;
-                    
+                    // --- CALCULATE METRICS ---
                     const now = new Date();
-                    const sevenDaysAgo = new Date(now);
-                    sevenDaysAgo.setDate(now.getDate() - 7);
-                    
-                    const leadsThisWeek = allLeads.filter(lead => {
-                         const timestamp = lead.timestamp?.toDate();
-                         return timestamp && timestamp >= sevenDaysAgo;
+                    const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+
+                    // Leads
+                    const leadsThisMonth = allLeads.filter(l => l.timestamp.toDate() >= startOfThisMonth).length;
+                    const leadsLastMonth = allLeads.filter(l => {
+                        const d = l.timestamp.toDate();
+                        return d >= startOfLastMonth && d <= endOfLastMonth;
+                    }).length;
+
+                    // Converted Leads
+                    const convertedThisMonthCount = allLeads.filter(l => l.status === 'Convertit' && l.timestamp.toDate() >= startOfThisMonth).length;
+                    setConvertedThisMonth(convertedThisMonthCount);
+                    const convertedLastMonth = allLeads.filter(l => {
+                        const d = l.timestamp.toDate();
+                        return l.status === 'Convertit' && d >= startOfLastMonth && d <= endOfLastMonth;
                     }).length;
                     
-                    // Prepare data for the 7-day chart
-                    const leadsByDay: {[key: string]: number} = {};
-                    for (let i = 0; i < 7; i++) {
-                        const d = new Date();
-                        d.setDate(d.getDate() - i);
-                        const key = d.toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit'});
-                        leadsByDay[key] = 0;
-                    }
+                     // Visitors
+                    const visitorsThisMonth = allVisitors.filter(v => v.timestamp.toDate() >= startOfThisMonth).length;
 
-                    allLeads.forEach(lead => {
-                        const leadDate = lead.timestamp?.toDate();
-                        if (leadDate) {
-                            const key = leadDate.toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit' });
-                            if (key in leadsByDay) {
-                                leadsByDay[key]++;
-                            }
-                        }
-                    });
-                    
-                    const leadsLast7Days = Object.entries(leadsByDay).map(([date, count]) => ({ date, count })).reverse();
-
+                    // Rates
+                    const conversionRate = visitorsThisMonth > 0 ? (leadsThisMonth / visitorsThisMonth) * 100 : 0;
+                    const closingRate = leadsThisMonth > 0 ? (convertedThisMonthCount / leadsThisMonth) * 100 : 0;
 
                     setStats({
-                        totalVisitors,
-                        totalLeads,
-                        abandoned,
-                        convertedLeads,
-                        leadsThisWeek,
-                        leadsLast7Days,
+                        totalVisitors: allVisitors.length,
+                        totalLeads: allLeads.length,
+                        conversionRate: Math.round(conversionRate),
+                        convertedLeads: allLeads.filter(l => l.status === 'Convertit').length,
+                        closingRate: Math.round(closingRate),
+                        monthlyComparison: [
+                            { name: 'Lead-uri', 'Luna curentă': leadsThisMonth, 'Luna trecută': leadsLastMonth },
+                            { name: 'Convertiți', 'Luna curentă': convertedThisMonthCount, 'Luna trecută': convertedLastMonth },
+                        ]
                     });
 
                 } catch (error) {
@@ -145,6 +150,35 @@ export default function DashboardSummaryPage() {
             fetchDashboardData();
         }
     }, [user, toast]);
+    
+    const handleSaveGoal = async () => {
+        if (!user) return;
+        const goalValue = Number(newGoal);
+        if (isNaN(goalValue) || goalValue <= 0) {
+            toast({ variant: 'destructive', title: 'Obiectiv invalid', description: 'Te rog introdu un număr pozitiv.' });
+            return;
+        }
+
+        const agentRef = doc(db, 'agents', user.uid);
+        try {
+            await updateDoc(agentRef, { monthlyGoal: goalValue });
+            setMonthlyGoal(goalValue);
+            setIsEditingGoal(false);
+            toast({ title: 'Succes!', description: 'Obiectivul a fost actualizat.' });
+        } catch (error) {
+            // If the document doesn't exist, create it.
+             if ((error as any).code === 'not-found') {
+                 await setDoc(agentRef, { monthlyGoal: goalValue }, { merge: true });
+                 setMonthlyGoal(goalValue);
+                 setIsEditingGoal(false);
+                 toast({ title: 'Succes!', description: 'Obiectivul a fost salvat.' });
+             } else {
+                console.error("Error updating goal:", error);
+                toast({ variant: 'destructive', title: 'Eroare', description: 'Nu s-a putut salva obiectivul.' });
+             }
+        }
+    };
+
 
     const copyToClipboard = () => {
         if (!user) return;
@@ -164,14 +198,7 @@ export default function DashboardSummaryPage() {
         });
     };
     
-    const abandonRate = stats ? (stats.totalVisitors > 0 ? ((stats.abandoned / stats.totalVisitors) * 100).toFixed(0) : 0) : 0;
-    
-    const funnelData = stats ? [
-        { name: 'Conversații', value: stats.totalVisitors, fill: 'hsl(var(--chart-1))' },
-        { name: 'Lead-uri', value: stats.totalLeads, fill: 'hsl(var(--chart-2))' },
-        { name: 'Abandon', value: stats.abandoned, fill: 'hsl(var(--chart-4))' },
-        { name: 'Convertiți', value: stats.convertedLeads, fill: 'hsl(var(--chart-3))' }
-    ] : [];
+    const goalProgress = monthlyGoal > 0 ? (convertedThisMonth / monthlyGoal) * 100 : 0;
 
     return (
         <div className="space-y-6">
@@ -183,30 +210,56 @@ export default function DashboardSummaryPage() {
             ) : stats ? (
                 <>
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                       <StatCard title="Conversații Începute" value={stats.totalVisitors} icon={Users} description={`${abandonRate}% abandon`} />
-                       <Link href="/dashboard/leads"><StatCard title="Lead-uri Generate" value={stats.totalLeads} icon={Target} description="Clienți care au completat formularul" /></Link>
-                       <StatCard title="Conversații Abandonate" value={stats.abandoned} icon={UserX} description="Nu au finalizat formularul" />
-                       <Link href="/dashboard/leads"><StatCard title="Clienți Convertiți" value={stats.convertedLeads} icon={UserCheck} description="Lead-uri cu status 'Convertit'" /></Link>
+                       <Link href="/dashboard/leads"><StatCard title="Total Lead-uri" value={stats.totalLeads} icon={Users} description="Clienți care au finalizat analiza" /></Link>
+                       <StatCard title="Rată de Conversie" value={`${stats.conversionRate}%`} icon={TrendingUp} description="Vizitatori → Lead-uri (Luna Curentă)" />
+                       <Link href="/dashboard/leads"><StatCard title="Total Clienți Convertiți" value={stats.convertedLeads} icon={UserCheck} description="Lead-uri cu status 'Convertit'" /></Link>
+                       <StatCard title="Rată de Închidere" value={`${stats.closingRate}%`} icon={Target} description="Lead-uri → Convertiți (Luna Curentă)" />
                     </div>
 
                     <div className="grid gap-6 grid-cols-1 lg:grid-cols-5">
                          <div className="lg:col-span-2">
-                             <StatChart 
-                                title="Performanță Funnel"
-                                description="Distribuția evenimentelor principale"
-                                type="bar"
-                                data={funnelData}
-                                dataKey="value"
-                            />
+                             <Card className="h-full flex flex-col">
+                                 <CardHeader>
+                                     <CardTitle>Obiectiv Lunar</CardTitle>
+                                     <CardDescription>Clienți convertiți luna aceasta.</CardDescription>
+                                 </CardHeader>
+                                 <CardContent className="flex-grow flex flex-col justify-center items-center gap-4">
+                                    <div className="relative w-40 h-40">
+                                        <svg className="w-full h-full" viewBox="0 0 36 36">
+                                            <path className="text-muted/50" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="2.5"></path>
+                                            <path className="text-primary" stroke-linecap="round" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="2.5" stroke-dasharray={`${goalProgress}, 100`}></path>
+                                        </svg>
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                            <span className="text-3xl font-bold">{convertedThisMonth}</span>
+                                            <span className="text-sm text-muted-foreground">din {monthlyGoal}</span>
+                                        </div>
+                                    </div>
+                                    {isEditingGoal ? (
+                                        <div className="flex items-center gap-2 w-full max-w-[200px] mx-auto">
+                                            <Input 
+                                                type="number" 
+                                                value={newGoal}
+                                                onChange={(e) => setNewGoal(Number(e.target.value))}
+                                                className="h-9 text-center"
+                                                onKeyDown={(e) => e.key === 'Enter' && handleSaveGoal()}
+                                            />
+                                            <Button size="sm" onClick={handleSaveGoal}>Salvează</Button>
+                                        </div>
+                                    ) : (
+                                        <Button variant="ghost" size="sm" onClick={() => setIsEditingGoal(true)}>
+                                            <Edit className="h-3 w-3 mr-2" /> Setează Obiectiv
+                                        </Button>
+                                    )}
+                                 </CardContent>
+                             </Card>
                          </div>
                          <div className="lg:col-span-3">
                              <StatChart 
-                                title="Activitate recentă"
-                                description="Lead-uri noi generate în ultimele 7 zile"
-                                type="line"
-                                data={stats.leadsLast7Days}
-                                dataKey="count"
-                                categories={['date']}
+                                title="Performanță Comparativă"
+                                description="Comparativ cu luna precedentă"
+                                type="bar"
+                                data={stats.monthlyComparison}
+                                categories={['Luna curentă', 'Luna trecută']}
                             />
                          </div>
                     </div>

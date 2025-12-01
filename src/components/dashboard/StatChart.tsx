@@ -2,7 +2,7 @@
 "use client"
 
 import * as React from "react"
-import { Bar, BarChart, Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts"
+import { Bar, BarChart, Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
 
@@ -11,14 +11,18 @@ interface StatChartProps {
     description: string;
     type: 'bar' | 'line';
     data: any[];
-    dataKey: string;
+    dataKey?: string;
     categories?: string[];
 }
 
 const chartConfig = {
-    value: {
-      label: "Valoare",
+    'Luna curentă': {
+      label: "Luna curentă",
       color: "hsl(var(--chart-1))",
+    },
+    'Luna trecută': {
+        label: "Luna trecută",
+        color: "hsl(var(--muted))",
     },
     count: {
         label: "Număr",
@@ -30,23 +34,35 @@ const chartConfig = {
 export default function StatChart({ title, description, type, data, dataKey, categories }: StatChartProps) {
     
     const renderChart = () => {
-        if (type === 'bar') {
-            return (
-                <BarChart data={data} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+        if (type === 'bar' && categories) {
+             return (
+                <BarChart data={data} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                     <CartesianGrid vertical={false} strokeDasharray="3 3" />
                     <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false}/>
                     <ChartTooltip
                         cursor={{ fill: 'hsla(var(--muted))' }}
-                        content={<ChartTooltipContent hideLabel />} 
+                        content={<ChartTooltipContent />} 
                     />
-                    <Bar dataKey={dataKey} radius={[4, 4, 0, 0]} />
+                    <Legend content={({ payload }) => (
+                        <div className="flex gap-4 justify-center mt-2">
+                        {payload?.map((entry, index) => (
+                            <div key={`item-${index}`} className="flex items-center gap-1.5">
+                                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
+                                <span className="text-xs text-muted-foreground">{entry.value}</span>
+                            </div>
+                        ))}
+                        </div>
+                    )} />
+                    {categories.map((cat, index) => (
+                         <Bar key={cat} dataKey={cat} fill={`hsl(var(--chart-${index + 1}))`} radius={[4, 4, 0, 0]} />
+                    ))}
                 </BarChart>
             )
         }
-        if (type === 'line') {
+        if (type === 'line' && dataKey) {
             return (
-                <LineChart data={data} margin={{ top: 5, right: 10, left: 12, bottom: 0 }}>
+                <LineChart data={data} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
                     <CartesianGrid vertical={false} strokeDasharray="3 3" />
                     <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
                     <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
@@ -76,7 +92,7 @@ export default function StatChart({ title, description, type, data, dataKey, cat
     }
 
     return (
-        <Card>
+        <Card className="h-full">
             <CardHeader>
                 <CardTitle>{title}</CardTitle>
                 <CardDescription>{description}</CardDescription>
