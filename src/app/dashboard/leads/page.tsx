@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { FilePlus2 } from "lucide-react";
 import LeadCard from "@/components/dashboard/LeadCard";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import ExportButtons from "@/components/dashboard/ExportButtons";
 
 
 const LeadDetailItem = ({ label, value }: { label: string, value: any }) => {
@@ -86,11 +87,14 @@ export default function LeadsPage() {
             orderBy("timestamp", "desc")
           );
           const querySnapshot = await getDocs(q);
-          const leadsData = querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-            timestamp: doc.data().timestamp?.toDate()
-          }));
+          const leadsData = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              ...data,
+              timestamp: data.timestamp?.toDate()
+            }
+          });
           setLeads(leadsData);
         } catch (error) {
           console.error("Error fetching leads:", error);
@@ -171,7 +175,7 @@ export default function LeadsPage() {
   
   return (
     <>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between no-print">
           <h1 className="text-xl font-bold md:text-2xl">Clienții Tăi</h1>
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
               <DialogTrigger asChild>
@@ -220,8 +224,12 @@ export default function LeadsPage() {
            </Dialog>
       </div>
 
+       <div className="my-4 no-print">
+            <ExportButtons leads={leads} />
+       </div>
+
        {/* Mobile View: List of Cards */}
-      <div className="grid grid-cols-1 gap-4 md:hidden">
+      <div className="grid grid-cols-1 gap-4 md:hidden no-print">
           {loading ? (
               <p className="text-center text-sm py-4">Se încarcă clienții...</p>
           ) : leads.length > 0 ? (
@@ -234,71 +242,73 @@ export default function LeadsPage() {
       </div>
 
       {/* Desktop View: Table */}
-      <Card className="hidden md:block">
-          <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                  <Table>
-                      <TableHeader>
-                      <TableRow>
-                          <TableHead className="text-xs">Dată</TableHead>
-                          <TableHead className="text-xs">Nume</TableHead>
-                          <TableHead className="text-xs">Email</TableHead>
-                          <TableHead className="text-xs">Telefon</TableHead>
-                          <TableHead className="text-xs">Sursă</TableHead>
-                          <TableHead className="text-xs">Status</TableHead>
-                      </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                      {loading ? (
-                          <TableRow>
-                            <TableCell colSpan={6} className="text-center text-sm py-4">Se încarcă clienții...</TableCell>
-                          </TableRow>
-                      ) : leads.length > 0 ? (
-                          leads.map((lead) => (
-                          <TableRow key={lead.id} onClick={() => setSelectedLead(lead)} className="cursor-pointer">
-                              <TableCell className="text-sm py-2">
-                                  {lead.timestamp ? new Date(lead.timestamp).toLocaleDateString('ro-RO') : 'N/A'}
-                              </TableCell>
-                              <TableCell className="text-sm py-2">{lead.contact?.name || "N/A"}</TableCell>
-                              <TableCell className="text-sm py-2">{lead.contact?.email || "N/A"}</TableCell>
-                              <TableCell className="text-sm py-2">{lead.contact?.phone || "N/A"}</TableCell>
-                               <TableCell className="py-2">
-                                {lead.source === 'Manual' 
-                                    ? <Badge variant="secondary">Manual</Badge> 
-                                    : <Badge variant="default">Link Client</Badge>}
-                              </TableCell>
-                              <TableCell className="text-sm py-2">
-                                  <Select 
-                                      value={lead.status || "Nou"}
-                                      onValueChange={(newStatus) => handleStatusChange(lead.id, newStatus)}
-                                  >
-                                      <SelectTrigger className="w-full h-8 text-xs">
-                                          <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                          <SelectItem value="Nou">Nou</SelectItem>
-                                          <SelectItem value="De contactat">De contactat</SelectItem>
-                                          <SelectItem value="Contactat">Contactat</SelectItem>
-                                          <SelectItem value="Ofertă trimisă">Ofertă trimisă</SelectItem>
-                                          <SelectItem value="Convertit">Convertit</SelectItem>
-                                          <SelectItem value="Inactiv">Inactiv</SelectItem>
-                                      </SelectContent>
-                                  </Select>
-                              </TableCell>
-                          </TableRow>
-                          ))
-                      ) : (
-                          <TableRow>
-                          <TableCell colSpan={6} className="text-center text-sm py-4">
-                              Nu ai niciun client momentan. Poți adăuga unul manual.
-                          </TableCell>
-                          </TableRow>
-                      )}
-                      </TableBody>
-                  </Table>
-              </div>
-          </CardContent>
-        </Card>
+      <div id="print-area">
+        <Card className="hidden md:block">
+            <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                    <Table>
+                        <TableHeader>
+                        <TableRow>
+                            <TableHead className="text-xs">Dată</TableHead>
+                            <TableHead className="text-xs">Nume</TableHead>
+                            <TableHead className="text-xs">Email</TableHead>
+                            <TableHead className="text-xs">Telefon</TableHead>
+                            <TableHead className="text-xs">Sursă</TableHead>
+                            <TableHead className="text-xs no-print">Status</TableHead>
+                        </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                        {loading ? (
+                            <TableRow>
+                                <TableCell colSpan={6} className="text-center text-sm py-4">Se încarcă clienții...</TableCell>
+                            </TableRow>
+                        ) : leads.length > 0 ? (
+                            leads.map((lead) => (
+                            <TableRow key={lead.id} onClick={() => setSelectedLead(lead)} className="cursor-pointer">
+                                <TableCell className="text-sm py-2">
+                                    {lead.timestamp ? new Date(lead.timestamp).toLocaleDateString('ro-RO') : 'N/A'}
+                                </TableCell>
+                                <TableCell className="text-sm py-2">{lead.contact?.name || "N/A"}</TableCell>
+                                <TableCell className="text-sm py-2">{lead.contact?.email || "N/A"}</TableCell>
+                                <TableCell className="text-sm py-2">{lead.contact?.phone || "N/A"}</TableCell>
+                                <TableCell className="py-2">
+                                    {lead.source === 'Manual' 
+                                        ? <Badge variant="secondary">Manual</Badge> 
+                                        : <Badge variant="default">Link Client</Badge>}
+                                </TableCell>
+                                <TableCell className="text-sm py-2 no-print">
+                                    <Select 
+                                        value={lead.status || "Nou"}
+                                        onValueChange={(newStatus) => handleStatusChange(lead.id, newStatus)}
+                                    >
+                                        <SelectTrigger className="w-full h-8 text-xs">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="Nou">Nou</SelectItem>
+                                            <SelectItem value="De contactat">De contactat</SelectItem>
+                                            <SelectItem value="Contactat">Contactat</SelectItem>
+                                            <SelectItem value="Ofertă trimisă">Ofertă trimisă</SelectItem>
+                                            <SelectItem value="Convertit">Convertit</SelectItem>
+                                            <SelectItem value="Inactiv">Inactiv</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </TableCell>
+                            </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                            <TableCell colSpan={6} className="text-center text-sm py-4">
+                                Nu ai niciun client momentan. Poți adăuga unul manual.
+                            </TableCell>
+                            </TableRow>
+                        )}
+                        </TableBody>
+                    </Table>
+                </div>
+            </CardContent>
+            </Card>
+        </div>
 
         {/* Lead Details Dialog */}
         <Dialog open={!!selectedLead} onOpenChange={(isOpen) => !isOpen && setSelectedLead(null)}>

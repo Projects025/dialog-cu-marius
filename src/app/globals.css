@@ -113,3 +113,21 @@
 body {
   background: radial-gradient(circle at top, hsl(222, 40%, 15%), hsl(var(--background)));
 }
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #print-area, #print-area * {
+    visibility: visible;
+  }
+  #print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
