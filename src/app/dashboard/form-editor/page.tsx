@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Save, ArrowUp, ArrowDown, Trash2, GitBranch } from 'lucide-react';
+import { PlusCircle, Save, ArrowUp, ArrowDown, Trash2, GitBranch, Pencil } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 type StepData = {
@@ -26,16 +26,21 @@ type StepData = {
 };
 
 // Componenta pentru cardul unui pas
-const StepCard = ({ step, index, totalSteps, onStepChange, onMove, onDelete, allStepIds }: {
+const StepCard = ({ step, index, totalSteps, onStepChange, onMove, onDelete, onRename, allStepIds }: {
     step: StepData,
     index: number,
     totalSteps: number,
     onStepChange: (index: number, field: keyof StepData, value: any) => void,
     onMove: (index: number, direction: 'up' | 'down') => void,
     onDelete: (index: number) => void,
+    onRename: (oldId: string, newId: string) => void,
     allStepIds: string[]
 }) => {
     
+    const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
+    const [newStepId, setNewStepId] = useState(step.id);
+    const { toast } = useToast();
+
     const handleAddButtonOption = () => {
         const newOptions = [...(step.options || []), { label: 'Opțiune nouă', nextStep: '' }];
         onStepChange(index, 'options', newOptions);
@@ -50,6 +55,20 @@ const StepCard = ({ step, index, totalSteps, onStepChange, onMove, onDelete, all
     const handleDeleteButtonOption = (optionIndex: number) => {
         const newOptions = step.options.filter((_: any, i: number) => i !== optionIndex);
         onStepChange(index, 'options', newOptions);
+    };
+
+    const handleRename = () => {
+        const trimmedNewId = newStepId.trim();
+        if (!trimmedNewId) {
+            toast({ variant: "destructive", title: "ID-ul nu poate fi gol." });
+            return;
+        }
+        if (allStepIds.includes(trimmedNewId) && trimmedNewId !== step.id) {
+            toast({ variant: "destructive", title: "Acest ID există deja." });
+            return;
+        }
+        onRename(step.id, trimmedNewId);
+        setIsRenameModalOpen(false);
     };
 
     const renderBranchingSummary = () => {
@@ -96,8 +115,13 @@ const StepCard = ({ step, index, totalSteps, onStepChange, onMove, onDelete, all
             <div className="space-y-4 p-4 bg-background rounded-md">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                        <Label htmlFor={`id-${step.id}`}>ID Pas (nemodificabil)</Label>
-                        <Input id={`id-${step.id}`} value={step.id} disabled className="font-mono text-muted-foreground"/>
+                        <Label htmlFor={`id-${step.id}`}>ID Pas</Label>
+                        <div className="flex items-center gap-2">
+                           <Input id={`id-${step.id}`} value={step.id} disabled className="font-mono text-muted-foreground"/>
+                           <Button variant="outline" size="icon" className="h-10 w-10 flex-shrink-0" onClick={() => { setNewStepId(step.id); setIsRenameModalOpen(true); }}>
+                               <Pencil className="h-4 w-4" />
+                           </Button>
+                        </div>
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor={`actionType-${step.id}`}>Tip Acțiune Utilizator</Label>
@@ -182,6 +206,24 @@ const StepCard = ({ step, index, totalSteps, onStepChange, onMove, onDelete, all
                 )}
             </div>
              {renderBranchingSummary()}
+             <Dialog open={isRenameModalOpen} onOpenChange={setIsRenameModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Redenumește Pas</DialogTitle>
+                        <DialogDescription>Atenție: Acest lucru va actualiza automat toate referințele către acest pas.</DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="new-step-id">ID Pas Nou</Label>
+                            <Input id="new-step-id" placeholder="ex: intrebare_buget_nou" value={newStepId} onChange={(e) => setNewStepId(e.target.value.toLowerCase().replace(/\s+/g, '_'))} className="font-mono"/>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsRenameModalOpen(false)}>Anulează</Button>
+                        <Button onClick={handleRename}>Redenumește</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };
@@ -305,6 +347,44 @@ function FormEditor() {
         toast({ title: "Succes!", description: `Pasul a fost șters local. Salvează pentru a confirma.` });
     };
 
+    const handleRenameStep = (oldId: string, newId: string) => {
+        if (oldId === newId) return;
+
+        setSteps(prevSteps => {
+            const newSteps = [...prevSteps];
+
+            // 1. Rename the step ID itself
+            const stepIndex = newSteps.findIndex(s => s.id === oldId);
+            if (stepIndex > -1) {
+                newSteps[stepIndex] = { ...newSteps[stepIndex], id: newId };
+            }
+
+            // 2. Update all references to the old ID
+            return newSteps.map(step => {
+                let updatedStep = { ...step };
+
+                // Update nextStep if it points to the old ID
+                if (updatedStep.nextStep === oldId) {
+                    updatedStep.nextStep = newId;
+                }
+
+                // Update nextStep within button options
+                if (updatedStep.actionType === 'buttons' && Array.isArray(updatedStep.options)) {
+                    updatedStep.options = updatedStep.options.map((opt: any) => {
+                        if (opt.nextStep === oldId) {
+                            return { ...opt, nextStep: newId };
+                        }
+                        return opt;
+                    });
+                }
+
+                return updatedStep;
+            });
+        });
+
+        toast({ title: "Succes!", description: `Pasul a fost redenumit în "${newId}". Nu uita să salvezi.` });
+    };
+
     const moveStep = (index: number, direction: 'up' | 'down') => {
         if ( (direction === 'up' && index === 0) || (direction === 'down' && index === steps.length - 1) ) return;
         setSteps(prev => {
@@ -405,7 +485,7 @@ function FormEditor() {
                            <StepCard
                                 key={step.id} step={step} index={index} totalSteps={steps.length}
                                 onStepChange={handleStepChange} onMove={moveStep} onDelete={handleDeleteStep}
-                                allStepIds={allStepIds}
+                                onRename={handleRenameStep} allStepIds={allStepIds}
                            />
                         ))}
                     </div>
@@ -452,8 +532,6 @@ function FormEditor() {
 export default function FormEditorPage() {
     return ( <Suspense fallback={<div className="text-center mt-8">Se încarcă...</div>}> <FormEditor /> </Suspense> );
 }
-    
-
     
 
     
