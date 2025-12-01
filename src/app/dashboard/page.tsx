@@ -95,10 +95,10 @@ export default function DashboardSummaryPage() {
                     const abandoned = totalVisitors - totalLeads;
                     const convertedLeads = allLeads.filter(lead => lead.status === 'Convertit').length;
                     
-                    const sevenDaysAgo = new Date();
-                    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-                    sevenDaysAgo.setHours(0, 0, 0, 0);
-
+                    const now = new Date();
+                    const sevenDaysAgo = new Date(now);
+                    sevenDaysAgo.setDate(now.getDate() - 7);
+                    
                     const leadsThisWeek = allLeads.filter(lead => {
                          const timestamp = lead.timestamp?.toDate();
                          return timestamp && timestamp >= sevenDaysAgo;
@@ -114,13 +114,11 @@ export default function DashboardSummaryPage() {
                     }
 
                     allLeads.forEach(lead => {
-                        if (lead.timestamp) {
-                            const leadDate = lead.timestamp.toDate();
-                            if (leadDate >= sevenDaysAgo) {
-                                const key = leadDate.toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit' });
-                                if (leadsByDay[key] !== undefined) {
-                                    leadsByDay[key]++;
-                                }
+                        const leadDate = lead.timestamp?.toDate();
+                        if (leadDate) {
+                            const key = leadDate.toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit' });
+                            if (key in leadsByDay) {
+                                leadsByDay[key]++;
                             }
                         }
                     });
@@ -185,9 +183,9 @@ export default function DashboardSummaryPage() {
             ) : stats ? (
                 <>
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                       <StatCard title="Conversații Începute" value={stats.totalVisitors} icon={Users} description="Total vizitatori pe link-ul tău" />
+                       <StatCard title="Conversații Începute" value={stats.totalVisitors} icon={Users} description={`${abandonRate}% abandon`} />
                        <Link href="/dashboard/leads"><StatCard title="Lead-uri Generate" value={stats.totalLeads} icon={Target} description="Clienți care au completat formularul" /></Link>
-                       <StatCard title="Conversații Abandonate" value={stats.abandoned} icon={UserX} description={`${abandonRate}% din total conversații`} />
+                       <StatCard title="Conversații Abandonate" value={stats.abandoned} icon={UserX} description="Nu au finalizat formularul" />
                        <Link href="/dashboard/leads"><StatCard title="Clienți Convertiți" value={stats.convertedLeads} icon={UserCheck} description="Lead-uri cu status 'Convertit'" /></Link>
                     </div>
 
