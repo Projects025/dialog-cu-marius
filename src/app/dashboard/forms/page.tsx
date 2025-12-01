@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -198,21 +197,23 @@ export default function FormsPage() {
         const masterData = {
           title: "Analiză Completă (Master)",
           description: "Versiunea finală cu textele complete pentru Deces, Pensie, Studii și Sănătate.",
-          startStepId: "intro_sequence",
+          startStepId: "secventa_intro",
           ownerId: null, 
           isTemplate: true,
           createdAt: new Date(),
           flow: {
-            intro_sequence: {
+            secventa_intro: {
               message: [
                 "Viața produce pierderi financiare semnificative în patru situații majore.",
                 "Dintre acestea, două situații sunt previzibile, precis așezate pe axa vieții, iar două sunt total imprevizibile („ceasul rău, pisica neagră”).",
                 "**Previzibile:**\n1. Pensionarea – reducerea drastică a opțiunilor\n2. Studiile copiilor – cheltuieli complexe\n\n**Imprevizibile:**\n1. Decesul – detonează standardul de viață\n2. Bolile grave – impact major asupra economiilor"
               ],
               isProgressStep: true,
-              actionType: "buttons", options: ["Continuă"], nextStep: "ask_topic"
+              actionType: "buttons", 
+              options: [{label: "Continuă"}], 
+              nextStep: "alege_subiect"
             },
-            ask_topic: {
+            alege_subiect: {
               message: [
                 "Salut! Sunt Marius, agentul tău de asigurări.",
                 "În următoarele 3 minute te invit la un moment de reflecție și de analiză prin care să descoperi care este gradul tău de expunere financiară.",
@@ -231,295 +232,295 @@ export default function FormsPage() {
             deces_intro_1: { 
                 isProgressStep: true,
                 message: ["Un deces afectează negativ profund și pe termen lung atât **planul existențial** (drama care însoțește pierderea persoanei dragi), cât și **planul financiar** (dispariția opțiunilor, apariția presiunilor financiare și a necesității de a ajusta nivelul de trai la noile realități)."], 
-                actionType: "buttons", options: ["Continuă"], nextStep: "deces_intro_2" 
+                actionType: "buttons", options: [{label: "Continuă"}], nextStep: "deces_intro_2" 
             },
             deces_intro_2: { 
                 isProgressStep: true,
                 message: "Vei răspunde la 6 întrebări pentru a stabili suma de bani de care ar avea nevoie familia ta pentru a ameliora impactul financiar negativ al decesului asupra:\n(1.) standardului de viață\n(2.) proiectelor în desfășurare\n(3.) creditelor / datoriilor", 
-                actionType: "buttons", options: ["Sunt gata"], nextStep: "deces_ask_period" 
+                actionType: "buttons", options: [{label: "Sunt gata"}], nextStep: "deces_perioada_suport" 
             },
-            deces_ask_period: { 
+            deces_perioada_suport: { 
                 isProgressStep: true,
                 message: "1. În cazul unui posibil deces, câți ani ar avea nevoie familia ta de susținere financiară pentru a-și menține nivelul de trai fără să fie nevoită să facă ajustări majore în stilul de viață (ex. vânzarea unor bunuri, lichidarea unor investiții, muncă suplimentară etc.)", 
-                actionType: "buttons", options: ["3 ani", "4 ani", "5 ani"], nextStep: "deces_ask_monthly_sum" 
+                actionType: "buttons", options: ["3 ani", "4 ani", "5 ani"], nextStep: "deces_suma_lunara" 
             },
-            deces_ask_monthly_sum: { 
+            deces_suma_lunara: { 
                 isProgressStep: true,
                 message: "Care ar fi suma de bani lunară necesară în această perioadă (în lei)?\n(Gândește-te la suma pe care o produci tu lunar).", 
-                actionType: "input", options: { type: "number", placeholder: "Ex: 5000" }, nextStep: "deces_show_deficit_1" 
+                actionType: "input", options: { type: "number", placeholder: "Ex: 5000" }, nextStep: "deces_afisare_deficit_1" 
             },
-            deces_show_deficit_1: { 
+            deces_afisare_deficit_1: { 
                 message: ["<span class=\"text-2xl font-bold\">{deficit1} lei</span>\n(calcul: sumă lunară x perioadă x 12)", "Această sumă reprezintă deficitul pentru perioada selectată pentru menținerea standardului de viață, respectiv pentru liniștea sufletească și confortul financiar necesar celor dragi.", "Continuăm cu cheltuielile specifice."], 
-                actionType: "buttons", options: ["Da"], nextStep: "deces_ask_event_costs" 
+                actionType: "buttons", options: [{label: "Da"}], nextStep: "deces_costuri_eveniment" 
             },
-            deces_ask_event_costs: { 
+            deces_costuri_eveniment: { 
                 isProgressStep: true,
                 message: "2. În cazul unui posibil deces, evenimentul în sine este însoțit de anumite cheltuieli (ex. înmormântare, taxe succesorale etc.)\n\nCare ar fi această sumă?", 
-                actionType: "input", options: { type: "number", placeholder: "Ex: 20000" }, nextStep: "deces_ask_projects" 
+                actionType: "input", options: { type: "number", placeholder: "Ex: 20000" }, nextStep: "deces_proiecte_in_desfasurare" 
             },
-            deces_ask_projects: { 
+            deces_proiecte_in_desfasurare: { 
                 isProgressStep: true,
                 message: "3. În cazul unui posibil deces, există anumite proiecte în desfășurare la acest moment care ar avea de suferit (ex. o construcție la stadiu „la roșu” sau un sport de performanță al copiilor sau alte proiecte care sunt susținute din finanțele tale lunare)?\n\nCare ar fi suma totală de bani (în lei) necesară finalizării acestor proiecte?", 
-                actionType: "input", options: { type: "number", placeholder: "Ex: 50000" }, nextStep: "deces_ask_debts" 
+                actionType: "input", options: { type: "number", placeholder: "Ex: 50000" }, nextStep: "deces_datorii_credite" 
             },
-            deces_ask_debts: { 
+            deces_datorii_credite: { 
                 isProgressStep: true,
                 message: "4. În cazul unui posibil deces, rămân pe umerii familiei anumite responsabilități financiare de tip credite, datorii, obligații financiare etc.?\n\nCare ar fi suma de bani de care ar avea nevoie pentru a stinge aceste obligații (în lei)?", 
-                actionType: "input", options: { type: "number", placeholder: "Ex: 150000" }, nextStep: "deces_show_brute_deficit" 
+                actionType: "input", options: { type: "number", placeholder: "Ex: 150000" }, nextStep: "deces_afisare_deficit_brut" 
             },
-            deces_show_brute_deficit: { 
+            deces_afisare_deficit_brut: { 
                 message: "Am calculat necesarul total brut: **{bruteDeficit} lei**.\nAcum haide să vedem ce resurse există deja.", 
-                actionType: "buttons", options: ["Continuă"], nextStep: "deces_ask_insurance" 
+                actionType: "buttons", options: [{label: "Continuă"}], nextStep: "deces_asigurari_existente" 
             },
-            deces_ask_insurance: { 
+            deces_asigurari_existente: { 
                 isProgressStep: true,
                 message: "5. În cazul unui posibil deces, familia ta ar beneficia de vreo asigurare de viață pe numele tău?\nDacă da, care este suma (în lei)?", 
-                actionType: "input", options: { type: "number", placeholder: "Ex: 0" }, nextStep: "deces_ask_savings" 
+                actionType: "input", options: { type: "number", placeholder: "Ex: 0" }, nextStep: "deces_economii_existente" 
             },
-            deces_ask_savings: { 
+            deces_economii_existente: { 
                 isProgressStep: true,
                 message: "6. În cazul unui posibil deces, familia ta ar putea accesa anumite economii sau investiții (ex. chirii, vânzarea unui imobil etc.) pentru standardului de viață?\nDacă da, care este suma de bani disponibilă?", 
-                actionType: "input", options: { type: "number", placeholder: "Ex: 10000" }, nextStep: "deces_prepare_to_show_result" 
+                actionType: "input", options: { type: "number", placeholder: "Ex: 10000" }, nextStep: "deces_pregatire_rezultat" 
             },
-            deces_prepare_to_show_result: {
+            deces_pregatire_rezultat: {
                 message: "Calcul finalizat.",
                 actionType: 'buttons',
-                options: ["Vezi Rezultatul"],
-                nextStep: "deces_show_final_result"
+                options: [{label: "Vezi Rezultatul"}],
+                nextStep: "deces_afisare_rezultat_final"
             },
-            deces_show_final_result: { 
+            deces_afisare_rezultat_final: { 
                 message: "Deficitul financiar cu care familia ta ar păși în acest viitor sumbru dacă n-ar mai putea conta pe sprijinul tău financiar este:\n\n<span class=\"text-2xl font-bold\">{finalDeficit} lei</span>", 
                 actionType: 'buttons',
-                options: ["Continuă"],
-                nextStep: "deces_ask_feeling" 
+                options: [{label: "Continuă"}],
+                nextStep: "deces_intrebare_sentiment_1" 
             },
-            deces_ask_feeling: { 
+            deces_intrebare_sentiment_1: { 
                 isProgressStep: true,
                 message: "Cum ți se pare această sumă?", 
-                actionType: "input", options: { type: "text", placeholder: "Scrie un gând..." }, nextStep: "deces_ask_feeling_2" 
+                actionType: "input", options: { type: "text", placeholder: "Scrie un gând..." }, nextStep: "deces_intrebare_sentiment_2" 
             },
-            deces_ask_feeling_2: { 
+            deces_intrebare_sentiment_2: { 
                 isProgressStep: true,
                 message: "Care este sentimentul pe care îl simți acum?", 
-                actionType: "input", options: { type: "text", placeholder: "Scrie un sentiment..." }, nextStep: "deces_ask_dramatic_options" 
+                actionType: "input", options: { type: "text", placeholder: "Scrie un sentiment..." }, nextStep: "deces_optiuni_dramatice" 
             },
-            deces_ask_dramatic_options: { 
+            deces_optiuni_dramatice: { 
                 isProgressStep: true,
                 message: "În acest scenariu de imaginație sumbru, ce opțiuni ar avea cei dragi ai tăi pentru a menține un oarecare echilibru în standardul de viață?\n\nBifează opțiunile realiste și cu care tu te simți confortabil pentru ai tăi:", 
                 actionType: "interactive_scroll_list", 
                 options: { buttonText: "Am bifat", options: ["Să se mute cu părinții", "Să se mute în alt oraș", "Să muncească suplimentar sau la al doilea job", "Să vândă din bunurile personale", "Să vândă casa / apartamentul", "Să reducă drastic cheltuieli / să renunțe la hobby-uri", "Să renunțe la proiecte personale", "Să amâne educația copiilor", "Să ceară ajutor de la familie și de la prieteni", "Să renunțe la economiile / investițiile existente", "Să se mute în locuință mai mică", "Să accepte orice compromis major", "Să se căsătorească din obligații financiare", "Altceva"] }, 
-                nextStep: "deces_present_solution" 
+                nextStep: "deces_prezentare_solutie" 
             },
-            deces_present_solution: { 
+            deces_prezentare_solutie: { 
                 isProgressStep: true,
                 message: ["Dacă nu ești foarte mulțumit cu opțiunile pe care familia ta le are, ai fi interesat să vezi o soluție personalizată care să ofere celor dragi ție o a doua șansă la o viață relativ normală, fără poveri financiare?", "Practic, o soluție prin care dragostea ta și grija ta pentru ei va continua chiar și după tine.", "Poți crea instant o moștenire care să îi ajute financiar pe cei dragi ție chiar și (mai ales!) în absența ta!"], 
                 actionType: "buttons", 
                 options: [
-                  { label: "Da, vreau detalii", nextStep: "final_contact" },
-                  { label: "Nu", nextStep: "end_dialog_friendly" }
+                  { label: "Da, vreau detalii", nextStep: "formular_contact" },
+                  { label: "Nu", nextStep: "final_dialog_prietenos" }
                 ],
             },
             pensie_intro_1: { 
                 isProgressStep: true,
                 message: ["Pensionarea poate fi cel mai lung concediu al vieții sau cel mai chinuitor concediu al vieții.", "Reducerea semnificativă a veniturilor la vârsta pensionării va afecta calitatea și standardul vieții tale în cel puțin 3 domenii:\n\n1. opțiunile personale (stil de viață, hobby-uri)\n2. demnitatea și stima de sine (dependență)\n3. tranziția de la rolul de susținător la susținut"], 
-                actionType: "buttons", options: ["Continuă"], nextStep: "pensie_ask_start_time" 
+                actionType: "buttons", options: [{label: "Continuă"}], nextStep: "pensie_moment_planificare" 
             },
-            pensie_ask_start_time: { 
+            pensie_moment_planificare: { 
                 isProgressStep: true,
                 message: "Când crezi că ar fi cel mai potrivit moment să începi să-ți planifici pensionarea?", 
-                actionType: "buttons", options: ["ACUM"], nextStep: "pensie_quiz_intro" 
+                actionType: "buttons", options: [{label: "ACUM"}], nextStep: "pensie_intro_quiz" 
             },
-            pensie_quiz_intro: { 
+            pensie_intro_quiz: { 
                 isProgressStep: true,
                 message: "Vei răspunde la 5 întrebări pentru a stabili suma de bani de care ai avea nevoie pentru a-ți menține standardul de viață dacă mâine ai ieși la pensie.", 
-                actionType: "buttons", options: ["Sunt gata"], nextStep: "pensie_ask_years" 
+                actionType: "buttons", options: [{label: "Sunt gata"}], nextStep: "pensie_ani_speranta" 
             },
-            pensie_ask_years: { 
+            pensie_ani_speranta: { 
                 isProgressStep: true,
                 message: "1. Facem un exercițiu de imaginație: ai 65 ani, ieși la pensie și instant pierzi din venituri.\n\nCâți ani speri să mai trăiești din acest moment?", 
-                actionType: "buttons", options: ["10 ani", "15 ani", "20 ani"], nextStep: "pensie_ask_monthly_needed" 
+                actionType: "buttons", options: ["10 ani", "15 ani", "20 ani"], nextStep: "pensie_suma_lunara_necesara" 
             },
-            pensie_ask_monthly_needed: { 
+            pensie_suma_lunara_necesara: { 
                 isProgressStep: true,
                 message: "Care ar fi suma de bani lunară de care ai avea nevoie în completarea pensiei de stat pentru a-ți putea menține standardul de viață (în lei)?", 
-                actionType: "input", options: { type: "number", placeholder: "Ex: 2000" }, nextStep: "pensie_show_deficit_1" 
+                actionType: "input", options: { type: "number", placeholder: "Ex: 2000" }, nextStep: "pensie_afisare_deficit_1" 
             },
-            pensie_show_deficit_1: { 
+            pensie_afisare_deficit_1: { 
                 message: "<span class=\"text-2xl font-bold\">{deficit1} lei</span>\n(calcul: sumă lunară x perioadă x 12).\n\nContinuăm.", 
-                actionType: "buttons", options: ["Continuă"], nextStep: "pensie_ask_projects_list" 
+                actionType: "buttons", options: [{label: "Continuă"}], nextStep: "pensie_lista_proiecte" 
             },
-            pensie_ask_projects_list: { 
+            pensie_lista_proiecte: { 
                 isProgressStep: true,
                 message: "2. Ce planuri / proiecte / obiective personale ți-ai propus pentru perioada pensionării?\n\nBifează activitățile de interes:", 
-                actionType: "interactive_scroll_list", options: { buttonText: "Am selectat", options: ["Călătorii și excursii culturale", "Cursuri și workshop-uri de dezvoltare", "Activități sportive moderate", "Voluntariat în comunitate", "Hobby-uri creative", "Întâlniri sociale și cluburi", "Sprijin pentru familie și nepoți", "Participare la asociații culturale sau civice", "Grădinărit și îngrijirea casei", "Consultanță și mentoring", "Investitii imobiliare", "Deschiderea unui business"] }, nextStep: "pensie_ask_projects_sum" 
+                actionType: "interactive_scroll_list", options: { buttonText: "Am selectat", options: ["Călătorii și excursii culturale", "Cursuri și workshop-uri de dezvoltare", "Activități sportive moderate", "Voluntariat în comunitate", "Hobby-uri creative", "Întâlniri sociale și cluburi", "Sprijin pentru familie și nepoți", "Participare la asociații culturale sau civice", "Grădinărit și îngrijirea casei", "Consultanță și mentoring", "Investitii imobiliare", "Deschiderea unui business"] }, nextStep: "pensie_suma_proiecte" 
             },
-            pensie_ask_projects_sum: { 
+            pensie_suma_proiecte: { 
                 isProgressStep: true,
                 message: "Acum, fă un calcul total mental pentru aceste activități, apoi notează care ar fi suma de bani anuală necesară (în lei)?", 
-                actionType: "input", options: { type: "number", placeholder: "Ex: 5000" }, nextStep: "pensie_ask_debts" 
+                actionType: "input", options: { type: "number", placeholder: "Ex: 5000" }, nextStep: "pensie_datorii" 
             },
-            pensie_ask_debts: { 
+            pensie_datorii: { 
                 isProgressStep: true,
                 message: "3. La vârsta pensionării, te aștepți să mai ai de plătit credite sau alte obligații financiare? Care ar fi suma necesară achitarea integrală (în lei)?", 
-                actionType: "input", options: { type: "number", placeholder: "Ex: 0" }, nextStep: "pensie_ask_insurance" 
+                actionType: "input", options: { type: "number", placeholder: "Ex: 0" }, nextStep: "pensie_asigurari_existente" 
             },
-            pensie_ask_insurance: { 
+            pensie_asigurari_existente: { 
                 isProgressStep: true,
                 message: "4. La acest moment, ai vreo asigurare de viață cu economisire / cu investiție pentru suplimentarea veniturilor la pensionare? Ce sumă s-a strâns (în lei)?", 
-                actionType: "input", options: { type: "number", placeholder: "Ex: 0" }, nextStep: "pensie_ask_savings" 
+                actionType: "input", options: { type: "number", placeholder: "Ex: 0" }, nextStep: "pensie_economii_existente" 
             },
-            pensie_ask_savings: { 
+            pensie_economii_existente: { 
                 isProgressStep: true,
                 message: "5. La acest moment, ai economii (ex. pensie pilon 2 sau pilonul 3) sau investiții pe care să le accesezi la pensionare? Ce sumă (în lei)?", 
-                actionType: "input", options: { type: "number", placeholder: "Ex: 40000" }, nextStep: "pensie_prepare_to_show_result" 
+                actionType: "input", options: { type: "number", placeholder: "Ex: 40000" }, nextStep: "pensie_pregatire_rezultat" 
             },
-             pensie_prepare_to_show_result: {
+             pensie_pregatire_rezultat: {
                 message: "Calcul finalizat.",
                 actionType: 'buttons',
-                options: ["Vezi Rezultatul"],
-                nextStep: "pensie_show_final_result"
+                options: [{label: "Vezi Rezultatul"}],
+                nextStep: "pensie_afisare_rezultat_final"
             },
-            pensie_show_final_result: { 
+            pensie_afisare_rezultat_final: { 
                 message: "Deficitul financiar cu care tu ai ieși la pensie este:\n\n<span class=\"text-2xl font-bold\">{finalDeficit} lei</span>",
                 actionType: 'buttons', 
-                options: ["Continuă"],
-                nextStep: "pensie_ask_feeling" 
+                options: [{label: "Continuă"}],
+                nextStep: "pensie_intrebare_sentiment_1" 
             },
-            pensie_ask_feeling: { 
+            pensie_intrebare_sentiment_1: { 
                 isProgressStep: true,
                 message: "Cum ți se pare această sumă?", 
-                actionType: "input", options: { type: "text", placeholder: "Scrie..." }, nextStep: "pensie_ask_feeling_2" 
+                actionType: "input", options: { type: "text", placeholder: "Scrie..." }, nextStep: "pensie_intrebare_sentiment_2" 
             },
-            pensie_ask_feeling_2: { 
+            pensie_intrebare_sentiment_2: { 
                 isProgressStep: true,
                 message: "Care este sentimentul pe care îl simți acum?", 
-                actionType: "input", options: { type: "text", placeholder: "Scrie..." }, nextStep: "pensie_dramatic_options" 
+                actionType: "input", options: { type: "text", placeholder: "Scrie..." }, nextStep: "pensie_optiuni_dramatice" 
             },
-            pensie_dramatic_options: { 
+            pensie_optiuni_dramatice: { 
                 isProgressStep: true,
                 message: "În acest scenariu de imaginație și la acest deficit financiar, cum crezi ca ți s-ar ajusta standardul de viață? Bifează opțiunile realiste:", 
-                actionType: "interactive_scroll_list", options: { buttonText: "Am bifat", options: ["Reducerea (calității) alimentelor", "Limitarea utilităților", "Limitarea accesului la servicii medicale", "Împrumuturi noi", "Apel la banii copiilor", "Vânzarea de bunuri", "Munca la vârstă înaintată", "Renunțarea la hobby-uri", "Anularea călătoriilor", "Izolare socială", "Schimbarea domiciliului", "Altceva"] }, nextStep: "pensie_solution" 
+                actionType: "interactive_scroll_list", options: { buttonText: "Am bifat", options: ["Reducerea (calității) alimentelor", "Limitarea utilităților", "Limitarea accesului la servicii medicale", "Împrumuturi noi", "Apel la banii copiilor", "Vânzarea de bunuri", "Munca la vârstă înaintată", "Renunțarea la hobby-uri", "Anularea călătoriilor", "Izolare socială", "Schimbarea domiciliului", "Altceva"] }, nextStep: "pensie_prezentare_solutie" 
             },
-            pensie_solution: { 
+            pensie_prezentare_solutie: { 
                 isProgressStep: true,
                 message: "Dacă nu ești foarte mulțumit cu aceste opțiuni, ai fi interesat să vezi o soluție personalizată care să-ți ofere posibilitatea de a-ți menține standardul de viață, opțiunile personale, demnitatea și statutul de susținător al familiei chiar și în etapa pensionării?", 
                  actionType: "buttons", 
                 options: [
-                  { label: "Da, vreau detalii", nextStep: "final_contact" },
-                  { label: "Nu", nextStep: "end_dialog_friendly" }
+                  { label: "Da, vreau detalii", nextStep: "formular_contact" },
+                  { label: "Nu", nextStep: "final_dialog_prietenos" }
                 ],
             },
             studii_intro_1: { 
                 isProgressStep: true,
                 message: ["Menirea ta ca părinte nu e doar să-ți crești copilul până va fi major, ci menirea ta este să îi dai aripi în viață!", "Ești de acord cu afirmația: „Cu cât vrei să zboare mai sus în viață, cu atât sunt mai scumpe aripile”?"], 
-                actionType: "buttons", options: ["De acord"], nextStep: "studii_intro_2" 
+                actionType: "buttons", options: [{label: "De acord"}], nextStep: "studii_intro_2" 
             },
             studii_intro_2: { 
                 isProgressStep: true,
                 message: "Vei răspunde la 6 întrebări pentru a stabili suma de bani de care va avea nevoie copilul tău pentru a avea asigurat un start cu dreptul în viață\n\nÎn acest calcul, vom include sumele de bani care vor acoperi 4 tipuri de costuri:\n(1.) educație formală,\n(2.) dezvoltare personală, socială și hobby-uri,\n(3.) lansare proiecte majore,\n(4.) întemeierea unei familii.", 
-                actionType: "buttons", options: ["Continuă"], nextStep: "studii_intro_3" 
+                actionType: "buttons", options: [{label: "Continuă"}], nextStep: "studii_intro_3" 
             },
             studii_intro_3: { 
                 message: "* Aceste calcule sunt pentru un singur copil! La final, poți înmulți suma obținută cu numărul copiilor tăi pentru costurile totale.", 
-                actionType: "buttons", options: ["Am înțeles"], nextStep: "studii_ask_years" 
+                actionType: "buttons", options: [{label: "Am înțeles"}], nextStep: "studii_ani_sustinere" 
             },
-            studii_ask_years: { 
+            studii_ani_sustinere: { 
                 isProgressStep: true,
                 message: "1. Câți ani ești dispus să-ți susții financiar copilul în studenție?", 
-                actionType: "buttons", options: ["3 ani", "4 ani", "5 ani", "6 ani"], nextStep: "studii_ask_annual_cost_list" 
+                actionType: "buttons", options: ["3 ani", "4 ani", "5 ani", "6 ani"], nextStep: "studii_lista_cost_anual" 
             },
-            studii_ask_annual_cost_list: { 
+            studii_lista_cost_anual: { 
                 isProgressStep: true,
                 message: "Bifează cheltuielile pe care le-ar avea copilul tău dacă azi ar fi student:", 
-                actionType: "interactive_scroll_list", options: { buttonText: "Am selectat", options: ["Taxa de școlarizare anuală", "Cazare în cămin sau chirie", "Utilități și întreținere cazare", "Transport (combustibil)", "Gadgeturi (smartphone, laptop, tableta)", "Software și licențe profesionale", "Recuzită pentru laboratoare sau proiecte", "Cărți și manuale", "Formări și certificări profesionale", "Conferințe și training-uri", "Restanțe / Re-restanțe :)"] }, nextStep: "studii_ask_annual_cost" 
+                actionType: "interactive_scroll_list", options: { buttonText: "Am selectat", options: ["Taxa de școlarizare anuală", "Cazare în cămin sau chirie", "Utilități și întreținere cazare", "Transport (combustibil)", "Gadgeturi (smartphone, laptop, tableta)", "Software și licențe profesionale", "Recuzită pentru laboratoare sau proiecte", "Cărți și manuale", "Formări și certificări profesionale", "Conferințe și training-uri", "Restanțe / Re-restanțe :)"] }, nextStep: "studii_suma_cost_anual" 
             },
-            studii_ask_annual_cost: { 
+            studii_suma_cost_anual: { 
                 isProgressStep: true,
                 message: "Fă un calcul total mental, apoi notează care ar fi suma de bani anuală necesară (în lei)?\n\nÎncearcă să nu pui sumele „din burtă” =)", 
-                actionType: "input", options: { type: "number", placeholder: "Ex: 30000" }, nextStep: "studii_show_deficit_1" 
+                actionType: "input", options: { type: "number", placeholder: "Ex: 30000" }, nextStep: "studii_afisare_deficit_1" 
             },
-            studii_show_deficit_1: { 
+            studii_afisare_deficit_1: { 
                 message: "Am calculat costul de bază: **{deficit1} lei** (Sumă anuală x Ani). Continuăm.", 
-                actionType: "buttons", options: ["Continuă"], nextStep: "studii_ask_extra_list" 
+                actionType: "buttons", options: [{label: "Continuă"}], nextStep: "studii_lista_extra" 
             },
-            studii_ask_extra_list: { 
+            studii_lista_extra: { 
                 isProgressStep: true,
                 message: "2. Pe lângă formarea academică, copilul tău se va dezvolta personal și social prin activități extra-curriculare. Bifează activitățile de interes:", 
-                actionType: "interactive_scroll_list", options: { buttonText: "Am selectat", options: ["Tabere și schimburi culturale (internaționale)", "Hobby-uri (pescuit, vlogging, lifestyle, gym)", "Activități recreative (sport, artă, muzică)", "Evenimente sociale și culturale", "Chefuri, majorate, aniversări, nunți", "Ieșiri cu prietenii – cafenele, restaurante, cluburi", "Călătorii și excursii (în țară sau în străinătate)", "Haine și accesorii", "Cadouri și atenții pentru prieteni/familie"] }, nextStep: "studii_ask_extra" 
+                actionType: "interactive_scroll_list", options: { buttonText: "Am selectat", options: ["Tabere și schimburi culturale (internaționale)", "Hobby-uri (pescuit, vlogging, lifestyle, gym)", "Activități recreative (sport, artă, muzică)", "Evenimente sociale și culturale", "Chefuri, majorate, aniversări, nunți", "Ieșiri cu prietenii – cafenele, restaurante, cluburi", "Călătorii și excursii (în țară sau în străinătate)", "Haine și accesorii", "Cadouri și atenții pentru prieteni/familie"] }, nextStep: "studii_suma_extra" 
             },
-            studii_ask_extra: { 
+            studii_suma_extra: { 
                 isProgressStep: true,
                 message: "Fă un calcul total mental, apoi notează care ar fi suma de bani anuală necesară (în lei)?", 
-                actionType: "input", options: { type: "number", placeholder: "Ex: 5000" }, nextStep: "studii_ask_projects_list" 
+                actionType: "input", options: { type: "number", placeholder: "Ex: 5000" }, nextStep: "studii_lista_proiecte" 
             },
-            studii_ask_projects_list: { 
+            studii_lista_proiecte: { 
                 isProgressStep: true,
                 message: "3. Debutul în viață profesională a studentului / a absolventului poate fi asociat unor proiecte majore, costisitoare. Bifează activitățile de interes:", 
-                actionType: "interactive_scroll_list", options: { buttonText: "Am selectat", options: ["Începerea unei afaceri personale", "Achiziționarea unui autoturism", "Achiziționarea unui imobil", "Avans pentru achiziționarea unui bun", "Altele"] }, nextStep: "studii_ask_projects" 
+                actionType: "interactive_scroll_list", options: { buttonText: "Am selectat", options: ["Începerea unei afaceri personale", "Achiziționarea unui autoturism", "Achiziționarea unui imobil", "Avans pentru achiziționarea unui bun", "Altele"] }, nextStep: "studii_suma_proiecte" 
             },
-            studii_ask_projects: { 
+            studii_suma_proiecte: { 
                 isProgressStep: true,
                 message: "Fă un calcul total mental, apoi notează care ar fi suma de bani de care ar fi nevoie (în lei)?", 
-                actionType: "input", options: { type: "number", placeholder: "Ex: 10000" }, nextStep: "studii_ask_wedding" 
+                actionType: "input", options: { type: "number", placeholder: "Ex: 10000" }, nextStep: "studii_nunta" 
             },
-            studii_ask_wedding: { 
+            studii_nunta: { 
                 isProgressStep: true,
                 message: "4. La un moment dat, copilul tău va îmbrăca rochia de mireasă / costumul de mire.\nCare ar fi contribuția ta financiară (în lei)?", 
-                actionType: "input", options: { type: "number", placeholder: "Ex: 20000" }, nextStep: "studii_ask_savings" 
+                actionType: "input", options: { type: "number", placeholder: "Ex: 20000" }, nextStep: "studii_economii_existente" 
             },
-            studii_ask_savings: { 
+            studii_economii_existente: { 
                 isProgressStep: true,
                 message: "5. La acest moment, există economii sau investiții pe care copilul tău le-ar putea accesa pentru a acoperi cele 4 tipuri de cheltuielile discutate anterior?\nDacă da, care este suma (în lei)?", 
-                actionType: "input", options: { type: "number", placeholder: "Ex: 5000" }, nextStep: "studii_ask_insurance" 
+                actionType: "input", options: { type: "number", placeholder: "Ex: 5000" }, nextStep: "studii_asigurari_existente" 
             },
-            studii_ask_insurance: { 
+            studii_asigurari_existente: { 
                 isProgressStep: true,
                 message: "6. La acest moment, există vreo asigurare de viață cu economisire destinată viitorului copilului?\nDacă da, care este suma (în lei)?", 
-                actionType: "input", options: { type: "number", placeholder: "Ex: 0" }, nextStep: "studii_ask_children_count" 
+                actionType: "input", options: { type: "number", placeholder: "Ex: 0" }, nextStep: "studii_numar_copii" 
             },
-            studii_ask_children_count: { 
+            studii_numar_copii: { 
                 message: "Deficitul financiar pe care trebuie să îl acoperi pentru a asigura copilului tău un start cu dreptul în viață este calculat.\n\nPentru a finaliza gradul tău de expunere financiară, ultima întrebare: **Câți copii ai?**\n(Vom înmulți deficitul cu acest număr).", 
-                actionType: "input", options: { type: "number", placeholder: "Ex: 1" }, nextStep: "studii_prepare_to_show_result" 
+                actionType: "input", options: { type: "number", placeholder: "Ex: 1" }, nextStep: "studii_pregatire_rezultat" 
             },
-             studii_prepare_to_show_result: {
+             studii_pregatire_rezultat: {
                 message: "Calcul finalizat.",
                 actionType: 'buttons',
-                options: ["Vezi Rezultatul"],
-                nextStep: "studii_show_final_result"
+                options: [{label: "Vezi Rezultatul"}],
+                nextStep: "studii_afisare_rezultat_final"
             },
-            studii_show_final_result: { 
+            studii_afisare_rezultat_final: { 
                 message: "Deficitul financiar TOTAL pe care trebuie să îl acoperi este:\n\n<span class=\"text-2xl font-bold\">{finalDeficit} lei</span>", 
                 actionType: 'buttons',
-                options: ["Continuă"],
-                nextStep: "studii_dramatic_intro" 
+                options: [{label: "Continuă"}],
+                nextStep: "studii_intro_dramatic" 
             },
-            studii_dramatic_intro: { 
+            studii_intro_dramatic: { 
                 isProgressStep: true,
                 message: ["Ar mai fi o nuanță aici... și nu e pozitivă...", "Ca părinte, pentru copiii tău trăiești. Pentru ei și pentru viitorul lor, orice sacrifiu pare natural.", "Dar cum s-ar schimba prezentul și viitorul copiilor tăi dacă nu ar mai putea conta pe sprijinul tău financiar?"], 
                 actionType: "buttons", 
-                options: ["Continuă"], 
-                nextStep: "studii_dramatic_options" 
+                options: [{label: "Continuă"}], 
+                nextStep: "studii_optiuni_dramatice" 
             },
-            studii_dramatic_options: { 
+            studii_optiuni_dramatice: { 
                 isProgressStep: true,
                 message: "Bifează scenariile posibile:", 
                 actionType: "interactive_scroll_list", 
                 options: { buttonText: "Am înțeles", options: ["Renunțarea la hobby-uri", "Renunțarea la activități sportive", "Abandon sau dezinteres școlar", "Acces limitat la activități educaționale", "Izolare față de prieteni", "Responsabilități asumate prea devreme", "Scăderea încrederii în sine", "Anxietate și teamă de viitor", "Frustrare față de colegi", "Dependență emoțională de părintele rămas", "Muncă excesivă și absența celuilalt părinte", "Sentiment de pierdere", "Vulnerabilitate la influențe", "Altceva"] }, 
-                nextStep: "studii_solution" 
+                nextStep: "studii_prezentare_solutie" 
             },
-            studii_solution: { 
+            studii_prezentare_solutie: { 
                 isProgressStep: true,
                 message: ["Cel mai probabil, nu ești foarte mulțumit cu opțiunile pe care copilul tău le-ar avea.", "Ai fi interesat să vezi o soluție personalizată care îți oferă\n1. posibilitatea de a-ți eșalona efortul financiar pe 10 - 15 - 20 ani și\n2. garanția ca în permanență copilul tău va avea un tutore financiar care să îi asigure viitorul?"],
                 actionType: "buttons", 
                 options: [
-                    { label: "Da, vreau detalii", nextStep: "final_contact" },
-                    { label: "Nu", nextStep: "end_dialog_friendly" }
+                    { label: "Da, vreau detalii", nextStep: "formular_contact" },
+                    { label: "Nu", nextStep: "final_dialog_prietenos" }
                 ]
             },
             sanatate_intro_1: { 
                 isProgressStep: true,
                 message: ["„Un om sănătos are 1.000 de gânduri, un om bolnav are un singur gând.”", "Când sănătatea este pusă la încercare, ai nevoie să ai atât bani, cât și acces rapid la tratament."], 
-                actionType: "buttons", options: ["Continuă"], nextStep: "sanatate_intro_2" 
+                actionType: "buttons", options: [{label: "Continuă"}], nextStep: "sanatate_intro_2" 
             },
             sanatate_intro_2: { 
                 isProgressStep: true,
@@ -527,57 +528,56 @@ export default function FormsPage() {
                 actionType: "buttons", 
                 options: [
                     { label: "Da", nextStep: "sanatate_info_1" },
-                    { label: "Nu", nextStep: "end_dialog_friendly" }
+                    { label: "Nu", nextStep: "final_dialog_prietenos" }
                 ]
             },
             sanatate_info_1: { 
                 message: ["Unele situații medicale sunt mai ușoare, apar frecvent și pun familia în dificultate, dar sunt dificultăți pe care le poți gestiona cu resursele potrivite.", "Alte situații sunt grave, mai rare, dar când apar pot schimba destinul unei familii pentru totdeauna, necesitând resurse substanțiale și acces rapid la tratament.\n\n**Forme frecvente:** Fracturi, arsuri, spitalizare, intervenții chirurgicale minore.\n**Forme grave / critice:** Cancer, Infarct, AVC, Transplant, Boli autoimune severe."], 
-                actionType: "buttons", options: ["Continuă"], nextStep: "sanatate_ask_sum" 
+                actionType: "buttons", options: [{label: "Continuă"}], nextStep: "sanatate_suma_liniste_financiara" 
             },
-            sanatate_ask_sum: { 
+            sanatate_suma_liniste_financiara: { 
                 isProgressStep: true,
                 message: "**Întrebare-cheie:**\nDacă mâine ai fi diagnosticat sau ai suferi un accident sever, ce sumă ți-ar oferi liniște financiară?\n\nAlege varianta care ți se pare realistă:", 
-                actionType: "buttons", options: ["20.000 lei", "50.000 lei", "100.000 lei", "150.000 lei", "200.000 lei", "Peste 200.000 lei"], nextStep: "sanatate_ask_access" 
+                actionType: "buttons", options: ["20.000 lei", "50.000 lei", "100.000 lei", "150.000 lei", "200.000 lei", "Peste 200.000 lei"], nextStep: "sanatate_acces_servicii" 
             },
-            sanatate_ask_access: { 
+            sanatate_acces_servicii: { 
                 isProgressStep: true,
                 message: "PASUL 2 – ACCES (tratament de calitate)\n\nCât de important este pentru tine accesul rapid la servicii medicale private de top? (Scală 1-10)", 
-                actionType: "input", options: { type: "number", placeholder: "Ex: 10" }, nextStep: "sanatate_ask_control" 
+                actionType: "input", options: { type: "number", placeholder: "Ex: 10" }, nextStep: "sanatate_control_tratament" 
             },
-            sanatate_ask_control: { 
+            sanatate_control_tratament: { 
                 isProgressStep: true,
                 message: "PASUL 3 – CONTROL\nCare variantă te reprezintă cel mai bine?", 
-                actionType: "buttons", options: ["Vreau bani și decid eu", "Vreau acces garantat în România", "Vreau acces garantat în Străinătate", "Le vreau pe ambele (bani + acces)", "Nu m-am gândit"], nextStep: "sanatate_ask_current" 
+                actionType: "buttons", options: ["Vreau bani și decid eu", "Vreau acces garantat în România", "Vreau acces garantat în Străinătate", "Le vreau pe ambele (bani + acces)", "Nu m-am gândit"], nextStep: "sanatate_situatie_curenta" 
             },
-            sanatate_ask_current: { 
+            sanatate_situatie_curenta: { 
                 isProgressStep: true,
-                message: "PASUL 4 – OPȚIUNILE TALE ÎN ACEST MOMENT\nRaportat la ce îți dorești și la situația ta actuală, unde te afli acum?", 
-                actionType: "buttons", options: ["Am asigurare medicală la stat", "Am deja o formă de protecție privată", "Am și economii pentru situații medicale", "Nu am niciun plan clar", "Nu știu exact ce acoperire am"], nextStep: "sanatate_dramatic_options" 
+                message: "PASUL 4 – OPȚIUNILE TALE ÎN ACEST MOMENT\nRaportat la ce îți dorești și la situația ta actuală, unde te afli acum?", e: "buttons", options: ["Am asigurare medicală la stat", "Am deja o formă de protecție privată", "Am și economii pentru situații medicale", "Nu am niciun plan clar", "Nu știu exact ce acoperire am"], nextStep: "sanatate_optiuni_dramatice" 
             },
-            sanatate_dramatic_options: { 
+            sanatate_optiuni_dramatice: { 
                 isProgressStep: true,
                 message: "PASUL 5 – OPȚIUNI ÎN CAZ DE RESURSE LIMITATE\nDacă veniturile actuale nu sunt suficiente, ce opțiuni crezi că ai avea? Bifează:", 
-                actionType: "interactive_scroll_list", options: { buttonText: "Am înțeles realitatea", options: ["Să faci împrumuturi sau carduri de credit", "Să vinzi bunuri personale sau locuința", "Să renunți la economii sau investiții", "Să reduci drastic cheltuielile și stilul de viață", "Să amâni proiecte personale sau educația copiilor", "Să limitezi accesul la tratamente de calitate", "Să depinzi exclusiv de sistemul public sau ajutor extern", "Ca familia să preia roluri suplimentare", "Să amâni recuperarea completă"] }, nextStep: "sanatate_ask_satisfaction" 
+                actionType: "interactive_scroll_list", options: { buttonText: "Am înțeles realitatea", options: ["Să faci împrumuturi sau carduri de credit", "Să vinzi bunuri personale sau locuința", "Să renunți la economii sau investiții", "Să reduci drastic cheltuielile și stilul de viață", "Să amâni proiecte personale sau educația copiilor", "Să limitezi accesul la tratamente de calitate", "Să depinzi exclusiv de sistemul public sau ajutor extern", "Ca familia să preia roluri suplimentare", "Să amâni recuperarea completă"] }, nextStep: "sanatate_satisfactie_optiuni" 
             },
-            sanatate_ask_satisfaction: { 
+            sanatate_satisfactie_optiuni: { 
                 isProgressStep: true,
                 message: "Întrebare de reflecție:\nCât de mulțumit ești cu aceste opțiuni bifate pentru tine și familia ta?", 
-                actionType: "buttons", options: ["Foarte mulțumit", "Parțial mulțumit", "Deloc mulțumit", "Nu știu"], nextStep: "sanatate_solution_1" 
+                actionType: "buttons", options: ["Foarte mulțumit", "Parțial mulțumit", "Deloc mulțumit", "Nu știu"], nextStep: "sanatate_constientizare" 
             },
-            sanatate_solution_1: { 
+            sanatate_constientizare: { 
                 message: "Acest pas te ajută să conștientizezi cât de important este să ai bani și acces, înainte ca evenimentul medical să apară.", 
-                actionType: "buttons", options: ["Continuă"], nextStep: "sanatate_solution_2" 
+                actionType: "buttons", options: [{label: "Continuă"}], nextStep: "sanatate_prezentare_solutie" 
             },
-            sanatate_solution_2: { 
+            sanatate_prezentare_solutie: { 
                 isProgressStep: true,
                 message: "CONVERSIA CĂTRE SOLUȚIE\nPe baza răspunsurilor tale, se poate construi o soluție care să îți ofere bani, acces și siguranță.\n\nAi vrea să vezi ce tip de protecție ți s-ar potrivi cel mai bine?", 
                 actionType: "buttons", 
                 options: [
-                    { label: "Da", nextStep: "final_contact" },
-                    { label: "Nu", nextStep: "end_dialog_friendly" }
+                    { label: "Da", nextStep: "formular_contact" },
+                    { label: "Nu", nextStep: "final_dialog_prietenos" }
                 ]
             },
-            final_contact: {
+            formular_contact: {
               isProgressStep: true,
               message: "Am nevoie de datele tale de contact (nume, telefon, email), iar în cel mai scurt timp posibil, te voi contacta pentru construirea soluției.\n\nDe asemenea, am rugămintea să semnezi și un acord GDPR.",
               actionType: "form",
@@ -590,19 +590,24 @@ export default function FormsPage() {
                   { name: "phone", placeholder: "Telefon", type: "tel", required: true }
                 ]
               },
-              nextStep: "thank_you_contact"
+              nextStep: "multumire_contact"
             },
-            thank_you_contact: {
+            multumire_contact: {
               isProgressStep: true,
               message: "Mulțumesc pentru că mi-ai răspuns la întrebări, te voi contacta în curând!\n\nCând preferi să fii contactat?",
               actionType: "buttons",
-              options: ["Dimineața", "După-masa", "Seara"],
-              nextStep: "thank_you_final"
+              options: [{label: "Dimineața"}, {label: "După-masa"}, {label: "Seara"}],
+              nextStep: "multumire_final"
             },
-            thank_you_final: {
+            multumire_final: {
               message: "Mulțumesc! O zi frumoasă!",
               actionType: "end",
               nextStep: ""
+            },
+            final_dialog_prietenos: {
+                message: "Am înțeles. Îți mulțumesc pentru timpul acordat! Dacă te răzgândești, știi unde mă găsești. O zi frumoasă!",
+                actionType: 'end',
+                nextStep: ''
             }
           }
         };
@@ -744,5 +749,3 @@ export default function FormsPage() {
     </div>
   );
 }
-
-    
