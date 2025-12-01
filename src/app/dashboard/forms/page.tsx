@@ -346,7 +346,7 @@ export default function FormsPage() {
                 actionType: "input", options: { type: "number", placeholder: "Ex: 2000" }, nextStep: "pensie_afisare_deficit_1" 
             },
             pensie_afisare_deficit_1: { 
-                message: "<span class=\"text-2xl font-bold\">{deficit1} lei</span>\n(calcul: sumă lunară x perioadă x 12).\n\nContinuăm.", 
+                message: "<span class=\"text-2xl font-bold\">{deficit1} lei</span>\n(calcul: sumă lunară x perioadă x 12).", 
                 actionType: "buttons", options: [{label: "Continuă"}], nextStep: "pensie_lista_proiecte" 
             },
             pensie_lista_proiecte: { 
@@ -548,11 +548,12 @@ export default function FormsPage() {
             sanatate_control_tratament: { 
                 isProgressStep: true,
                 message: "PASUL 3 – CONTROL\nCare variantă te reprezintă cel mai bine?", 
-                actionType: "buttons", options: ["Vreau bani și decid eu", "Vreau acces garantat în România", "Vreau acces garantat în Străinătate", "Le vreau pe ambele (bani + acces)", "Nu m-am gândit"], nextStep: "sanatate_situatie_curenta" 
+                actionType: "buttons", options: ["Vreau servicii medicale de stat", "Vreau bani și decid eu unde mă tratez", "Vreau acces garantat la servicii medicale de top în România", "Vreau acces garantat la servicii medicale de top în străinătate", "Le vreau pe ambele (bani + acces)", "Nu m-am gândit niciodată la asta"], nextStep: "sanatate_situatie_curenta" 
             },
             sanatate_situatie_curenta: { 
                 isProgressStep: true,
-                message: "PASUL 4 – OPȚIUNILE TALE ÎN ACEST MOMENT\nRaportat la ce îți dorești și la situația ta actuală, unde te afli acum?", actionType: "buttons", options: ["Am asigurare medicală la stat", "Am deja o formă de protecție privată", "Am și economii pentru situații medicale", "Nu am niciun plan clar", "Nu știu exact ce acoperire am"], nextStep: "sanatate_optiuni_dramatice" 
+                message: "PASUL 4 – OPȚIUNILE TALE ÎN ACEST MOMENT\nRaportat la ce îți dorești și la situația ta actuală, unde te afli acum?", 
+                actionType: "buttons", options: ["Am asigurare medicală la stat", "Am deja o formă de protecție privată", "Am și economii pentru situații medicale", "Nu am niciun plan clar", "Nu știu exact ce acoperire am"], nextStep: "sanatate_optiuni_dramatice" 
             },
             sanatate_optiuni_dramatice: { 
                 isProgressStep: true,

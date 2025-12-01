@@ -127,59 +127,66 @@ const calculateDynamicDelay = (text: string): number => {
 const performDynamicCalculations = (data: any) => {
     const newData = { ...data };
     
-    // Helper Robust: Transformă orice string "12.000" sau "12,000" în numărul 12000
     const parse = (val: any) => {
         if (!val) return 0;
         if (typeof val === 'number') return val;
-        // Păstrează doar cifrele (0-9), elimină tot restul
         const clean = String(val).replace(/[^0-9]/g, '');
         return Number(clean) || 0;
     };
-    // === 1. STUDII COPII (Fix pentru problema ta curentă) ===
-    if (newData.studii_ask_annual_cost || newData.studii_ask_years) {
-        const annual = parse(newData.studii_ask_annual_cost);
-        // Extragem doar prima cifra din "5 ani" -> 5
-        const yearsString = String(newData.studii_ask_years || "0");
-        const years = parseInt(yearsString) || 0;
-        newData.deficit1 = annual * years;
-        // Calcul Final Studii
-        const extra = parse(newData.studii_ask_extra) + 
-                      parse(newData.studii_ask_projects) + 
-                      parse(newData.studii_ask_wedding);
-        const resources = parse(newData.studii_ask_savings) + 
-                          parse(newData.studii_ask_insurance);
-        const perChild = newData.deficit1 + extra - resources;
-        const children = parse(newData.studii_ask_children_count) || 1;
-        newData.finalDeficit = perChild * children;
-    }
-    // === 2. DECES ===
-    if (newData.deces_ask_monthly_sum || newData.deces_ask_period) {
-        const sum = parse(newData.deces_ask_monthly_sum);
-        const yearsString = String(newData.deces_ask_period || "0");
-        const years = parseInt(yearsString) || 0;
+    
+    const extractNumber = (val: any) => {
+        if (!val) return 0;
+        if (typeof val === 'number') return val;
+        const match = String(val).match(/\d+/);
+        return match ? parseInt(match[0], 10) : 0;
+    };
+
+    // === DECES ===
+    if (newData.deces_suma_lunara || newData.deces_perioada_suport) {
+        const sum = parse(newData.deces_suma_lunara);
+        const years = extractNumber(newData.deces_perioada_suport);
         
         newData.deficit1 = sum * years * 12;
-        const costs = parse(newData.deces_ask_event_costs) + 
-                      parse(newData.deces_ask_projects) + 
-                      parse(newData.deces_ask_debts);
-        const resources = parse(newData.deces_ask_insurance) + parse(newData.deces_ask_savings);
+        const costs = parse(newData.deces_costuri_eveniment) + 
+                      parse(newData.deces_proiecte_in_desfasurare) + 
+                      parse(newData.deces_datorii_credite);
+        const resources = parse(newData.deces_asigurari_existente) + parse(newData.deces_economii_existente);
         
         newData.bruteDeficit = newData.deficit1 + costs;
         newData.finalDeficit = newData.bruteDeficit - resources;
     }
-    // === 3. PENSIONARE ===
-    if (newData.pensie_ask_monthly_needed || newData.pensie_ask_years) {
-        const monthly = parse(newData.pensie_ask_monthly_needed);
-        const yearsString = String(newData.pensie_ask_years || "0");
-        const years = parseInt(yearsString) || 0;
+    
+    // === PENSIONARE ===
+    if (newData.pensie_suma_lunara_necesara || newData.pensie_ani_speranta) {
+        const monthly = parse(newData.pensie_suma_lunara_necesara);
+        const years = extractNumber(newData.pensie_ani_speranta);
         newData.deficit1 = monthly * years * 12;
+        
         const needs = newData.deficit1 + 
-                      parse(newData.pensie_ask_projects) + 
-                      parse(newData.pensie_ask_debts);
-        const resources = parse(newData.pensie_ask_insurance) + 
-                          parse(newData.pensie_ask_savings);
+                      (parse(newData.pensie_suma_proiecte) * years) + // Suma proiectelor e anuala
+                      parse(newData.pensie_datorii);
+        const resources = parse(newData.pensie_asigurari_existente) + 
+                          parse(newData.pensie_economii_existente);
+                          
         newData.finalDeficit = needs - resources;
     }
+
+    // === STUDII COPII ===
+    if (newData.studii_suma_cost_anual || newData.studii_ani_sustinere) {
+        const annual = parse(newData.studii_suma_cost_anual);
+        const years = extractNumber(newData.studii_ani_sustinere);
+        newData.deficit1 = annual * years;
+        
+        const extra = (parse(newData.studii_suma_extra) * years) + 
+                      parse(newData.studii_suma_proiecte) + 
+                      parse(newData.studii_nunta);
+        const resources = parse(newData.studii_economii_existente) + 
+                          parse(newData.studii_asigurari_existente);
+        const perChild = newData.deficit1 + extra - resources;
+        const children = parse(newData.studii_numar_copii) || 1;
+        newData.finalDeficit = perChild * children;
+    }
+
     return newData;
 };
 
@@ -206,7 +213,7 @@ const countProgressStepsInPath = (flow: ConversationFlow, startStepId: string): 
     const visited = new Set([startStepId]);
     
     // Pași comuni care pot termina un flux, dar pe care dorim să-i explorăm
-    const commonEndPoints = ['final_contact', 'end_dialog_friendly', 'thank_you_contact', 'thank_you_final'];
+    const commonEndPoints = ['formular_contact', 'final_dialog_prietenos', 'multumire_contact', 'multumire_final'];
 
     while (queue.length > 0) {
         const currentId = queue.shift()!;
@@ -229,7 +236,7 @@ const countProgressStepsInPath = (flow: ConversationFlow, startStepId: string): 
             currentStep.options.forEach(opt => {
                 if (typeof opt === 'object' && opt.nextStep) {
                     exploreNext(opt.nextStep);
-                } else if (currentStep.nextStep) {
+                } else if (currentStep.nextStep && typeof currentStep.nextStep === 'string') {
                     // Cazul pentru butoane simple care folosesc nextStep principal
                     exploreNext(currentStep.nextStep as string);
                 }
@@ -376,7 +383,7 @@ export default function ChatAppClient() {
             }
 
             // Aici salvăm datele, după ce am adăugat și preferința de contact
-            if (currentStepId === 'thank_you_contact') {
+            if (currentStepId === 'multumire_contact') {
                 userDataRef.current['contact_preference'] = rawResponseValue;
                 await saveLeadToFirestore(userDataRef.current, agentIdRef.current);
             }
@@ -452,7 +459,11 @@ export default function ChatAppClient() {
                 if(step.branchStart){
                     branchPointFound = true;
                 }
-                currentId = typeof step.nextStep === 'string' ? step.nextStep : '';
+                if (typeof step.nextStep === 'string') {
+                    currentId = step.nextStep;
+                } else {
+                    currentId = ''; // Stop if nextStep is not a simple string
+                }
             }
             
             initialProgressStepsCount.current = stepsBeforeBranch;
