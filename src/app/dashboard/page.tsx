@@ -60,7 +60,7 @@ const InsightCard = ({ icon: Icon, title, children }: { icon: React.ElementType,
         <div className="flex items-start gap-4 p-4 rounded-lg bg-muted/30 border border-border/50">
             <Icon className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
             <div className="flex-grow">
-                <h4 className="font-semibold text-foreground">{title}</h4>
+                <h4 className="font-semibold text-foreground truncate">{title}</h4>
                 <div className="text-sm text-muted-foreground">{children}</div>
             </div>
         </div>
