@@ -43,15 +43,6 @@ const SidebarContent = ({ onLinkClick }: { onLinkClick?: () => void }) => {
         return () => unsubscribe();
     }, []);
 
-    const handleLogout = async () => {
-        try {
-            await signOut(auth);
-            router.push("/login");
-        } catch (error) {
-            console.error("Error signing out:", error);
-        }
-    };
-
     return (
         <div className="flex h-full max-h-screen flex-col gap-2">
             <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
@@ -67,13 +58,6 @@ const SidebarContent = ({ onLinkClick }: { onLinkClick?: () => void }) => {
                     <NavLink href="/dashboard/forms" icon={FileText} onClick={onLinkClick}>Formulare</NavLink>
                     <NavLink href="/dashboard/profile" icon={UserCircle} onClick={onLinkClick}>Profil</NavLink>
                 </nav>
-            </div>
-            <div className="mt-auto p-4 border-t">
-               <div className="text-xs text-muted-foreground mb-2 truncate">{user?.email}</div>
-               <Button variant="outline" size="sm" className="w-full" onClick={handleLogout}>
-                 <LogOut className="mr-2 h-4 w-4"/>
-                 Logout
-               </Button>
             </div>
         </div>
     );

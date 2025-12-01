@@ -2,7 +2,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { onAuthStateChanged, updateProfile, updatePassword, type User } from 'firebase/auth';
+import { onAuthStateChanged, updateProfile, updatePassword, signOut, type User } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebaseConfig';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
-import { Loader2 } from 'lucide-react';
+import { Loader2, LogOut } from 'lucide-react';
 
 export default function ProfilePage() {
     const [user, setUser] = useState<User | null>(null);
@@ -23,6 +24,7 @@ export default function ProfilePage() {
     const [isSavingName, setIsSavingName] = useState(false);
     const [isSavingPassword, setIsSavingPassword] = useState(false);
     const { toast } = useToast();
+    const router = useRouter();
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -37,11 +39,13 @@ export default function ProfilePage() {
                 } else {
                     setName(currentUser.displayName || '');
                 }
+            } else {
+                router.push("/login");
             }
             setLoading(false);
         });
         return () => unsubscribe();
-    }, []);
+    }, [router]);
 
     const handleSaveChanges = async () => {
         if (!user || !name.trim()) {
@@ -91,6 +95,16 @@ export default function ProfilePage() {
              }
         } finally {
             setIsSavingPassword(false);
+        }
+    };
+
+    const handleLogout = async () => {
+        try {
+            await signOut(auth);
+            router.push("/login");
+        } catch (error) {
+            console.error("Error signing out:", error);
+            toast({ variant: 'destructive', title: 'Eroare', description: 'Nu s-a putut efectua deconectarea.' });
         }
     };
     
@@ -147,6 +161,13 @@ export default function ProfilePage() {
                         </Button>
                     </CardContent>
                 </Card>
+            </div>
+            <Separator className="my-8" />
+             <div className="flex justify-start">
+                <Button variant="outline" onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Deconectare
+                </Button>
             </div>
         </div>
     );
