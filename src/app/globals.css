@@ -112,7 +112,7 @@
 }
 
 body {
-  background: radial-gradient(circle at top, hsl(222, 40%, 15%), hsl(var(--background)));
+  background: radial-gradient(circle at 20% 25%, hsl(222, 40%, 18%), hsl(var(--background)) 40%);
 }
 
 @media print {

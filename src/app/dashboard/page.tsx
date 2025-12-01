@@ -57,7 +57,7 @@ const StatCard = ({ title, value, icon: Icon, description }: { title: string, va
 
 const InsightCard = ({ icon: Icon, title, children }: { icon: React.ElementType, title: string, children: React.ReactNode }) => {
     return (
-        <div className="flex items-start gap-4 p-4 rounded-lg bg-muted/50">
+        <div className="flex items-start gap-4 p-4 rounded-lg bg-muted/30 border border-border/50">
             <Icon className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
             <div className="flex-grow">
                 <h4 className="font-semibold text-foreground">{title}</h4>
@@ -319,7 +319,7 @@ export default function DashboardSummaryPage() {
                                 </InsightCard>
                             </CardContent>
                         </Card>
-                         <Card className="h-full flex flex-col">
+                         <Card className="h-full flex flex-col bg-gradient-to-br from-muted/30 to-muted/10 border-border/80">
                              <CardHeader>
                                  <CardTitle>Obiectiv Lunar</CardTitle>
                                  <CardDescription>Clienți convertiți luna aceasta.</CardDescription>
@@ -328,7 +328,7 @@ export default function DashboardSummaryPage() {
                                 <div className="relative w-32 h-32 sm:w-40 sm:h-40">
                                     <svg className="w-full h-full" viewBox="0 0 36 36">
                                         <path className="text-muted/50" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="2.5"></path>
-                                        <path className="text-primary" stroke-linecap="round" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="2.5" stroke-dasharray={`${goalProgress}, 100`}></path>
+                                        <path className="text-primary drop-shadow-[0_2px_4px_hsl(var(--primary)/0.5)]" strokeLinecap="round" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="2.5" strokeDasharray={`${goalProgress}, 100`}></path>
                                     </svg>
                                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                                         <span className="text-3xl font-bold">{convertedThisMonth}</span>
