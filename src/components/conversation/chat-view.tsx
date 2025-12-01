@@ -474,11 +474,10 @@ const renderMessageContent = (content: any) => {
     if (typeof content !== 'string') {
       return content;
     }
-
-    const normalizedContent = content.replace(/\\n/g, '\n');
-    const processedHtml = normalizedContent
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\n/g, '<br />');
+    // Updated regex to handle multi-line bolding and global replacement
+    const processedHtml = content
+      .replace(/\n/g, '<br />')
+      .replace(/\*\*(.*?)\*\*/gs, (match, p1) => `<strong class="text-primary font-bold">${p1}</strong>`);
 
     return (
         <div
@@ -573,4 +572,4 @@ const renderMessageContent = (content: any) => {
 
 export default ChatView;
 
-    
+  

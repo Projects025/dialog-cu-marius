@@ -293,7 +293,7 @@ export default function FormsPage() {
                 actionType: "input", options: { type: "number", placeholder: "Ex: 5000" }, nextStep: "deces_afisare_deficit_1" 
             },
             deces_afisare_deficit_1: { 
-                message: ["<span class=\"text-2xl font-bold\">{deficit1} lei</span>\n(calcul: sumă lunară x perioadă x 12)", "Această sumă reprezintă deficitul pentru perioada selectată pentru menținerea standardului de viață, respectiv pentru liniștea sufletească și confortul financiar necesar celor dragi."], 
+                message: ["**{deficit1} lei**\n(calcul: sumă lunară x perioadă x 12)", "Această sumă reprezintă deficitul pentru perioada selectată pentru menținerea standardului de viață, respectiv pentru liniștea sufletească și confortul financiar necesar celor dragi."], 
                 actionType: "buttons", options: [{label: "Da"}], nextStep: "deces_costuri_eveniment" 
             },
             deces_costuri_eveniment: { 
@@ -332,7 +332,7 @@ export default function FormsPage() {
                 nextStep: "deces_afisare_rezultat_final"
             },
             deces_afisare_rezultat_final: { 
-                message: "Deficitul financiar cu care familia ta ar păși în acest viitor sumbru dacă n-ar mai putea conta pe sprijinul tău financiar este:\n\n<span class=\"text-2xl font-bold\">{finalDeficit} lei</span>", 
+                message: "Deficitul financiar cu care familia ta ar păși în acest viitor sumbru dacă n-ar mai putea conta pe sprijinul tău financiar este:\n\n**{finalDeficit} lei**", 
                 actionType: 'buttons',
                 options: [{label: "Continuă"}],
                 nextStep: "deces_intrebare_sentiment_1" 
@@ -389,7 +389,7 @@ export default function FormsPage() {
                 actionType: "input", options: { type: "number", placeholder: "Ex: 2000" }, nextStep: "pensie_afisare_deficit_1" 
             },
             pensie_afisare_deficit_1: { 
-                message: "<span class=\"text-2xl font-bold\">{deficit1} lei</span>\n(calcul: sumă lunară x perioadă x 12).", 
+                message: "**{deficit1} lei**\n(calcul: sumă lunară x perioadă x 12).", 
                 actionType: "buttons", options: [{label: "Continuă"}], nextStep: "pensie_lista_proiecte" 
             },
             pensie_lista_proiecte: { 
@@ -428,7 +428,7 @@ export default function FormsPage() {
                 nextStep: "pensie_afisare_rezultat_final"
             },
             pensie_afisare_rezultat_final: { 
-                message: "Deficitul financiar cu care tu ai ieși la pensie este:\n\n<span class=\"text-2xl font-bold\">{finalDeficit} lei</span>",
+                message: "Deficitul financiar cu care tu ai ieși la pensie este:\n\n**{finalDeficit} lei**",
                 actionType: 'buttons', 
                 options: [{label: "Continuă"}],
                 nextStep: "pensie_intrebare_sentiment_1" 
@@ -540,7 +540,7 @@ export default function FormsPage() {
                 nextStep: "studii_afisare_rezultat_final"
             },
             studii_afisare_rezultat_final: { 
-                message: "Deficitul financiar TOTAL pe care trebuie să îl acoperi este:\n\n<span class=\"text-2xl font-bold\">{finalDeficit} lei</span>", 
+                message: "Deficitul financiar TOTAL pe care trebuie să îl acoperi este:\n\n**{finalDeficit} lei**", 
                 actionType: 'buttons',
                 options: [{label: "Continuă"}],
                 nextStep: "studii_intro_dramatic" 
@@ -588,7 +588,7 @@ export default function FormsPage() {
             sanatate_info_1: {
               message: [
                 "Unele situații medicale sunt mai ușoare, apar frecvent și pun familia în dificultate, dar sunt dificultăți pe care le poți gestiona cu resursele potrivite. Alte situații sunt grave, mai rare, dar când apar pot schimba destinul unei familii pentru totdeauna, necesitând resurse substanțiale și acces rapid la tratament.",
-                "**<span style=\"color:hsl(var(--primary))\">Forme mai ușoare / frecvente:</span>**\n• Fracturi, arsuri\n• Spitalizare\n• Intervenții chirurgicale minore\n• Incapacitate temporară de muncă\n• Cheltuieli medicale curente\n• Invaliditate parțială\n\n**<span style=\"color:hsl(var(--primary))\">Forme grave / critice:</span>**\n• Cancer\n• Infarct miocardic\n• AVC\n• Transplant de organe\n• Intervenții chirurgicale majore\n• Insuficiență renală cronică\n• Boală hepatică avansată\n• Scleroză multiplă\n• Parkinson avansat\n• Boli autoimune severe"
+                "**Forme mai ușoare / frecvente:**\n• Fracturi, arsuri\n• Spitalizare\n• Intervenții chirurgicale minore\n• Incapacitate temporară de muncă\n• Cheltuieli medicale curente\n• Invaliditate parțială\n\n**Forme grave / critice:**\n• Cancer\n• Infarct miocardic\n• AVC\n• Transplant de organe\n• Intervenții chirurgicale majore\n• Insuficiență renală cronică\n• Boală hepatică avansată\n• Scleroză multiplă\n• Parkinson avansat\n• Boli autoimune severe"
               ],
               actionType: "buttons",
               options: [{ label: "Continuă" }],
@@ -607,7 +607,7 @@ export default function FormsPage() {
               nextStep: "sanatate_control_tratament"
             },
             sanatate_control_tratament: {
-              message: "CONTROL\nCare variantă te reprezintă cel mai bine?",
+              message: "Ce variantă te reprezintă cel mai bine?",
               actionType: "interactive_scroll_list",
               options: { buttonText: "Am selectat", options: [
                 "Vreau servicii medicale de stat",
@@ -620,7 +620,7 @@ export default function FormsPage() {
               nextStep: "sanatate_situatie_curenta"
             },
             sanatate_situatie_curenta: {
-              message: "OPȚIUNILE TALE ÎN ACEST MOMENT\nRaportat la ce îți dorești și la situația ta actuală, unde te afli acum?",
+              message: "Raportat la ce îți dorești și la situația ta actuală, unde te afli acum?",
               actionType: "interactive_scroll_list",
               options: { buttonText: "Am selectat", options: [
                 "Am asigurare medicală la stat",
@@ -632,7 +632,7 @@ export default function FormsPage() {
               nextStep: "sanatate_optiuni_dramatice"
             },
             sanatate_optiuni_dramatice: {
-              message: "OPȚIUNI ÎN CAZ DE RESURSE LIMITATE\nDacă veniturile tale actuale nu sunt momentan la nivelul care să-ți ofere liniștea financiară și acces rapid la tratament în cazul unei boli grave, ce opțiuni crezi că ai avea?",
+              message: "Dacă veniturile tale actuale nu sunt momentan la nivelul care să-ți ofere liniștea financiară și acces rapid la tratament în cazul unei boli grave, ce opțiuni crezi că ai avea?",
               actionType: "interactive_scroll_list",
               options: {
                 buttonText: "Am înțeles realitatea",
@@ -865,4 +865,4 @@ export default function FormsPage() {
   );
 }
 
-    
+  
