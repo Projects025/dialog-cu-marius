@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from 'next/link';
 import { User, onAuthStateChanged } from "firebase/auth";
 import { collection, query, where, getDocs, doc, getDoc, Timestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebaseConfig";
@@ -10,18 +11,24 @@ import { Users, Target, BarChart, Copy, CalendarClock, UserCheck } from 'lucide-
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import StatChart from "@/components/dashboard/StatChart";
+
+interface LeadData {
+    status: string;
+    timestamp: Timestamp;
+}
 
 interface Stats {
     totalVisitors: number;
     totalLeads: number;
     convertedLeads: number;
-    conversionRate: number;
     leadsThisWeek: number;
+    leadsLast7Days: { date: string; count: number }[];
 }
 
 const StatCard = ({ title, value, icon: Icon, description }: { title: string, value: string | number, icon: React.ElementType, description?: string }) => {
     return (
-        <Card>
+        <Card className="transition-all hover:shadow-lg hover:-translate-y-1">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
                 <CardTitle className="text-sm font-medium">{title}</CardTitle>
                 <Icon className="h-4 w-4 text-muted-foreground" />
@@ -58,23 +65,23 @@ export default function DashboardSummaryPage() {
             const fetchDashboardData = async () => {
                 setLoading(true);
                 try {
-                    // Fetch Agent Data (including active form)
+                    // Fetch Agent Data
                     const agentRef = doc(db, "agents", user.uid);
                     const agentDoc = await getDoc(agentRef);
                     if (agentDoc.exists()) {
                         setActiveFormId(agentDoc.data().activeFormId);
                     }
 
-                    // --- Fetch Leads Data ---
+                    // Fetch Leads Data
                     const leadsQuery = query(
                         collection(db, "leads"),
                         where("agentId", "==", user.uid)
                     );
                     const leadsSnapshot = await getDocs(leadsQuery);
-                    const allLeads = leadsSnapshot.docs.map(doc => doc.data());
+                    const allLeads: LeadData[] = leadsSnapshot.docs.map(doc => doc.data() as LeadData);
                     const totalLeads = allLeads.length;
                     
-                    // --- Fetch Analytics Data (Visitors) ---
+                    // Fetch Analytics Data (Visitors)
                     const analyticsQuery = query(
                         collection(db, 'analytics'),
                         where('agentId', '==', user.uid),
@@ -83,24 +90,48 @@ export default function DashboardSummaryPage() {
                     const analyticsSnapshot = await getDocs(analyticsQuery);
                     const totalVisitors = analyticsSnapshot.size;
 
-                    // --- Calculate Metrics ---
+                    // Calculate Metrics
                     const convertedLeads = allLeads.filter(lead => lead.status === 'Convertit').length;
-                    const conversionRate = totalLeads > 0 ? ((convertedLeads / totalLeads) * 100).toFixed(1) + '%' : "0%";
                     
                     const sevenDaysAgo = new Date();
                     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-                    
+                    sevenDaysAgo.setHours(0, 0, 0, 0);
+
                     const leadsThisWeek = allLeads.filter(lead => {
-                         const timestamp = (lead.timestamp as Timestamp)?.toDate();
+                         const timestamp = lead.timestamp?.toDate();
                          return timestamp && timestamp >= sevenDaysAgo;
                     }).length;
+                    
+                    // Prepare data for the 7-day chart
+                    const leadsByDay: {[key: string]: number} = {};
+                    for (let i = 0; i < 7; i++) {
+                        const d = new Date();
+                        d.setDate(d.getDate() - i);
+                        const key = d.toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit'});
+                        leadsByDay[key] = 0;
+                    }
+
+                    allLeads.forEach(lead => {
+                        if (lead.timestamp) {
+                            const leadDate = lead.timestamp.toDate();
+                            if (leadDate >= sevenDaysAgo) {
+                                const key = leadDate.toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit' });
+                                if (leadsByDay[key] !== undefined) {
+                                    leadsByDay[key]++;
+                                }
+                            }
+                        }
+                    });
+                    
+                    const leadsLast7Days = Object.entries(leadsByDay).map(([date, count]) => ({ date, count })).reverse();
+
 
                     setStats({
                         totalVisitors,
                         totalLeads,
                         convertedLeads,
-                        conversionRate: parseFloat(conversionRate), // Store as number for potential future use
                         leadsThisWeek,
+                        leadsLast7Days,
                     });
 
                 } catch (error) {
@@ -133,26 +164,55 @@ export default function DashboardSummaryPage() {
     };
     
     const abandonRate = stats ? (stats.totalVisitors > 0 ? (((stats.totalVisitors - stats.totalLeads) / stats.totalVisitors) * 100).toFixed(0) : 0) : 0;
-
+    
+    const funnelData = stats ? [
+        { name: 'Conversații', value: stats.totalVisitors, fill: 'hsl(var(--chart-1))' },
+        { name: 'Lead-uri', value: stats.totalLeads, fill: 'hsl(var(--chart-2))' },
+        { name: 'Convertiți', value: stats.convertedLeads, fill: 'hsl(var(--chart-3))' }
+    ] : [];
 
     return (
-        <>
+        <div className="space-y-6">
             <div className="flex items-center">
                 <h1 className="text-xl font-bold md:text-2xl">Sumar & Statistici</h1>
             </div>
             {loading ? (
                 <p>Se încarcă statisticile...</p>
             ) : stats ? (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                   <StatCard title="Conversații Începute" value={stats.totalVisitors} icon={Users} description={`${stats.totalVisitors - stats.totalLeads} nu au finalizat (${abandonRate}% abandon)`} />
-                   <StatCard title="Lead-uri Generate" value={stats.totalLeads} icon={Target} description="Clienți care au completat formularul" />
-                   <StatCard title="Clienți Convertiți" value={stats.convertedLeads} icon={UserCheck} description="Lead-uri cu status 'Convertit'" />
-                   <StatCard title="Lead-uri Noi" value={stats.leadsThisWeek} icon={CalendarClock} description="În ultimele 7 zile"/>
-                </div>
+                <>
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                       <StatCard title="Conversații Începute" value={stats.totalVisitors} icon={Users} description={`${stats.totalVisitors - stats.totalLeads} nu au finalizat (${abandonRate}% abandon)`} />
+                       <Link href="/dashboard/leads"><StatCard title="Lead-uri Generate" value={stats.totalLeads} icon={Target} description="Clienți care au completat formularul" /></Link>
+                       <Link href="/dashboard/leads"><StatCard title="Clienți Convertiți" value={stats.convertedLeads} icon={UserCheck} description="Lead-uri cu status 'Convertit'" /></Link>
+                       <Link href="/dashboard/leads"><StatCard title="Lead-uri Noi" value={stats.leadsThisWeek} icon={CalendarClock} description="În ultimele 7 zile"/></Link>
+                    </div>
+
+                    <div className="grid gap-6 grid-cols-1 lg:grid-cols-5">
+                         <div className="lg:col-span-2">
+                             <StatChart 
+                                title="Performanță Funnel"
+                                description="Comparativ: Conversații, Lead-uri, Clienți"
+                                type="bar"
+                                data={funnelData}
+                                dataKey="value"
+                            />
+                         </div>
+                         <div className="lg:col-span-3">
+                             <StatChart 
+                                title="Activitate recentă"
+                                description="Lead-uri noi generate în ultimele 7 zile"
+                                type="line"
+                                data={stats.leadsLast7Days}
+                                dataKey="count"
+                                categories={['date']}
+                            />
+                         </div>
+                    </div>
+                </>
             ) : (
                 <p>Nu s-au putut încărca statisticile.</p>
             )}
-             <div className="grid gap-4 md:gap-8 mt-6">
+             <div className="grid gap-4 md:gap-8">
                  <Card>
                     <CardHeader className="p-4">
                         <CardTitle className="text-base">Link-ul tău de Client</CardTitle>
@@ -174,6 +234,6 @@ export default function DashboardSummaryPage() {
                     </CardContent>
                 </Card>
             </div>
-        </>
+        </div>
     );
 }
