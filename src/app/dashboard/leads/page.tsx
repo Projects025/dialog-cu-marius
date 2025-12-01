@@ -17,10 +17,12 @@ import { Label } from "@/components/ui/label";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/errors";
 import { Badge } from "@/components/ui/badge";
-import { FilePlus2 } from "lucide-react";
+import { FilePlus2, User as UserIcon } from "lucide-react";
 import LeadCard from "@/components/dashboard/LeadCard";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ExportButtons from "@/components/dashboard/ExportButtons";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
 
 
 const LeadDetailItem = ({ label, value }: { label: string, value: any }) => {
@@ -43,9 +45,9 @@ const LeadDetailItem = ({ label, value }: { label: string, value: any }) => {
     }
     
     return (
-        <div className="grid grid-cols-3 gap-4 py-2 border-b border-muted">
-            <dt className="text-sm font-medium text-muted-foreground">{label}</dt>
-            <dd className="text-sm col-span-2">{displayValue}</dd>
+        <div className="grid grid-cols-2 gap-2 py-2.5">
+            <dt className="text-sm font-medium text-muted-foreground truncate">{label}</dt>
+            <dd className="text-sm text-foreground font-semibold text-right">{displayValue}</dd>
         </div>
     )
 };
@@ -242,8 +244,8 @@ export default function LeadsPage() {
       </div>
 
       {/* Desktop View: Table */}
-      <div id="print-area" className="hidden md:block">
-        <Card>
+      <div id="print-area">
+        <Card className="hidden md:block">
             <CardContent className="p-0">
                 <div className="overflow-x-auto">
                     <Table>
@@ -312,37 +314,47 @@ export default function LeadsPage() {
 
         {/* Lead Details Dialog */}
         <Dialog open={!!selectedLead} onOpenChange={(isOpen) => !isOpen && setSelectedLead(null)}>
-            <DialogContent className="sm:max-w-lg no-print">
-                 <DialogHeader>
-                    <DialogTitle>Detalii Client</DialogTitle>
-                    <DialogDescription>
-                        Sumarul informațiilor colectate de la {selectedLead?.contact?.name || 'acest client'}.
-                    </DialogDescription>
+            <DialogContent className="sm:max-w-lg no-print p-0">
+                 <DialogHeader className="p-6 pb-4">
+                    <div className="flex items-center gap-4">
+                        <Avatar className="h-12 w-12">
+                            <AvatarFallback className="bg-primary/20 text-primary font-bold">
+                                <UserIcon />
+                            </AvatarFallback>
+                        </Avatar>
+                        <div>
+                             <DialogTitle className="text-xl mb-1">{selectedLead?.contact?.name || 'Detalii Client'}</DialogTitle>
+                             <div className="flex items-center gap-2">
+                                <Badge variant={selectedLead?.source === 'Manual' ? 'secondary' : 'default'}>{selectedLead?.source || 'N/A'}</Badge>
+                                <Badge variant="outline">{selectedLead?.status || 'N/A'}</Badge>
+                             </div>
+                        </div>
+                    </div>
                 </DialogHeader>
-                <ScrollArea className="max-h-[60vh] pr-4">
-                    <dl className="divide-y divide-muted">
-                        <LeadDetailItem label="Nume" value={selectedLead?.contact?.name} />
-                        <LeadDetailItem label="Email" value={selectedLead?.contact?.email} />
-                        <LeadDetailItem label="Telefon" value={selectedLead?.contact?.phone} />
-                        <LeadDetailItem label="Data Nașterii" value={selectedLead?.birthDate ? new Date(selectedLead.birthDate) : undefined} />
-                        <LeadDetailItem label="Status" value={selectedLead?.status} />
-                        <LeadDetailItem label="Sursă" value={selectedLead?.source} />
-                        <LeadDetailItem label="Dată creare lead" value={selectedLead?.timestamp} />
-                        {selectedLead && Object.entries(selectedLead).map(([key, value]) => {
-                             // Exclude keys that are already displayed or are technical
-                            const excludedKeys = [
-                                'id', 'agentId', 'timestamp', 'status', 'source', 'contact', 'birthDate',
-                            ];
-                            if (excludedKeys.includes(key)) return null;
-
-                             // Format the key for display
-                            const displayKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-
-                            return <LeadDetailItem key={key} label={displayKey} value={value} />;
-                        })}
-                    </dl>
+                <ScrollArea className="max-h-[60vh] px-6">
+                    <div className="space-y-4">
+                        <div className="p-4 rounded-lg bg-muted/50">
+                             <h3 className="text-sm font-semibold mb-2 text-foreground">Informații Contact</h3>
+                             <dl className="divide-y divide-muted-foreground/20">
+                                <LeadDetailItem label="Email" value={selectedLead?.contact?.email} />
+                                <LeadDetailItem label="Telefon" value={selectedLead?.contact?.phone} />
+                                <LeadDetailItem label="Data creare" value={selectedLead?.timestamp} />
+                             </dl>
+                        </div>
+                        <div className="p-4 rounded-lg bg-muted/50">
+                            <h3 className="text-sm font-semibold mb-2 text-foreground">Detalii Analiză Financiară</h3>
+                            <dl className="divide-y divide-muted-foreground/20">
+                                {selectedLead && Object.entries(selectedLead).map(([key, value]) => {
+                                    const excludedKeys = ['id', 'agentId', 'timestamp', 'status', 'source', 'contact'];
+                                    if (excludedKeys.includes(key)) return null;
+                                    const displayKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                    return <LeadDetailItem key={key} label={displayKey} value={value} />;
+                                })}
+                            </dl>
+                        </div>
+                    </div>
                 </ScrollArea>
-                <DialogFooter>
+                <DialogFooter className="p-6 bg-muted/50 border-t">
                     <Button variant="outline" onClick={() => setSelectedLead(null)}>Închide</Button>
                 </DialogFooter>
             </DialogContent>
