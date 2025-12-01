@@ -381,15 +381,18 @@ export default function ChatAppClient() {
             if (currentStepId && !isNavigationButton) {
                 userDataRef.current[currentStepId as keyof FinancialData] = rawResponseValue;
             }
-
-            // Aici salvăm datele, după ce am adăugat și preferința de contact
-            if (currentStepId === 'multumire_contact') {
-                userDataRef.current['contact_preference'] = rawResponseValue;
-                await saveLeadToFirestore(userDataRef.current, agentIdRef.current);
-            }
             
+            // --- MODIFICARE CHEIE: Salvarea imediată a datelor ---
             if (step.actionType === 'form') {
                 userDataRef.current.contact = response;
+                // Salvăm imediat lead-ul după ce formularul este completat
+                await saveLeadToFirestore(userDataRef.current, agentIdRef.current);
+            }
+
+            if (currentStepId === 'multumire_contact') {
+                userDataRef.current['contact_preference'] = rawResponseValue;
+                // Aici nu mai salvăm, doar colectăm preferința.
+                // Putem adăuga ulterior o logică de a actualiza lead-ul existent, dar nu este critic.
             }
             
             if (step.branchStart) {
