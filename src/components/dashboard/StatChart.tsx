@@ -46,10 +46,10 @@ export default function StatChart({ title, description, type, data, dataKey, cat
         }
         if (type === 'line') {
             return (
-                <LineChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                <LineChart data={data} margin={{ top: 5, right: 10, left: 12, bottom: 0 }}>
                     <CartesianGrid vertical={false} strokeDasharray="3 3" />
                     <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
                     <ChartTooltip
                         content={({ active, payload, label }) =>
                             active && payload && payload.length ? (
@@ -82,11 +82,9 @@ export default function StatChart({ title, description, type, data, dataKey, cat
                 <CardDescription>{description}</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="h-[250px] w-full">
-                   <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
-                        {renderChart()}
-                    </ChartContainer>
-                </div>
+                 <ChartContainer config={chartConfig} className="h-[250px] w-full">
+                    {renderChart()}
+                </ChartContainer>
             </CardContent>
         </Card>
     )
