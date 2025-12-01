@@ -668,13 +668,13 @@ export default function FormsPage() {
   };
 
 
-  if (loading) return <div className="p-8 text-white text-center">Se încarcă...</div>;
+  if (loading) return <div className="text-white text-center">Se încarcă...</div>;
 
   const userForms = formTemplates.filter(f => f.ownerId === user?.uid);
   const standardForms = formTemplates.filter(f => f.isTemplate);
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto text-white space-y-8">
+    <div className="space-y-8">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Management Formulare</h1>
         <Button onClick={() => setIsCreateModalOpen(true)} className="bg-amber-500 text-black font-bold">
@@ -792,3 +792,5 @@ export default function FormsPage() {
     </div>
   );
 }
+
+    
