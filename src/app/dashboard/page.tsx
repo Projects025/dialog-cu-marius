@@ -49,7 +49,6 @@ export default function DashboardSummaryPage() {
     const [stats, setStats] = useState<Stats | null>(null);
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
-    const [activeFormId, setActiveFormId] = useState<string | null>(null);
     
     const [monthlyGoal, setMonthlyGoal] = useState(10);
     const [convertedThisMonth, setConvertedThisMonth] = useState(0);
@@ -78,7 +77,6 @@ export default function DashboardSummaryPage() {
                     const agentDoc = await getDoc(agentRef);
                     if (agentDoc.exists()) {
                         const agentData = agentDoc.data();
-                        setActiveFormId(agentData.activeFormId);
                         setMonthlyGoal(agentData.monthlyGoal || 10);
                         setNewGoal(agentData.monthlyGoal || 10);
                     }
@@ -179,25 +177,6 @@ export default function DashboardSummaryPage() {
         }
     };
 
-
-    const copyToClipboard = () => {
-        if (!user) return;
-        const link = `${window.location.origin}/?agentId=${user.uid}`;
-        navigator.clipboard.writeText(link).then(() => {
-            toast({
-                title: "Copiat!",
-                description: "Link-ul tău de client a fost copiat în clipboard.",
-            });
-        }, (err) => {
-            console.error('Could not copy text: ', err);
-            toast({
-                variant: "destructive",
-                title: "Eroare",
-                description: "Nu s-a putut copia link-ul.",
-            });
-        });
-    };
-    
     const goalProgress = monthlyGoal > 0 ? (convertedThisMonth / monthlyGoal) * 100 : 0;
 
     return (
@@ -267,28 +246,6 @@ export default function DashboardSummaryPage() {
             ) : (
                 <p>Nu s-au putut încărca statisticile.</p>
             )}
-             <div className="grid gap-4 md:gap-8">
-                 <Card>
-                    <CardHeader className="p-4">
-                        <CardTitle className="text-base">Link-ul tău de Client</CardTitle>
-                        <CardDescription className="text-xs">Acesta este link-ul pe care îl poți trimite clienților tăi. Formularul activ este cel setat din pagina "Formulare".</CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex flex-col sm:flex-row items-center gap-2 p-4 pt-0">
-                         {!activeFormId && !loading && (
-                            <Badge variant="destructive" className="w-full sm:w-auto text-xs">Niciun formular activ setat. Link-ul nu va funcționa.</Badge>
-                        )}
-                        {user && (
-                             <div className="flex-1 w-full bg-muted text-muted-foreground p-2 rounded-md text-xs text-center sm:text-left overflow-x-auto">
-                                {`${window.location.origin}/?agentId=${user.uid}`}
-                            </div>
-                        )}
-                        <Button onClick={copyToClipboard} size="sm" className="w-full sm:w-auto" disabled={!user}>
-                            <Copy className="mr-2 h-4 w-4" />
-                            Copiază Link
-                        </Button>
-                    </CardContent>
-                </Card>
-            </div>
         </div>
     );
 }

@@ -26,6 +26,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Edit, Trash2, Copy, AlertTriangle, FilePlus2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 interface FormTemplate {
   id: string;
@@ -102,6 +103,24 @@ export default function FormsPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const copyToClipboard = () => {
+    if (!user) return;
+    const link = `${window.location.origin}/?agentId=${user.uid}`;
+    navigator.clipboard.writeText(link).then(() => {
+        toast({
+            title: "Copiat!",
+            description: "Link-ul tău de client a fost copiat în clipboard.",
+        });
+    }, (err) => {
+        console.error('Could not copy text: ', err);
+        toast({
+            variant: "destructive",
+            title: "Eroare",
+            description: "Nu s-a putut copia link-ul.",
+        });
+    });
   };
 
   const handleSetActiveForm = (formId: string) => {
@@ -682,6 +701,27 @@ export default function FormsPage() {
         </Button>
       </div>
 
+       <Card>
+          <CardHeader className="p-4">
+              <CardTitle className="text-base">Link-ul tău de Client</CardTitle>
+              <CardDescription className="text-xs">Formularul activ este cel setat mai jos. Acesta va fi afișat clienților care accesează link-ul.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col sm:flex-row items-center gap-2 p-4 pt-0">
+               {!activeFormId && !loading && (
+                  <Badge variant="destructive" className="w-full sm:w-auto text-xs">Niciun formular activ setat. Link-ul nu va funcționa.</Badge>
+              )}
+              {user && (
+                   <div className="flex-1 w-full bg-muted text-muted-foreground p-2 rounded-md text-xs text-center sm:text-left overflow-x-auto">
+                      {`${window.location.origin}/?agentId=${user.uid}`}
+                  </div>
+              )}
+              <Button onClick={copyToClipboard} size="sm" className="w-full sm:w-auto" disabled={!user}>
+                  <Copy className="mr-2 h-4 w-4" />
+                  Copiază Link
+              </Button>
+          </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
          {userForms.map(form => (
             <Card key={form.id} className={`flex flex-col bg-gray-900 border ${activeFormId === form.id ? 'border-green-500' : 'border-gray-800'}`}>
@@ -792,5 +832,3 @@ export default function FormsPage() {
     </div>
   );
 }
-
-    
