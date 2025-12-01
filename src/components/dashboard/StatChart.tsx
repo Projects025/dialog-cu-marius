@@ -2,9 +2,9 @@
 "use client"
 
 import * as React from "react"
-import { Bar, BarChart, Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts"
+import { Bar, BarChart, Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { ChartTooltipContent } from "@/components/ui/chart"
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
 
 interface StatChartProps {
     title: string;
@@ -15,15 +15,28 @@ interface StatChartProps {
     categories?: string[];
 }
 
+const chartConfig = {
+    value: {
+      label: "Valoare",
+      color: "hsl(var(--chart-1))",
+    },
+    count: {
+        label: "Număr",
+        color: "hsl(var(--primary))",
+    }
+} satisfies ChartConfig;
+
+
 export default function StatChart({ title, description, type, data, dataKey, categories }: StatChartProps) {
     
     const renderChart = () => {
         if (type === 'bar') {
             return (
-                <BarChart data={data} margin={{ top: 0, right: 0, left: -20, bottom: -10 }}>
-                    <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                    <Tooltip
+                <BarChart data={data} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                    <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                    <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                    <ChartTooltip
                         cursor={{ fill: 'hsla(var(--muted))' }}
                         content={<ChartTooltipContent hideLabel />} 
                     />
@@ -33,10 +46,11 @@ export default function StatChart({ title, description, type, data, dataKey, cat
         }
         if (type === 'line') {
             return (
-                <LineChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: -10 }}>
-                    <XAxis dataKey="date" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                    <Tooltip
+                <LineChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                    <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                    <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                    <ChartTooltip
                         content={({ active, payload, label }) =>
                             active && payload && payload.length ? (
                                 <div className="rounded-lg border bg-background p-2 shadow-sm">
@@ -54,7 +68,7 @@ export default function StatChart({ title, description, type, data, dataKey, cat
                             ) : null
                         }
                     />
-                    <Line type="monotone" dataKey={dataKey} stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey={dataKey} stroke="hsl(var(--primary))" strokeWidth={2} dot={true} />
                 </LineChart>
             )
         }
@@ -69,9 +83,9 @@ export default function StatChart({ title, description, type, data, dataKey, cat
             </CardHeader>
             <CardContent>
                 <div className="h-[250px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                       {renderChart()}
-                    </ResponsiveContainer>
+                   <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+                        {renderChart()}
+                    </ChartContainer>
                 </div>
             </CardContent>
         </Card>
