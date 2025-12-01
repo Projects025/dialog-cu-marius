@@ -118,20 +118,30 @@ export default function LeadsPage() {
     }
   }, [user]);
 
-  const filteredLeads = useMemo(() => {
-      return leads.filter(lead => {
-          const leadDate = lead.timestamp;
-          const nameMatch = searchTerm ? lead.contact?.name.toLowerCase().includes(searchTerm.toLowerCase()) : true;
-          const statusMatch = statusFilter !== 'all' ? lead.status === statusFilter : true;
-          const sourceMatch = sourceFilter !== 'all' ? lead.source === sourceFilter : true;
-          
-          const dateMatch = dateRange?.from ? 
-            (leadDate >= dateRange.from && (dateRange.to ? leadDate <= dateRange.to : true)) 
-            : true;
+   const filteredLeads = useMemo(() => {
+    return leads.filter(lead => {
+        const nameMatch = searchTerm ? lead.contact?.name?.toLowerCase().includes(searchTerm.toLowerCase()) : true;
+        const statusMatch = statusFilter !== 'all' ? lead.status === statusFilter : true;
+        const sourceMatch = sourceFilter !== 'all' ? lead.source === sourceFilter : true;
 
-          return nameMatch && statusMatch && sourceMatch && dateMatch;
-      });
-  }, [leads, searchTerm, statusFilter, sourceFilter, dateRange]);
+        let dateMatch = true;
+        if (dateRange?.from && lead.timestamp) {
+            const leadDate = lead.timestamp;
+            dateMatch = leadDate >= dateRange.from;
+            if (dateRange.to) {
+                // Set the time to the end of the day for the 'to' date
+                const toDate = new Date(dateRange.to);
+                toDate.setHours(23, 59, 59, 999);
+                dateMatch = dateMatch && leadDate <= toDate;
+            }
+        } else if (dateRange?.from && !lead.timestamp) {
+            // If a date range is selected but the lead has no timestamp, exclude it
+            dateMatch = false;
+        }
+
+        return nameMatch && statusMatch && sourceMatch && dateMatch;
+    });
+}, [leads, searchTerm, statusFilter, sourceFilter, dateRange]);
 
 
   const handleStatusChange = async (leadId: string, newStatus: string) => {
@@ -191,21 +201,24 @@ export default function LeadsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <h1 className="text-xl font-bold md:text-2xl">Clienții Tăi</h1>
-          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-              <DialogTrigger asChild>
-                  <Button size="sm" className="w-full sm:w-auto"><FilePlus2 className="mr-2 h-4 w-4" /> Client Nou</Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                  <DialogHeader><DialogTitle>Adaugă un Client Nou</DialogTitle></DialogHeader>
-                  <div className="grid gap-4 py-4">
-                      <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="name" className="text-right">Nume</Label><Input id="name" value={newName} onChange={(e) => setNewName(e.target.value)} className="col-span-3" required /></div>
-                      <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="email" className="text-right">Email</Label><Input id="email" type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} className="col-span-3" /></div>
-                      <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="phone" className="text-right">Telefon</Label><Input id="phone" type="tel" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} className="col-span-3" required/></div>
-                      <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="status" className="text-right">Status</Label><Select onValueChange={setNewStatus} defaultValue={newStatus}><SelectTrigger className="col-span-3"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Nou">Nou</SelectItem><SelectItem value="De contactat">De contactat</SelectItem><SelectItem value="Contactat">Contactat</SelectItem><SelectItem value="Ofertă trimisă">Ofertă trimisă</SelectItem><SelectItem value="Convertit">Convertit</SelectItem><SelectItem value="Inactiv">Inactiv</SelectItem></SelectContent></Select></div>
-                  </div>
-                  <DialogFooter><Button onClick={handleSaveClient} disabled={isSaving}>{isSaving ? "Se salvează..." : "Salvează Client"}</Button></DialogFooter>
-              </DialogContent>
-           </Dialog>
+           <div className="flex items-center gap-2">
+            <ExportButtons leads={filteredLeads} />
+            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                <DialogTrigger asChild>
+                    <Button size="sm" className="w-full sm:w-auto"><FilePlus2 className="mr-2 h-4 w-4" /> Client Nou</Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader><DialogTitle>Adaugă un Client Nou</DialogTitle></DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="name" className="text-right">Nume</Label><Input id="name" value={newName} onChange={(e) => setNewName(e.target.value)} className="col-span-3" required /></div>
+                        <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="email" className="text-right">Email</Label><Input id="email" type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} className="col-span-3" /></div>
+                        <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="phone" className="text-right">Telefon</Label><Input id="phone" type="tel" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} className="col-span-3" required/></div>
+                        <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="status" className="text-right">Status</Label><Select onValueChange={setNewStatus} defaultValue={newStatus}><SelectTrigger className="col-span-3"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Nou">Nou</SelectItem><SelectItem value="De contactat">De contactat</SelectItem><SelectItem value="Contactat">Contactat</SelectItem><SelectItem value="Ofertă trimisă">Ofertă trimisă</SelectItem><SelectItem value="Convertit">Convertit</SelectItem><SelectItem value="Inactiv">Inactiv</SelectItem></SelectContent></Select></div>
+                    </div>
+                    <DialogFooter><Button onClick={handleSaveClient} disabled={isSaving}>{isSaving ? "Se salvează..." : "Salvează Client"}</Button></DialogFooter>
+                </DialogContent>
+             </Dialog>
+           </div>
       </div>
 
       <Card className="no-print">
@@ -229,7 +242,6 @@ export default function LeadsPage() {
           <CardContent className="p-4 pt-0 border-t">
             <div className="flex justify-between items-center text-sm text-muted-foreground">
               <span>Afișare <span className="font-bold text-foreground">{filteredLeads.length}</span> din <span className="font-bold text-foreground">{leads.length}</span> clienți.</span>
-              <ExportButtons leads={filteredLeads} />
             </div>
           </CardContent>
       </Card>
