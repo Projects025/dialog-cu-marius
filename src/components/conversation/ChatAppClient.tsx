@@ -69,6 +69,12 @@ async function saveLeadToFirestore(data: any, agentId: string | null) {
      if (Array.isArray(dataToSend.studii_dramatic_options)) {
         dataToSend.studii_dramatic_options = dataToSend.studii_dramatic_options.join(', ');
     }
+    if (Array.isArray(dataToSend.sanatate_control_tratament)) {
+        dataToSend.sanatate_control_tratament = dataToSend.sanatate_control_tratament.join(', ');
+    }
+     if (Array.isArray(dataToSend.sanatate_situatie_curenta)) {
+        dataToSend.sanatate_situatie_curenta = dataToSend.sanatate_situatie_curenta.join(', ');
+    }
     if (dataToSend.birthDate && typeof dataToSend.birthDate === 'string' && dataToSend.birthDate.includes('T')) {
          // Asigură-te că data este într-un format consistent dacă e deja string
         dataToSend.birthDate = new Date(dataToSend.birthDate).toISOString();
@@ -169,6 +175,7 @@ const performDynamicCalculations = (data: any) => {
         const resources = parse(newData.pensie_asigurari_existente) + 
                           parse(newData.pensie_economii_existente);
                           
+        newData.bruteDeficit = needs; // Brute deficit for pensie is the total need
         newData.finalDeficit = needs - resources;
     }
 
@@ -183,7 +190,11 @@ const performDynamicCalculations = (data: any) => {
                       parse(newData.studii_nunta);
         const resources = parse(newData.studii_economii_existente) + 
                           parse(newData.studii_asigurari_existente);
+
+        newData.bruteDeficit = newData.deficit1 + extra; // Total cost before savings
         const perChild = newData.deficit1 + extra - resources;
+        newData.finalDeficitOneChild = perChild; // Store deficit for one child
+
         const children = parse(newData.studii_numar_copii) || 1;
         newData.finalDeficit = perChild * children;
     }
@@ -377,8 +388,15 @@ export default function ChatAppClient() {
             } else {
                  const rawResponseValue = (typeof response === 'object' && response !== null && !Array.isArray(response)) ? (response.id || response.value || response.label) : response;
                 
-                if (currentStepId && !isNavigationButton) {
-                    userDataRef.current[currentStepId as keyof FinancialData] = rawResponseValue;
+                if (currentStepId) {
+                     if (step.options?.minLength && String(rawResponseValue).length < step.options.minLength) {
+                        addMessage({ author: "Marius", type: "text" }, `Te rog oferă un răspuns de cel puțin ${step.options.minLength} caractere.`);
+                        setCurrentUserAction({ type: step.actionType, options: step.options });
+                        return;
+                    }
+                    if (!isNavigationButton) {
+                        userDataRef.current[currentStepId as keyof FinancialData] = rawResponseValue;
+                    }
                 }
 
                 if (Array.isArray(response)) {
@@ -553,3 +571,5 @@ export default function ChatAppClient() {
         </div>
     );
 }
+
+    

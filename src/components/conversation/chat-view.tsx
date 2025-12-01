@@ -41,12 +41,19 @@ interface ChatViewProps {
 
 const UserInput = ({ options, onResponse }: { options: any, onResponse: (value: string | number) => void }) => {
     const [inputValue, setInputValue] = useState("");
+    const [error, setError] = useState<string | null>(null);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setInputValue(e.target.value);
+        if (error) setError(null);
     };
 
     const handleSendInput = () => {
+        if (options?.minLength && inputValue.trim().length < options.minLength) {
+            setError(`Răspunsul trebuie să aibă cel puțin ${options.minLength} caractere.`);
+            return;
+        }
+
         if (options?.type === 'number') {
             const valueToSend = inputValue.trim() === '' ? 0 : Number(inputValue);
             onResponse(valueToSend);
@@ -63,20 +70,29 @@ const UserInput = ({ options, onResponse }: { options: any, onResponse: (value: 
     };
 
     return (
-        <div className="flex w-full items-center space-x-2 animate-in fade-in-50">
-            <Input
-                type={options?.type || 'text'}
-                placeholder={options?.placeholder || ''}
-                value={inputValue}
-                onChange={handleInputChange}
-                onKeyPress={handleInputKeyPress}
-                className="bg-background h-12 text-sm"
-                autoFocus
-            />
-            <Button type="submit" onClick={handleSendInput} disabled={!inputValue.trim() && options?.type !== 'number'} size="icon" className="h-12 w-12 flex-shrink-0">
-                <Send className="h-5 w-5" />
-                <span className="sr-only">Trimite</span>
-            </Button>
+        <div className="w-full animate-in fade-in-50 space-y-2">
+            <div className="flex w-full items-center space-x-2">
+                <Input
+                    type={options?.type || 'text'}
+                    placeholder={options?.placeholder || ''}
+                    value={inputValue}
+                    onChange={handleInputChange}
+                    onKeyPress={handleInputKeyPress}
+                    className={cn("bg-background h-12 text-sm", error && "border-destructive")}
+                    autoFocus
+                />
+                <Button 
+                    type="submit" 
+                    onClick={handleSendInput} 
+                    disabled={options?.type !== 'number' && !inputValue.trim()}
+                    size="icon" 
+                    className="h-12 w-12 flex-shrink-0"
+                >
+                    <Send className="h-5 w-5" />
+                    <span className="sr-only">Trimite</span>
+                </Button>
+            </div>
+            {error && <p className="text-xs text-destructive text-center">{error}</p>}
         </div>
     );
 };
@@ -556,7 +572,5 @@ const renderMessageContent = (content: any) => {
 };
 
 export default ChatView;
-
-    
 
     
