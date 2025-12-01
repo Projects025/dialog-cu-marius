@@ -13,6 +13,7 @@ import { Label } from "../ui/label";
 import TypingIndicator from "./typing-indicator";
 import { ScrollArea } from "../ui/scroll-area";
 import React from "react";
+import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 
 
 export type Message = {
@@ -282,24 +283,34 @@ const MultiChoiceList = ({ options, onConfirm }: { options: {id: string, label: 
 
 
 const ContactForm = ({ options, onResponse }: { options: any, onResponse: (data: any) => void }) => {
-    const [formData, setFormData] = useState<{[key: string]: string}>({});
+    const [formData, setFormData] = useState<{ [key: string]: string }>({});
     const [gdprChecked, setGdprChecked] = useState(false);
-    const [errors, setErrors] = useState<{[key: string]: string}>({});
-    
+    const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
     const fields = options?.fields || [];
+    const radioFields = options?.radio_fields || [];
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
     };
+    
+    const handleRadioChange = (value: string) => {
+        setFormData(prev => ({ ...prev, [radioFields[0].name]: value }));
+    };
 
     const validate = () => {
-        const newErrors: {[key: string]: string} = {};
+        const newErrors: { [key: string]: string } = {};
         fields.forEach((field: any) => {
             if (field.required && !formData[field.name]) {
                 newErrors[field.name] = 'Acest câmp este obligatoriu.';
             }
             if (field.type === 'email' && formData[field.name] && !/\S+@\S+\.\S+/.test(formData[field.name])) {
-                 newErrors[field.name] = 'Adresa de email nu este validă.';
+                newErrors[field.name] = 'Adresa de email nu este validă.';
+            }
+        });
+         radioFields.forEach((field: any) => {
+            if (field.required && !formData[field.name]) {
+                newErrors[field.name] = 'Te rog alege o opțiune.';
             }
         });
         if (!gdprChecked) {
@@ -314,7 +325,7 @@ const ContactForm = ({ options, onResponse }: { options: any, onResponse: (data:
             onResponse(formData);
         }
     };
-    
+
     if (fields.length === 0) {
         return <div className="text-destructive p-2 text-center bg-destructive/10 rounded-md">Eroare de configurare: Câmpurile formularului lipsesc.</div>;
     }
@@ -330,14 +341,35 @@ const ContactForm = ({ options, onResponse }: { options: any, onResponse: (data:
                         onChange={handleInputChange}
                         className="bg-background h-12 text-sm"
                     />
-                    {errors[field.name] && <p className="text-sm text-red-600 mt-1">{errors[field.name]}</p>}
+                    {errors[field.name] && <p className="text-sm text-red-500 mt-1">{errors[field.name]}</p>}
                 </div>
             ))}
-            <div className="flex items-center space-x-2">
+            
+            {radioFields.map((field: any) => (
+                <div key={field.name} className="pt-2">
+                    <Label className="text-sm font-medium">{field.label}</Label>
+                    <RadioGroup
+                        name={field.name}
+                        onValueChange={handleRadioChange}
+                        className="grid grid-cols-3 gap-2 mt-2"
+                    >
+                        {field.options.map((option: string) => (
+                           <div key={option} className="flex items-center space-x-2">
+                                <RadioGroupItem value={option} id={`${field.name}-${option}`} />
+                                <Label htmlFor={`${field.name}-${option}`} className="text-sm font-normal">{option}</Label>
+                            </div>
+                        ))}
+                    </RadioGroup>
+                    {errors[field.name] && <p className="text-sm text-red-500 mt-1">{errors[field.name]}</p>}
+                </div>
+            ))}
+            
+            <div className="flex items-center space-x-2 pt-2">
                 <Checkbox id="gdpr" checked={gdprChecked} onCheckedChange={(checked) => setGdprChecked(checked as boolean)} />
                 <Label htmlFor="gdpr" className="text-xs font-medium leading-none text-foreground/80 cursor-pointer">{options?.gdpr || 'Sunt de acord cu prelucrarea datelor.'}</Label>
             </div>
-            {errors.gdpr && <p className="text-sm text-red-600">{errors.gdpr}</p>}
+            {errors.gdpr && <p className="text-sm text-red-500 mt-1">{errors.gdpr}</p>}
+            
             <Button onClick={handleSubmit} className="w-full h-12 mt-2">{options?.buttonText || 'Trimite'}</Button>
         </div>
     )

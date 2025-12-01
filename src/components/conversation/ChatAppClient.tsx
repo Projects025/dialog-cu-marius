@@ -357,44 +357,44 @@ export default function ChatAppClient() {
             const step = allFlows[currentStepId];
             if (!step) return;
 
-            const rawResponseValue = (typeof response === 'object' && response !== null && !Array.isArray(response)) ? (response.id || response.value || response.label) : response;
-            const displayResponseValue = (typeof response === 'object' && response !== null && response.label) ? response.label : response;
+            const isNavigationButton = step.actionType === 'buttons' && ['Continuă', 'Start', 'Da, continuăm', 'Sunt gata', 'Da'].includes(typeof response === 'object' ? response.label : response);
             
             let userMessageContent: string | null = null;
-            if (step.actionType === 'input') {
-                userMessageContent = (typeof displayResponseValue === 'number') ? displayResponseValue.toLocaleString('ro-RO') : String(displayResponseValue);
-            } else if (Array.isArray(response)) {
-                userMessageContent = response.map(item => (item.label || item)).join(', ');
-            } else if (displayResponseValue instanceof Date) {
-                userMessageContent = format(displayResponseValue, "dd/MM/yyyy");
-            } else if (typeof response === 'object' && response !== null && response.name) {
-                userMessageContent = `Datele au fost trimise.`;
+
+            if (step.actionType === 'form') {
+                 // For forms, create a summary message
+                userMessageContent = "Datele au fost trimise cu succes.";
+                userDataRef.current.contact = {
+                    name: response.name,
+                    email: response.email,
+                    phone: response.phone,
+                };
+                userDataRef.current.contact_preference = response.contact_preference;
+
+                // Save immediately
+                await saveLeadToFirestore(userDataRef.current, agentIdRef.current);
             } else {
-                userMessageContent = String(displayResponseValue);
+                 const rawResponseValue = (typeof response === 'object' && response !== null && !Array.isArray(response)) ? (response.id || response.value || response.label) : response;
+                
+                if (currentStepId && !isNavigationButton) {
+                    userDataRef.current[currentStepId as keyof FinancialData] = rawResponseValue;
+                }
+
+                if (Array.isArray(response)) {
+                    userMessageContent = response.map(item => (item.label || item)).join(', ');
+                } else if (response instanceof Date) {
+                    userMessageContent = format(response, "dd/MM/yyyy");
+                } else if (typeof response === 'object' && response.label) {
+                    userMessageContent = response.label;
+                } else {
+                    userMessageContent = String(response);
+                }
             }
             
             if (userMessageContent && userMessageContent.trim() !== '') {
                  addMessage({ author: "user", type: "response" }, userMessageContent);
             }
-            
-            const isNavigationButton = step.actionType === 'buttons' && ['Continuă', 'Start', 'Da, continuăm', 'Sunt gata', 'Da'].includes(rawResponseValue);
-            if (currentStepId && !isNavigationButton) {
-                userDataRef.current[currentStepId as keyof FinancialData] = rawResponseValue;
-            }
-            
-            // --- MODIFICARE CHEIE: Salvarea imediată a datelor ---
-            if (step.actionType === 'form') {
-                userDataRef.current.contact = response;
-                // Salvăm imediat lead-ul după ce formularul este completat
-                await saveLeadToFirestore(userDataRef.current, agentIdRef.current);
-            }
 
-            if (currentStepId === 'multumire_contact') {
-                userDataRef.current['contact_preference'] = rawResponseValue;
-                // Aici nu mai salvăm, doar colectăm preferința.
-                // Putem adăuga ulterior o logică de a actualiza lead-ul existent, dar nu este critic.
-            }
-            
             if (step.branchStart) {
                 const nextStepIdForBranch = typeof response === 'object' && response.nextStep ? response.nextStep : (typeof step.nextStep === 'function' ? step.nextStep(response) : step.nextStep);
                 if (nextStepIdForBranch) {
@@ -407,7 +407,7 @@ export default function ChatAppClient() {
             if (typeof response === 'object' && response !== null && response.nextStep) {
                 nextStepId = response.nextStep;
             } else if (typeof step.nextStep === 'function') {
-                nextStepId = step.nextStep(rawResponseValue, userDataRef.current, loadedFlow);
+                nextStepId = step.nextStep(response, userDataRef.current, loadedFlow);
             } else if (typeof step.nextStep === 'string') {
                 nextStepId = step.nextStep;
             } else {

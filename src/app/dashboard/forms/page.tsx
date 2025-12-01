@@ -517,66 +517,107 @@ export default function FormsPage() {
                     { label: "Nu", nextStep: "final_dialog_prietenos" }
                 ]
             },
-             sanatate_intro_1: { 
-                isProgressStep: true,
-                message: ["„Un om sănătos are 1.000 de gânduri, un om bolnav are un singur gând.”", "Când sănătatea este pusă la încercare, ai nevoie să ai atât bani, cât și acces rapid la tratament."], 
-                actionType: "buttons", options: [{label: "Continuă"}], nextStep: "sanatate_intro_2" 
+            sanatate_intro_1: {
+              message: [
+                "„Un om sănătos are 1.000 de gânduri, un om bolnav are un singur gând.”",
+                "Când sănătatea este pusă la încercare, ai nevoie să ai atât bani, cât și acces rapid la tratament."
+              ],
+              actionType: "buttons",
+              options: [{ label: "Continuă" }],
+              nextStep: "sanatate_intro_2"
             },
-            sanatate_intro_2: { 
-                isProgressStep: true,
-                message: "Boala nu așteaptă să fii pregătit financiar sau emoțional – apare pur și simplu, schimbând totul peste noapte.\n\nAr fi de interes pentru tine să vezi cât de pregătită este familia ta pentru un scenariu medical sever?", 
-                actionType: "buttons", 
+            sanatate_intro_2: {
+              message: "Boala nu așteaptă să fii pregătit financiar sau emoțional – apare pur și simplu, schimbând totul peste noapte.\n\nAr fi de interes pentru tine să vezi cât de pregătită este familia ta pentru un scenariu medical sever?",
+              actionType: "buttons",
+              options: [
+                { label: "Da", nextStep: "sanatate_info_1" },
+                { label: "Nu", nextStep: "final_dialog_prietenos" }
+              ]
+            },
+            sanatate_info_1: {
+              message: [
+                "Unele situații medicale sunt mai ușoare, apar frecvent și pun familia în dificultate, dar sunt dificultăți pe care le poți gestiona cu resursele potrivite. Alte situații sunt grave, mai rare, dar când apar pot schimba destinul unei familii pentru totdeauna, necesitând resurse substanțiale și acces rapid la tratament.",
+                "Forme mai ușoare / frecvente:\n• Fracturi, arsuri\n• Spitalizare\n• Intervenții chirurgicale minore\n• Incapacitate temporară de muncă\n• Cheltuieli medicale curente\n• Invaliditate parțială\n\nForme grave / critice:\n• Cancer\n• Infarct miocardic\n• AVC\n• Transplant de organe\n• Intervenții chirurgicale majore\n• Insuficiență renală cronică\n• Boală hepatică avansată\n• Scleroză multiplă\n• Parkinson avansat\n• Boli autoimune severe"
+              ],
+              actionType: "buttons",
+              options: [{ label: "Continuă" }],
+              nextStep: "sanatate_suma_liniste_financiara"
+            },
+            sanatate_suma_liniste_financiara: {
+              message: "**Întrebare-cheie:**\nDacă mâine ai fi diagnosticat sau ai suferi un accident sever, ce sumă ți-ar oferi liniște financiară?",
+              actionType: "buttons",
+              options: ["20.000 lei", "50.000 lei", "100.000 lei", "150.000 lei", "200.000 lei", "Peste 200.000 lei"],
+              nextStep: "sanatate_acces_servicii"
+            },
+            sanatate_acces_servicii: {
+              message: "PASUL 2 – ACCES (tratament de calitate)\n\nCât de important este pentru tine accesul rapid la servicii medicale private de top? (Scală 1-10)",
+              actionType: "input",
+              options: { type: "number", placeholder: "Scorul tău: __ / 10" },
+              nextStep: "sanatate_control_tratament"
+            },
+            sanatate_control_tratament: {
+              message: "PASUL 3 – CONTROL\nCare variantă te reprezintă cel mai bine?",
+              actionType: "buttons",
+              options: [
+                "Vreau servicii medicale de stat",
+                "Vreau bani și decid eu unde mă tratez",
+                "Vreau acces garantat la servicii medicale de top în România",
+                "Vreau acces garantat la servicii medicale de top în străinătate",
+                "Le vreau pe ambele (bani + acces)",
+                "Nu m-am gândit niciodată la asta"
+              ],
+              nextStep: "sanatate_situatie_curenta"
+            },
+            sanatate_situatie_curenta: {
+              message: "PASUL 4 – OPȚIUNILE TALE ÎN ACEST MOMENT\nRaportat la ce îți dorești și la situația ta actuală, unde te afli acum?",
+              actionType: "buttons",
+              options: [
+                "Am asigurare medicală la stat",
+                "Am deja o formă de protecție privată",
+                "Am și economii pentru situații medicale",
+                "Nu am niciun plan clar",
+                "Nu știu exact ce acoperire am"
+              ],
+              nextStep: "sanatate_optiuni_dramatice"
+            },
+            sanatate_optiuni_dramatice: {
+              message: "PASUL 5 – OPȚIUNI ÎN CAZ DE RESURSE LIMITATE\nDacă veniturile tale actuale nu sunt momentan la nivelul care să-ți ofere liniștea financiară și acces rapid la tratament în cazul unei boli grave, ce opțiuni crezi că ai avea?",
+              actionType: "interactive_scroll_list",
+              options: {
+                buttonText: "Am înțeles realitatea",
                 options: [
-                    { label: "Da", nextStep: "sanatate_info_1" },
-                    { label: "Nu", nextStep: "final_dialog_prietenos" }
+                  "să faci împrumuturi sau să folosești carduri de credit",
+                  "să vinzi bunuri personale sau chiar locuința",
+                  "să renunți la economii sau investiții",
+                  "să reduci drastic cheltuielile și stilul de viață",
+                  "să amâni proiecte personale sau educația copiilor",
+                  "să limitezi accesul la tratamente de calitate sau să le primești întârziat",
+                  "să depinzi exclusiv de sistemul public sau de ajutor extern",
+                  "ca familia să preia roluri suplimentare (îngrijire, transport, asistență)",
+                  "să amâni recuperarea completă din lipsă de resurse"
                 ]
+              },
+              nextStep: "sanatate_satisfactie_optiuni"
             },
-            sanatate_info_1: { 
-                message: ["Unele situații medicale sunt mai ușoare, apar frecvent și pun familia în dificultate, dar sunt dificultăți pe care le poți gestiona cu resursele potrivite.\nAlte situații sunt grave, mai rare, dar când apar pot schimba destinul unei familii pentru totdeauna, necesitând resurse substanțiale și acces rapid la tratament.", "Forme mai ușoare / frecvente:\n• Fracturi, arsuri\n• Spitalizare\n• Intervenții chirurgicale minore\n• Incapacitate temporară de muncă\n• Cheltuieli medicale curente\n• Invaliditate parțială\n\nForme grave / critice:\n• Cancer (orice tip major: pulmonar, pancreatic, colorectal etc.)\n• Infarct miocardic\n• AVC (accident vascular cerebral)\n• Transplant de organe\n• Intervenții chirurgicale majore, inclusiv cardiologice\n• Insuficiență renală cronică / dializă\n• Boală hepatică avansată (ciroză, hepatită severă)\n• Scleroză multiplă progresivă\n• Parkinson avansat sau alte boli neurologice degenerative\n• Boli autoimune severe care necesită tratamente costisitoare (ex. lupus, artrită reumatoidă avansată)"], 
-                actionType: "buttons", options: [{label: "Continuă"}], nextStep: "sanatate_suma_liniste_financiara" 
+            sanatate_satisfactie_optiuni: {
+              message: "Întrebare de reflecție:\nCât de mulțumit ești cu aceste opțiuni bifate pentru tine și familia ta?",
+              actionType: "buttons",
+              options: ["Foarte mulțumit", "Parțial mulțumit", "Deloc mulțumit", "Nu știu / Nu m-am gândit"],
+              nextStep: "sanatate_constientizare"
             },
-            sanatate_suma_liniste_financiara: { 
-                isProgressStep: true,
-                message: "**Întrebare-cheie:**\nDacă mâine ai fi diagnosticat sau ai suferi un accident sever, ce sumă ți-ar oferi liniște financiară?\n\nAlege varianta care ți se pare realistă:", 
-                actionType: "buttons", options: ["20.000 lei", "50.000 lei", "100.000 lei", "150.000 lei", "200.000 lei", "Peste 200.000 lei"], nextStep: "sanatate_acces_servicii" 
+            sanatate_constientizare: {
+              message: "Acest pas te ajută să conștientizezi cât de important este să ai bani și acces, înainte ca evenimentul medical să apară.",
+              actionType: "buttons",
+              options: [{ label: "Continuă" }],
+              nextStep: "sanatate_prezentare_solutie"
             },
-            sanatate_acces_servicii: { 
-                isProgressStep: true,
-                message: "PASUL 2 – ACCES (tratament de calitate)\n\nCât de important este pentru tine accesul rapid la servicii medicale private de top? (Scală 1-10)", 
-                actionType: "input", options: { type: "number", placeholder: "Ex: 10" }, nextStep: "sanatate_control_tratament" 
-            },
-            sanatate_control_tratament: { 
-                isProgressStep: true,
-                message: "PASUL 3 – CONTROL\nCare variantă te reprezintă cel mai bine?", 
-                actionType: "buttons", options: ["Vreau servicii medicale de stat", "Vreau bani și decid eu unde mă tratez", "Vreau acces garantat la servicii medicale de top în România", "Vreau acces garantat la servicii medicale de top în străinătate", "Le vreau pe ambele (bani + acces)", "Nu m-am gândit niciodată la asta"], nextStep: "sanatate_situatie_curenta" 
-            },
-            sanatate_situatie_curenta: { 
-                isProgressStep: true,
-                message: "PASUL 4 – OPȚIUNILE TALE ÎN ACEST MOMENT\nRaportat la ce îți dorești și la situația ta actuală, unde te afli acum?", 
-                actionType: "buttons", options: ["Am asigurare medicală la stat", "Am deja o formă de protecție privată", "Am și economii pentru situații medicale", "Nu am niciun plan clar", "Nu știu exact ce acoperire am"], nextStep: "sanatate_optiuni_dramatice" 
-            },
-            sanatate_optiuni_dramatice: { 
-                isProgressStep: true,
-                message: "PASUL 5 – OPȚIUNI ÎN CAZ DE RESURSE LIMITATE\nDacă veniturile tale actuale nu sunt momentan la nivelul care să-ți ofere liniștea financiară și acces rapid la tratament în cazul unei boli grave, ce opțiuni crezi că ai avea?", 
-                actionType: "interactive_scroll_list", options: { buttonText: "Am înțeles realitatea", options: ["să faci împrumuturi sau să folosești carduri de credit", "să vinzi bunuri personale sau chiar locuința", "să renunți la economii sau investiții", "să reduci drastic cheltuielile și stilul de viață", "să amâni proiecte personale sau educația copiilor", "să limitezi accesul la tratamente de calitate sau să le primești întârziat", "să depinzi exclusiv de sistemul public sau de ajutor extern", "ca familia să preia roluri suplimentare (îngrijire, transport, asistență)", "să amâni recuperarea completă din lipsă de resurse"] }, nextStep: "sanatate_satisfactie_optiuni" 
-            },
-            sanatate_satisfactie_optiuni: { 
-                isProgressStep: true,
-                message: "Întrebare de reflecție:\nCât de mulțumit ești cu aceste opțiuni bifate pentru tine și familia ta?", 
-                actionType: "buttons", options: ["Foarte mulțumit", "Parțial mulțumit", "Deloc mulțumit", "Nu știu / Nu m-am gândit"], nextStep: "sanatate_constientizare" 
-            },
-            sanatate_constientizare: { 
-                message: "Acest pas te ajută să conștientizezi cât de important este să ai bani și acces, înainte ca evenimentul medical să apară.", 
-                actionType: "buttons", options: [{label: "Continuă"}], nextStep: "sanatate_prezentare_solutie" 
-            },
-            sanatate_prezentare_solutie: { 
-                isProgressStep: true,
-                message: "CONVERSIA CĂTRE SOLUȚIE\nPe baza răspunsurilor tale, se poate construi o soluție care să îți ofere exact nivelul de:\n✔ bani\n✔ acces\n✔ siguranță\n\nÎn momente critice, diferența nu o face norocul, ci pregătirea.\nAi vrea să vezi ce tip de protecție ți s-ar potrivi cel mai bine?", 
-                actionType: "buttons", 
-                options: [
-                    { label: "Da", nextStep: "formular_contact" },
-                    { label: "Nu", nextStep: "final_dialog_prietenos" }
-                ]
+            sanatate_prezentare_solutie: {
+              message: "CONVERSIA CĂTRE SOLUȚIE\nPe baza răspunsurilor tale, se poate construi o soluție care să îți ofere exact nivelul de:\n✔ bani\n✔ acces\n✔ siguranță\n\nÎn momente critice, diferența nu o face norocul, ci pregătirea.\nAi vrea să vezi ce tip de protecție ți s-ar potrivi cel mai bine?",
+              actionType: "buttons",
+              options: [
+                { label: "Da", nextStep: "formular_contact" },
+                { label: "Nu", nextStep: "final_dialog_prietenos" }
+              ]
             },
             formular_contact: {
               isProgressStep: true,
@@ -589,19 +630,20 @@ export default function FormsPage() {
                   { name: "name", placeholder: "Nume Prenume", type: "text", required: true },
                   { name: "email", placeholder: "Email", type: "email", required: true },
                   { name: "phone", placeholder: "Telefon", type: "tel", required: true }
+                ],
+                 radio_fields: [
+                    { 
+                        name: "contact_preference", 
+                        label: "Când preferi să fii contactat?",
+                        required: true,
+                        options: ["Dimineața", "După-masa", "Seara"]
+                    }
                 ]
               },
-              nextStep: "multumire_contact"
-            },
-            multumire_contact: {
-              isProgressStep: true,
-              message: "Mulțumesc pentru că mi-ai răspuns la întrebări, te voi contacta în curând!\n\nCând preferi să fii contactat?",
-              actionType: "buttons",
-              options: [{label: "Dimineața"}, {label: "După-masa"}, {label: "Seara"}],
               nextStep: "multumire_final"
             },
             multumire_final: {
-              message: "Mulțumesc! O zi frumoasă!",
+              message: "Mulțumesc! Datele au fost trimise. Te voi contacta în curând! O zi frumoasă!",
               actionType: "end",
               nextStep: ""
             },
