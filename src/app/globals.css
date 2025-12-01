@@ -116,11 +116,11 @@ body {
 }
 
 @media print {
-  .no-print {
-    display: none !important;
+  body * {
+    visibility: hidden;
   }
-  body {
-    background: none;
+  #print-area, #print-area * {
+    visibility: visible;
   }
   #print-area {
     position: absolute;
@@ -128,5 +128,7 @@ body {
     top: 0;
     width: 100%;
   }
+  .no-print {
+    display: none !important;
+  }
 }
-
