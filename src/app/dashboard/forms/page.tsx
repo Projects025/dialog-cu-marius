@@ -517,7 +517,7 @@ export default function FormsPage() {
                     { label: "Nu", nextStep: "final_dialog_prietenos" }
                 ]
             },
-            sanatate_intro_1: { 
+             sanatate_intro_1: { 
                 isProgressStep: true,
                 message: ["„Un om sănătos are 1.000 de gânduri, un om bolnav are un singur gând.”", "Când sănătatea este pusă la încercare, ai nevoie să ai atât bani, cât și acces rapid la tratament."], 
                 actionType: "buttons", options: [{label: "Continuă"}], nextStep: "sanatate_intro_2" 
@@ -532,7 +532,7 @@ export default function FormsPage() {
                 ]
             },
             sanatate_info_1: { 
-                message: ["Unele situații medicale sunt mai ușoare, apar frecvent și pun familia în dificultate, dar sunt dificultăți pe care le poți gestiona cu resursele potrivite.", "Alte situații sunt grave, mai rare, dar când apar pot schimba destinul unei familii pentru totdeauna, necesitând resurse substanțiale și acces rapid la tratament.\n\n**Forme frecvente:** Fracturi, arsuri, spitalizare, intervenții chirurgicale minore.\n**Forme grave / critice:** Cancer, Infarct, AVC, Transplant, Boli autoimune severe."], 
+                message: ["Unele situații medicale sunt mai ușoare, apar frecvent și pun familia în dificultate, dar sunt dificultăți pe care le poți gestiona cu resursele potrivite.\nAlte situații sunt grave, mai rare, dar când apar pot schimba destinul unei familii pentru totdeauna, necesitând resurse substanțiale și acces rapid la tratament.", "Forme mai ușoare / frecvente:\n• Fracturi, arsuri\n• Spitalizare\n• Intervenții chirurgicale minore\n• Incapacitate temporară de muncă\n• Cheltuieli medicale curente\n• Invaliditate parțială\n\nForme grave / critice:\n• Cancer (orice tip major: pulmonar, pancreatic, colorectal etc.)\n• Infarct miocardic\n• AVC (accident vascular cerebral)\n• Transplant de organe\n• Intervenții chirurgicale majore, inclusiv cardiologice\n• Insuficiență renală cronică / dializă\n• Boală hepatică avansată (ciroză, hepatită severă)\n• Scleroză multiplă progresivă\n• Parkinson avansat sau alte boli neurologice degenerative\n• Boli autoimune severe care necesită tratamente costisitoare (ex. lupus, artrită reumatoidă avansată)"], 
                 actionType: "buttons", options: [{label: "Continuă"}], nextStep: "sanatate_suma_liniste_financiara" 
             },
             sanatate_suma_liniste_financiara: { 
@@ -552,17 +552,17 @@ export default function FormsPage() {
             },
             sanatate_situatie_curenta: { 
                 isProgressStep: true,
-                message: "PASUL 4 – OPȚIUNILE TALE ÎN ACEST MOMENT\nRaportat la ce îți dorești și la situația ta actuală, unde te afli acum?", e: "buttons", options: ["Am asigurare medicală la stat", "Am deja o formă de protecție privată", "Am și economii pentru situații medicale", "Nu am niciun plan clar", "Nu știu exact ce acoperire am"], nextStep: "sanatate_optiuni_dramatice" 
+                message: "PASUL 4 – OPȚIUNILE TALE ÎN ACEST MOMENT\nRaportat la ce îți dorești și la situația ta actuală, unde te afli acum?", actionType: "buttons", options: ["Am asigurare medicală la stat", "Am deja o formă de protecție privată", "Am și economii pentru situații medicale", "Nu am niciun plan clar", "Nu știu exact ce acoperire am"], nextStep: "sanatate_optiuni_dramatice" 
             },
             sanatate_optiuni_dramatice: { 
                 isProgressStep: true,
-                message: "PASUL 5 – OPȚIUNI ÎN CAZ DE RESURSE LIMITATE\nDacă veniturile actuale nu sunt suficiente, ce opțiuni crezi că ai avea? Bifează:", 
-                actionType: "interactive_scroll_list", options: { buttonText: "Am înțeles realitatea", options: ["Să faci împrumuturi sau carduri de credit", "Să vinzi bunuri personale sau locuința", "Să renunți la economii sau investiții", "Să reduci drastic cheltuielile și stilul de viață", "Să amâni proiecte personale sau educația copiilor", "Să limitezi accesul la tratamente de calitate", "Să depinzi exclusiv de sistemul public sau ajutor extern", "Ca familia să preia roluri suplimentare", "Să amâni recuperarea completă"] }, nextStep: "sanatate_satisfactie_optiuni" 
+                message: "PASUL 5 – OPȚIUNI ÎN CAZ DE RESURSE LIMITATE\nDacă veniturile tale actuale nu sunt momentan la nivelul care să-ți ofere liniștea financiară și acces rapid la tratament în cazul unei boli grave, ce opțiuni crezi că ai avea?", 
+                actionType: "interactive_scroll_list", options: { buttonText: "Am înțeles realitatea", options: ["să faci împrumuturi sau să folosești carduri de credit", "să vinzi bunuri personale sau chiar locuința", "să renunți la economii sau investiții", "să reduci drastic cheltuielile și stilul de viață", "să amâni proiecte personale sau educația copiilor", "să limitezi accesul la tratamente de calitate sau să le primești întârziat", "să depinzi exclusiv de sistemul public sau de ajutor extern", "ca familia să preia roluri suplimentare (îngrijire, transport, asistență)", "să amâni recuperarea completă din lipsă de resurse"] }, nextStep: "sanatate_satisfactie_optiuni" 
             },
             sanatate_satisfactie_optiuni: { 
                 isProgressStep: true,
                 message: "Întrebare de reflecție:\nCât de mulțumit ești cu aceste opțiuni bifate pentru tine și familia ta?", 
-                actionType: "buttons", options: ["Foarte mulțumit", "Parțial mulțumit", "Deloc mulțumit", "Nu știu"], nextStep: "sanatate_constientizare" 
+                actionType: "buttons", options: ["Foarte mulțumit", "Parțial mulțumit", "Deloc mulțumit", "Nu știu / Nu m-am gândit"], nextStep: "sanatate_constientizare" 
             },
             sanatate_constientizare: { 
                 message: "Acest pas te ajută să conștientizezi cât de important este să ai bani și acces, înainte ca evenimentul medical să apară.", 
@@ -570,7 +570,7 @@ export default function FormsPage() {
             },
             sanatate_prezentare_solutie: { 
                 isProgressStep: true,
-                message: "CONVERSIA CĂTRE SOLUȚIE\nPe baza răspunsurilor tale, se poate construi o soluție care să îți ofere bani, acces și siguranță.\n\nAi vrea să vezi ce tip de protecție ți s-ar potrivi cel mai bine?", 
+                message: "CONVERSIA CĂTRE SOLUȚIE\nPe baza răspunsurilor tale, se poate construi o soluție care să îți ofere exact nivelul de:\n✔ bani\n✔ acces\n✔ siguranță\n\nÎn momente critice, diferența nu o face norocul, ci pregătirea.\nAi vrea să vezi ce tip de protecție ți s-ar potrivi cel mai bine?", 
                 actionType: "buttons", 
                 options: [
                     { label: "Da", nextStep: "formular_contact" },
