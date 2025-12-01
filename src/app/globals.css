@@ -116,19 +116,19 @@ body {
 }
 
 @media print {
-  body * {
-    visibility: hidden;
-  }
-  #print-area, #print-area * {
-    visibility: visible;
-  }
-  #print-area {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-  }
   .no-print {
     display: none !important;
+  }
+  #print-area {
+    display: block !important;
+  }
+  #print-area table {
+    font-size: 10px; /* Smaller font for printing */
+    table-layout: auto; /* Allow table to adjust layout */
+    width: 100%;
+    word-break: break-word; /* Break long words/emails */
+  }
+  #print-area th, #print-area td {
+    padding: 4px 6px; /* Reduce padding */
   }
 }

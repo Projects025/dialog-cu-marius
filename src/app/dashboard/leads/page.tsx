@@ -242,8 +242,8 @@ export default function LeadsPage() {
       </div>
 
       {/* Desktop View: Table */}
-      <div id="print-area">
-        <Card className="hidden md:block">
+      <div id="print-area" className="hidden md:block">
+        <Card>
             <CardContent className="p-0">
                 <div className="overflow-x-auto">
                     <Table>
