@@ -121,22 +121,32 @@ export default function LeadsPage() {
    const filteredLeads = useMemo(() => {
     return leads.filter(lead => {
         const nameMatch = searchTerm ? lead.contact?.name?.toLowerCase().includes(searchTerm.toLowerCase()) : true;
-        const statusMatch = statusFilter !== 'all' ? lead.status === statusFilter : true;
+        
+        let statusMatch = true;
+        if (statusFilter !== 'all') {
+            if (statusFilter === 'Nou') {
+                // Include leads with status 'Nou' or with no status field at all
+                statusMatch = lead.status === 'Nou' || !lead.status;
+            } else {
+                statusMatch = lead.status === statusFilter;
+            }
+        }
+
         const sourceMatch = sourceFilter !== 'all' ? lead.source === sourceFilter : true;
 
         let dateMatch = true;
-        if (dateRange?.from && lead.timestamp) {
-            const leadDate = lead.timestamp;
-            dateMatch = leadDate >= dateRange.from;
-            if (dateRange.to) {
-                // Set the time to the end of the day for the 'to' date
-                const toDate = new Date(dateRange.to);
-                toDate.setHours(23, 59, 59, 999);
-                dateMatch = dateMatch && leadDate <= toDate;
+        if (dateRange?.from) {
+             if (!lead.timestamp) {
+                dateMatch = false;
+            } else {
+                const leadDate = lead.timestamp;
+                dateMatch = leadDate >= dateRange.from;
+                if (dateRange.to) {
+                    const toDate = new Date(dateRange.to);
+                    toDate.setHours(23, 59, 59, 999);
+                    dateMatch = dateMatch && leadDate <= toDate;
+                }
             }
-        } else if (dateRange?.from && !lead.timestamp) {
-            // If a date range is selected but the lead has no timestamp, exclude it
-            dateMatch = false;
         }
 
         return nameMatch && statusMatch && sourceMatch && dateMatch;
@@ -266,7 +276,7 @@ export default function LeadsPage() {
                                 <TableCell className="font-medium">{lead.contact?.name || "N/A"}</TableCell>
                                 <TableCell><div className="flex flex-col"><span className="text-xs">{lead.contact?.email || ""}</span><span className="text-xs text-muted-foreground">{lead.contact?.phone || ""}</span></div></TableCell>
                                 <TableCell><Badge variant={lead.source === 'Manual' ? 'secondary' : 'default'} className="text-xs">{lead.source || 'N/A'}</Badge></TableCell>
-                                <TableCell><Badge variant={getStatusBadgeVariant(lead.status)} className="text-xs">{lead.status || "N/A"}</Badge></TableCell>
+                                <TableCell><Badge variant={getStatusBadgeVariant(lead.status || 'Nou')} className="text-xs">{lead.status || "Nou"}</Badge></TableCell>
                                 <TableCell className="text-right no-print">
                                     <Button variant="ghost" size="sm" onClick={() => setSelectedLead(lead)}>Detalii</Button>
                                     <Select value={lead.status || "Nou"} onValueChange={(newStatus) => handleStatusChange(lead.id, newStatus)}>
@@ -293,7 +303,7 @@ export default function LeadsPage() {
                              <DialogTitle className="text-xl mb-1">{selectedLead?.contact?.name || 'Detalii Client'}</DialogTitle>
                              <div className="flex items-center gap-2">
                                 <Badge variant={selectedLead?.source === 'Manual' ? 'secondary' : 'default'}>{selectedLead?.source || 'N/A'}</Badge>
-                                <Badge variant={getStatusBadgeVariant(selectedLead?.status)}>{selectedLead?.status || 'N/A'}</Badge>
+                                <Badge variant={getStatusBadgeVariant(selectedLead?.status || 'Nou')}>{selectedLead?.status || 'Nou'}</Badge>
                              </div>
                         </div>
                     </div>
@@ -327,5 +337,3 @@ export default function LeadsPage() {
     </div>
   );
 }
-
-    

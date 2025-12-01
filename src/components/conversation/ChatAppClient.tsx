@@ -49,6 +49,7 @@ async function saveLeadToFirestore(data: any, agentId: string | null) {
         ...cleanedData, 
         agentId: agentId,
         source: 'Link Client',
+        status: 'Nou', // Adaugă statusul default aici
         timestamp: serverTimestamp()
     };
 
