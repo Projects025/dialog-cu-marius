@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import StatChart from "@/components/dashboard/StatChart";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
+import { format, subDays } from 'date-fns';
 
 interface LeadData {
     status: string;
@@ -27,6 +28,7 @@ interface Stats {
     convertedLeads: number;
     closingRate: number;
     monthlyComparison: { name: string; 'Luna curentă': number; 'Luna trecută': number }[];
+    last7DaysLeads: { date: string; Leaduri: number }[];
 }
 
 const StatCard = ({ title, value, icon: Icon, description }: { title: string, value: string | number, icon: React.ElementType, description?: string }) => {
@@ -126,6 +128,21 @@ export default function DashboardSummaryPage() {
                     const conversionRate = visitorsThisMonth > 0 ? (leadsThisMonth / visitorsThisMonth) * 100 : 0;
                     const closingRate = leadsThisMonth > 0 ? (convertedThisMonthCount / leadsThisMonth) * 100 : 0;
 
+                    // Last 7 days leads
+                    const last7DaysData = Array.from({ length: 7 }).map((_, i) => {
+                        const date = subDays(now, i);
+                        return { date: format(date, 'dd/MM'), Leaduri: 0 };
+                    }).reverse();
+
+                    allLeads.forEach(lead => {
+                        const leadDate = lead.timestamp.toDate();
+                        const formattedDate = format(leadDate, 'dd/MM');
+                        const dayData = last7DaysData.find(d => d.date === formattedDate);
+                        if (dayData) {
+                            dayData.Leaduri++;
+                        }
+                    });
+
                     setStats({
                         totalVisitors: allVisitors.length,
                         totalLeads: allLeads.length,
@@ -135,7 +152,8 @@ export default function DashboardSummaryPage() {
                         monthlyComparison: [
                             { name: 'Lead-uri', 'Luna curentă': leadsThisMonth, 'Luna trecută': leadsLastMonth },
                             { name: 'Convertiți', 'Luna curentă': convertedThisMonthCount, 'Luna trecută': convertedLastMonth },
-                        ]
+                        ],
+                        last7DaysLeads: last7DaysData
                     });
 
                 } catch (error) {
@@ -242,6 +260,15 @@ export default function DashboardSummaryPage() {
                             />
                          </div>
                     </div>
+                     <div className="grid grid-cols-1">
+                        <StatChart
+                            title="Lead-uri în Ultimele 7 Zile"
+                            description="Evoluția numărului de clienți noi."
+                            type="line"
+                            data={stats.last7DaysLeads}
+                            dataKey="Leaduri"
+                        />
+                    </div>
                 </>
             ) : (
                 <p>Nu s-au putut încărca statisticile.</p>
@@ -249,3 +276,5 @@ export default function DashboardSummaryPage() {
         </div>
     );
 }
+
+    
