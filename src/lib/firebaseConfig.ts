@@ -5,7 +5,7 @@ import { getFirestore } from "firebase/firestore";
 import { getFunctions } from "firebase/functions";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyD_qB4O4YxV4_jVj8Zp2hB6g4wQyYt3r1E",
+  apiKey: "AIzaSyDfx_7F5lF_0b1R3f2y9xWc8V4zN7sK5dI",
   authDomain: "polisafe-429913.firebaseapp.com",
   projectId: "polisafe-429913",
   storageBucket: "polisafe-429913.appspot.com",
