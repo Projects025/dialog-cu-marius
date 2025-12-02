@@ -3,94 +3,81 @@
 
 import { useState, useEffect } from 'react';
 import { onAuthStateChanged, type User } from 'firebase/auth';
-import { collection, query, where, getDocs, addDoc, onSnapshot, doc } from 'firebase/firestore';
-import { loadStripe } from '@stripe/stripe-js';
+import { collection, query, where, getDocs, addDoc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebaseConfig';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { CheckCircle2, XCircle, Loader2, ExternalLink } from 'lucide-react';
+import { CheckCircle2, XCircle, Loader2, ExternalLink, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
-// Asigură-te că cheia publicabilă este definită în variabilele de mediu
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+// Lista statică de produse. 
+// IMPORTANT: Înlocuiește 'price_...' cu ID-ul real al prețului din contul tău Stripe.
+// Poți găsi Price ID-ul în panoul Stripe, la secțiunea Products -> (produsul tău) -> Pricing.
+const productPlans = [
+    {
+        id: 'prod_TWi5UrIFpY0u6R',
+        name: 'Basic - PoliSafe',
+        description: 'Ideal pentru consultanții la început de drum.',
+        priceId: 'price_REPLACE_WITH_BASIC_PRICE_ID', // <--- ÎNLOCUIEȘTE AICI
+        price: 75,
+        interval: 'lună',
+        features: [
+            "Asistent virtual inteligent",
+            "Analiză de vulnerabilitate",
+            "CRM pentru managementul clienților",
+            "Link personalizat și cod QR",
+        ]
+    },
+    {
+        id: 'prod_TX4ETTsdLydidt',
+        name: 'Pro - PoliSafe',
+        description: 'Planul perfect pentru consultantul individual.',
+        isPopular: true,
+        priceId: 'price_REPLACE_WITH_PRO_PRICE_ID', // <--- ÎNLOCUIEȘTE AICI
+        price: 100,
+        interval: 'lună',
+        features: [
+            "Toate beneficiile 'Basic'",
+            "Dashboard cu statistici avansate",
+            "Export & Print rapoarte clienți",
+            "5 formulare personalizate",
+        ]
+    },
+    {
+        id: 'prod_TX4ED5ZsoiCwFx',
+        name: 'Team - PoliSafe',
+        description: 'Pentru liderii de echipă care vor performanță.',
+        priceId: 'price_REPLACE_WITH_TEAM_PRICE_ID', // <--- ÎNLOCUIEȘTE AICI
+        price: 125,
+        interval: 'lună',
+        features: [
+            "Toate beneficiile 'Pro'",
+            "Formulare nelimitate",
+            "Cont de administrator de echipă",
+            "Rapoarte de performanță lunare",
+        ]
+    }
+];
 
-interface Product {
-    id: string;
-    name: string;
-    description: string;
-    role: string | null;
-    prices: { id: string; unit_amount: number; currency: string; interval: string }[];
-}
 
 const SubscriptionPage = () => {
     const { toast } = useToast();
     const [user, setUser] = useState<User | null>(null);
-    const [products, setProducts] = useState<Product[]>([]);
     const [subscription, setSubscription] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [isProcessingCheckout, setIsProcessingCheckout] = useState<string | null>(null);
-    const [hasCheckedSubscription, setHasCheckedSubscription] = useState(false);
 
     useEffect(() => {
         const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
             setUser(currentUser);
             if (!currentUser) {
                 setLoading(false);
-                setHasCheckedSubscription(true);
             }
         });
         return () => unsubscribeAuth();
     }, []);
-
-    // Fetch Products and Prices
-    useEffect(() => {
-        const fetchProducts = async () => {
-            try {
-                const productsQuery = query(collection(db, 'products'), where('active', '==', true));
-                const querySnapshot = await getDocs(productsQuery);
-                const fetchedProducts: Product[] = [];
-
-                for (const productDoc of querySnapshot.docs) {
-                    const productData = productDoc.data();
-                    const pricesQuery = query(collection(db, 'products', productDoc.id, 'prices'));
-                    const pricesSnapshot = await getDocs(pricesQuery);
-                    const productPrices: Product['prices'] = [];
-                    
-                    pricesSnapshot.forEach(priceDoc => {
-                        const priceData = priceDoc.data();
-                        // Doar prețurile recurente
-                        if (priceData.active === true && priceData.type === 'recurring') {
-                            productPrices.push({
-                                id: priceDoc.id,
-                                unit_amount: priceData.unit_amount,
-                                currency: priceData.currency,
-                                interval: priceData.interval,
-                            });
-                        }
-                    });
-
-                    if (productPrices.length > 0) {
-                         fetchedProducts.push({
-                            id: productDoc.id,
-                            name: productData.name,
-                            description: productData.description,
-                            role: productData.role || null,
-                            prices: productPrices,
-                        });
-                    }
-                }
-                // Sortează produsele pe baza primului preț (de la cel mai mic la cel mai mare)
-                fetchedProducts.sort((a, b) => a.prices[0].unit_amount - b.prices[0].unit_amount);
-                setProducts(fetchedProducts);
-            } catch(e) {
-                console.error("Error fetching products:", e);
-                toast({ variant: 'destructive', title: 'Eroare Produse', description: 'Nu s-au putut încărca planurile de abonament.' });
-            }
-        };
-
-        fetchProducts();
-    }, [toast]);
 
     // Listen for Subscription status
     useEffect(() => {
@@ -102,7 +89,6 @@ const SubscriptionPage = () => {
         );
         
         const unsubscribeSub = onSnapshot(subscriptionsQuery, (snapshot) => {
-            setLoading(true);
             if (!snapshot.empty) {
                 const subData = snapshot.docs[0].data();
                 setSubscription({ id: snapshot.docs[0].id, ...subData });
@@ -110,18 +96,25 @@ const SubscriptionPage = () => {
                 setSubscription(null);
             }
             setLoading(false);
-            setHasCheckedSubscription(true);
         }, (error) => {
             console.error("Subscription snapshot error:", error);
             toast({ variant: 'destructive', title: 'Eroare', description: 'Nu s-a putut verifica statusul abonamentului.' });
             setLoading(false);
-            setHasCheckedSubscription(true);
         });
 
         return () => unsubscribeSub();
     }, [user, toast]);
 
     const handleCheckout = async (priceId: string) => {
+        if (priceId.includes('REPLACE_WITH')) {
+            toast({
+                variant: 'destructive',
+                title: 'Configurare Incompletă',
+                description: 'ID-ul prețului nu a fost configurat în cod. Contactează suportul tehnic.',
+            });
+            return;
+        }
+
         if (!user) return;
         setIsProcessingCheckout(priceId);
         toast({ title: 'Se pregătește sesiunea de plată...', description: 'Vei fi redirecționat către Stripe în câteva secunde.' });
@@ -177,11 +170,8 @@ const SubscriptionPage = () => {
             default: return { text: 'Inactiv', icon: <XCircle className="h-5 w-5 text-muted-foreground" />, variant: 'outline' as const };
         }
     };
-
-    const currentStatus = getStatusText(subscription?.status || null);
-    const isActive = subscription?.status === 'active' || subscription?.status === 'trialing';
-
-    if (!hasCheckedSubscription) {
+    
+    if (loading) {
          return (
             <div className="flex items-center justify-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -190,6 +180,10 @@ const SubscriptionPage = () => {
         );
     }
     
+    const currentStatus = getStatusText(subscription?.status || null);
+    const isActive = subscription?.status === 'active' || subscription?.status === 'trialing';
+    const activeProductId = subscription?.items[0]?.price?.product;
+
     return (
         <div className="space-y-8">
             <div>
@@ -206,7 +200,7 @@ const SubscriptionPage = () => {
                     <CardContent className="space-y-4">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 rounded-lg bg-muted/50 border border-border">
                             <div className="flex items-center gap-3">
-                                <span className="font-semibold text-lg">{subscription.items[0].price.product.name}</span>
+                                <span className="font-semibold text-lg">{productPlans.find(p => p.id === activeProductId)?.name || 'Plan Activ'}</span>
                                 <Badge variant={currentStatus.variant} className="gap-2">
                                      {currentStatus.icon}
                                     {currentStatus.text}
@@ -233,29 +227,41 @@ const SubscriptionPage = () => {
                     </CardHeader>
                 </Card>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {products.length === 0 && !loading ? (
-                         <p className="text-muted-foreground col-span-full text-center">Niciun plan de abonament nu este disponibil momentan.</p>
-                    ) : products.map((product) => (
-                        <Card key={product.id} className="flex flex-col hover:border-primary transition-colors duration-300">
+                    {productPlans.map((plan) => (
+                        <Card key={plan.id} className={cn(
+                            "flex flex-col transition-all duration-300",
+                            plan.isPopular ? "border-amber-500 shadow-amber-500/10 shadow-lg" : "hover:border-primary"
+                        )}>
+                             {plan.isPopular && (
+                                <Badge variant="secondary" className="absolute -top-3 left-1/2 -translate-x-1/2">Cel mai popular</Badge>
+                             )}
                             <CardHeader>
-                                <CardTitle>{product.name}</CardTitle>
-                                <CardDescription>{product.description}</CardDescription>
+                                <CardTitle className={cn(plan.isPopular && "text-amber-400")}>{plan.name}</CardTitle>
+                                <CardDescription>{plan.description}</CardDescription>
                             </CardHeader>
-                            <CardContent className="flex-grow">
+                            <CardContent className="flex-grow space-y-6">
                                 <p className="text-4xl font-bold">
-                                    {(product.prices[0].unit_amount / 100).toLocaleString('ro-RO', { style: 'currency', currency: 'RON' })}
-                                    <span className="text-sm font-normal text-muted-foreground"> / {product.prices[0].interval === 'month' ? 'lună' : 'an'}</span>
+                                    {plan.price}
+                                    <span className="text-sm font-normal text-muted-foreground"> RON / {plan.interval}</span>
                                 </p>
-                                {/* Aici se pot adăuga în viitor listă de features */}
+                                <ul className="space-y-3 text-sm text-muted-foreground">
+                                    {plan.features.map((feature) => (
+                                        <li key={feature} className="flex items-start">
+                                            <Check className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                                            <span>{feature}</span>
+                                        </li>
+                                    ))}
+                                </ul>
                             </CardContent>
                             <CardFooter>
                                 <Button 
-                                    className="w-full" 
-                                    onClick={() => handleCheckout(product.prices[0].id)}
+                                    className={cn("w-full", plan.isPopular ? "bg-amber-500 text-black hover:bg-amber-400" : "")}
+                                    variant={plan.isPopular ? "default" : "outline"}
+                                    onClick={() => handleCheckout(plan.priceId)}
                                     disabled={!!isProcessingCheckout}
                                 >
-                                    {isProcessingCheckout === product.prices[0].id ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
-                                    {isProcessingCheckout === product.prices[0].id ? 'Se procesează...' : 'Alege Planul'}
+                                    {isProcessingCheckout === plan.priceId ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
+                                    {isProcessingCheckout === plan.priceId ? 'Se procesează...' : 'Alege Planul'}
                                 </Button>
                             </CardFooter>
                         </Card>
@@ -268,3 +274,5 @@ const SubscriptionPage = () => {
 };
 
 export default SubscriptionPage;
+
+    
