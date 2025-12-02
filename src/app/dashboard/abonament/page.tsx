@@ -46,46 +46,51 @@ const SubscriptionPage = () => {
     // Fetch Products and Prices
     useEffect(() => {
         const fetchProducts = async () => {
-            const productsQuery = query(collection(db, 'products'), where('active', '==', true));
-            const querySnapshot = await getDocs(productsQuery);
-            const fetchedProducts: Product[] = [];
+            try {
+                const productsQuery = query(collection(db, 'products'), where('active', '==', true));
+                const querySnapshot = await getDocs(productsQuery);
+                const fetchedProducts: Product[] = [];
 
-            for (const productDoc of querySnapshot.docs) {
-                const productData = productDoc.data();
-                const pricesQuery = query(collection(db, 'products', productDoc.id, 'prices'));
-                const pricesSnapshot = await getDocs(pricesQuery);
-                const productPrices: Product['prices'] = [];
-                
-                pricesSnapshot.forEach(priceDoc => {
-                    const priceData = priceDoc.data();
-                    // Doar prețurile recurente
-                    if (priceData.active === true && priceData.type === 'recurring') {
-                        productPrices.push({
-                            id: priceDoc.id,
-                            unit_amount: priceData.unit_amount,
-                            currency: priceData.currency,
-                            interval: priceData.interval,
+                for (const productDoc of querySnapshot.docs) {
+                    const productData = productDoc.data();
+                    const pricesQuery = query(collection(db, 'products', productDoc.id, 'prices'));
+                    const pricesSnapshot = await getDocs(pricesQuery);
+                    const productPrices: Product['prices'] = [];
+                    
+                    pricesSnapshot.forEach(priceDoc => {
+                        const priceData = priceDoc.data();
+                        // Doar prețurile recurente
+                        if (priceData.active === true && priceData.type === 'recurring') {
+                            productPrices.push({
+                                id: priceDoc.id,
+                                unit_amount: priceData.unit_amount,
+                                currency: priceData.currency,
+                                interval: priceData.interval,
+                            });
+                        }
+                    });
+
+                    if (productPrices.length > 0) {
+                         fetchedProducts.push({
+                            id: productDoc.id,
+                            name: productData.name,
+                            description: productData.description,
+                            role: productData.role || null,
+                            prices: productPrices,
                         });
                     }
-                });
-
-                if (productPrices.length > 0) {
-                     fetchedProducts.push({
-                        id: productDoc.id,
-                        name: productData.name,
-                        description: productData.description,
-                        role: productData.role || null,
-                        prices: productPrices,
-                    });
                 }
+                // Sortează produsele pe baza primului preț (de la cel mai mic la cel mai mare)
+                fetchedProducts.sort((a, b) => a.prices[0].unit_amount - b.prices[0].unit_amount);
+                setProducts(fetchedProducts);
+            } catch(e) {
+                console.error("Error fetching products:", e);
+                toast({ variant: 'destructive', title: 'Eroare Produse', description: 'Nu s-au putut încărca planurile de abonament.' });
             }
-            // Sortează produsele pe baza primului preț (de la cel mai mic la cel mai mare)
-            fetchedProducts.sort((a, b) => a.prices[0].unit_amount - b.prices[0].unit_amount);
-            setProducts(fetchedProducts);
         };
 
         fetchProducts();
-    }, []);
+    }, [toast]);
 
     // Listen for Subscription status
     useEffect(() => {
