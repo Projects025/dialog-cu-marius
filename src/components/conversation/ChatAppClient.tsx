@@ -8,7 +8,7 @@ import ChatView from "@/components/conversation/chat-view";
 import type { Message, UserAction } from "@/components/conversation/chat-view";
 import { format } from "date-fns";
 import { db } from "@/lib/firebaseConfig";
-import { collection, addDoc, serverTimestamp, doc, getDoc, setDoc } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, doc, getDoc, setDoc, query, where, getDocs } from "firebase/firestore";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/errors";
 import type { FinancialData } from "@/lib/calculation";
@@ -445,11 +445,28 @@ export default function ChatAppClient() {
         try {
             const agentId = agentIdRef.current;
             if (!agentId) throw new Error("Link invalid sau incomplet. Te rog contactează consultantul tău.");
+            
             const agentRef = doc(db, "agents", agentId);
             const agentDoc = await getDoc(agentRef);
             if (!agentDoc.exists()) throw new Error("Agentul nu a fost găsit.");
+            
+            const agentData = agentDoc.data();
 
-            const activeFormId = agentDoc.data().activeFormId;
+            // Admin bypass
+            const isAdmin = agentData.email === 'alinmflavius@gmail.com';
+
+            if (!isAdmin) {
+                const subscriptionsQuery = query(
+                    collection(db, 'customers', agentId, 'subscriptions'),
+                    where('status', 'in', ['trialing', 'active'])
+                );
+                const subscriptionsSnapshot = await getDocs(subscriptionsQuery);
+                if (subscriptionsSnapshot.empty) {
+                    throw new Error("Acest formular este inactiv. Agentul nu are un abonament activ.");
+                }
+            }
+
+            const activeFormId = agentData.activeFormId;
             if (!activeFormId) throw new Error("Acest agent nu are un formular activ configurat.");
 
             if (!hasTrackedStartRef.current) {
