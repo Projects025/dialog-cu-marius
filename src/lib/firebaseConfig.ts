@@ -5,12 +5,12 @@ import { getFirestore } from "firebase/firestore";
 import { getFunctions } from "firebase/functions";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDfx_7F5lF_0b1R3f2y9xWc8V4zN7sK5dI",
-  authDomain: "polisafe-429913.firebaseapp.com",
-  projectId: "polisafe-429913",
-  storageBucket: "polisafe-429913.appspot.com",
-  messagingSenderId: "367202359858",
-  appId: "1:367202359858:web:715f5d377b55345d3c81e2"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
 // Inițializează Firebase
