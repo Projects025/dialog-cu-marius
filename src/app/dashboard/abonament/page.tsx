@@ -13,7 +13,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 
 // Asigură-te că cheia publicabilă este definită în variabilele de mediu
-// Vom adăuga aceasta variabilă de mediu mai târziu.
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 interface Product {
@@ -29,14 +28,16 @@ const SubscriptionPage = () => {
     const [user, setUser] = useState<User | null>(null);
     const [products, setProducts] = useState<Product[]>([]);
     const [subscription, setSubscription] = useState<any>(null);
-    const [loadingProducts, setLoadingProducts] = useState(true);
+    const [loading, setLoading] = useState(true);
     const [isProcessingCheckout, setIsProcessingCheckout] = useState<string | null>(null);
+    const [hasCheckedSubscription, setHasCheckedSubscription] = useState(false);
 
     useEffect(() => {
         const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
             setUser(currentUser);
             if (!currentUser) {
-                setLoadingProducts(false);
+                setLoading(false);
+                setHasCheckedSubscription(true);
             }
         });
         return () => unsubscribeAuth();
@@ -45,7 +46,6 @@ const SubscriptionPage = () => {
     // Fetch Products and Prices
     useEffect(() => {
         const fetchProducts = async () => {
-            setLoadingProducts(true);
             const productsQuery = query(collection(db, 'products'), where('active', '==', true));
             const querySnapshot = await getDocs(productsQuery);
             const fetchedProducts: Product[] = [];
@@ -58,7 +58,8 @@ const SubscriptionPage = () => {
                 
                 pricesSnapshot.forEach(priceDoc => {
                     const priceData = priceDoc.data();
-                    if (priceData.type === 'recurring') {
+                    // Doar prețurile recurente
+                    if (priceData.active === true && priceData.type === 'recurring') {
                         productPrices.push({
                             id: priceDoc.id,
                             unit_amount: priceData.unit_amount,
@@ -78,8 +79,9 @@ const SubscriptionPage = () => {
                     });
                 }
             }
+            // Sortează produsele pe baza primului preț (de la cel mai mic la cel mai mare)
+            fetchedProducts.sort((a, b) => a.prices[0].unit_amount - b.prices[0].unit_amount);
             setProducts(fetchedProducts);
-            setLoadingProducts(false);
         };
 
         fetchProducts();
@@ -95,16 +97,24 @@ const SubscriptionPage = () => {
         );
         
         const unsubscribeSub = onSnapshot(subscriptionsQuery, (snapshot) => {
+            setLoading(true);
             if (!snapshot.empty) {
                 const subData = snapshot.docs[0].data();
                 setSubscription({ id: snapshot.docs[0].id, ...subData });
             } else {
                 setSubscription(null);
             }
+            setLoading(false);
+            setHasCheckedSubscription(true);
+        }, (error) => {
+            console.error("Subscription snapshot error:", error);
+            toast({ variant: 'destructive', title: 'Eroare', description: 'Nu s-a putut verifica statusul abonamentului.' });
+            setLoading(false);
+            setHasCheckedSubscription(true);
         });
 
         return () => unsubscribeSub();
-    }, [user]);
+    }, [user, toast]);
 
     const handleCheckout = async (priceId: string) => {
         if (!user) return;
@@ -114,14 +124,14 @@ const SubscriptionPage = () => {
         try {
             const checkoutSessionRef = await addDoc(collection(db, 'customers', user.uid, 'checkout_sessions'), {
                 price: priceId,
-                success_url: window.location.origin + '/dashboard/abonament',
-                cancel_url: window.location.origin + '/dashboard/abonament',
+                success_url: `${window.location.origin}/dashboard/payment/success`,
+                cancel_url: `${window.location.origin}/dashboard/payment/cancel`,
             });
 
             onSnapshot(checkoutSessionRef, (snap) => {
                 const { error, url } = snap.data() as { error?: { message: string }; url?: string };
                 if (error) {
-                    toast({ variant: 'destructive', title: 'Eroare', description: error.message });
+                    toast({ variant: 'destructive', title: 'Eroare la creare sesiune', description: error.message });
                     setIsProcessingCheckout(null);
                 }
                 if (url) {
@@ -139,11 +149,12 @@ const SubscriptionPage = () => {
         if (!user) return;
         toast({ title: 'Se deschide portalul de client...' });
         
-        const portalLinkRef = await addDoc(collection(db, 'customers', user.uid, 'portal_links'), {
+        const portalLinkRef = collection(db, 'customers', user.uid, 'portal_links');
+        const docRef = await addDoc(portalLinkRef, {
             return_url: window.location.href,
         });
 
-        onSnapshot(portalLinkRef, (snap) => {
+        onSnapshot(docRef, (snap) => {
             const { error, url } = snap.data() as { error?: { message: string }; url?: string };
             if (error) {
                 toast({ variant: 'destructive', title: 'Eroare', description: error.message });
@@ -165,10 +176,11 @@ const SubscriptionPage = () => {
     const currentStatus = getStatusText(subscription?.status || null);
     const isActive = subscription?.status === 'active' || subscription?.status === 'trialing';
 
-    if (loadingProducts || !user) {
+    if (!hasCheckedSubscription) {
          return (
             <div className="flex items-center justify-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="ml-4 text-muted-foreground">Se verifică statusul abonamentului...</p>
             </div>
         );
     }
@@ -184,10 +196,10 @@ const SubscriptionPage = () => {
                 <Card>
                     <CardHeader>
                         <CardTitle>Planul Tău Actual</CardTitle>
-                        <CardDescription>Mulțumim că ești un membru PRO!</CardDescription>
+                        <CardDescription>Mulțumim că ești un membru PRO! Aici poți vedea detaliile și poți gestiona abonamentul.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 rounded-lg bg-muted/50">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 rounded-lg bg-muted/50 border border-border">
                             <div className="flex items-center gap-3">
                                 <span className="font-semibold text-lg">{subscription.items[0].price.product.name}</span>
                                 <Badge variant={currentStatus.variant} className="gap-2">
@@ -203,14 +215,23 @@ const SubscriptionPage = () => {
                     <CardFooter>
                          <Button onClick={handleManageSubscription}>
                             <ExternalLink className="mr-2 h-4 w-4"/>
-                            Gestionează Abonamentul
+                            Gestionează în portalul Stripe
                         </Button>
                     </CardFooter>
                 </Card>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {products.map((product) => (
-                        <Card key={product.id} className="flex flex-col">
+                <>
+                <Card className="border-amber-500/50 bg-amber-950/20">
+                     <CardHeader className="text-center">
+                        <CardTitle>Nu ai un abonament activ</CardTitle>
+                        <CardDescription>Alege unul dintre planurile de mai jos pentru a debloca toate funcționalitățile platformei.</CardDescription>
+                    </CardHeader>
+                </Card>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {products.length === 0 && !loading ? (
+                         <p className="text-muted-foreground col-span-full text-center">Niciun plan de abonament nu este disponibil momentan.</p>
+                    ) : products.map((product) => (
+                        <Card key={product.id} className="flex flex-col hover:border-primary transition-colors duration-300">
                             <CardHeader>
                                 <CardTitle>{product.name}</CardTitle>
                                 <CardDescription>{product.description}</CardDescription>
@@ -220,6 +241,7 @@ const SubscriptionPage = () => {
                                     {(product.prices[0].unit_amount / 100).toLocaleString('ro-RO', { style: 'currency', currency: 'RON' })}
                                     <span className="text-sm font-normal text-muted-foreground"> / {product.prices[0].interval === 'month' ? 'lună' : 'an'}</span>
                                 </p>
+                                {/* Aici se pot adăuga în viitor listă de features */}
                             </CardContent>
                             <CardFooter>
                                 <Button 
@@ -234,6 +256,7 @@ const SubscriptionPage = () => {
                         </Card>
                     ))}
                 </div>
+                </>
             )}
         </div>
     );
