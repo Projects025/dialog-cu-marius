@@ -1,16 +1,16 @@
+
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getFunctions } from "firebase/functions";
 
-// ADAUGAȚI AICI NOUA CONFIGURAȚIE DE LA NOUL PROIECT FIREBASE
 const firebaseConfig = {
-  apiKey: "REPLACE_WITH_YOUR_NEW_API_KEY",
-  authDomain: "REPLACE_WITH_YOUR_NEW_AUTH_DOMAIN",
-  projectId: "REPLACE_WITH_YOUR_NEW_PROJECT_ID",
-  storageBucket: "REPLACE_WITH_YOUR_NEW_STORAGE_BUCKET",
-  messagingSenderId: "REPLACE_WITH_YOUR_NEW_MESSAGING_SENDER_ID",
-  appId: "REPLACE_WITH_YOUR_NEW_APP_ID"
+  apiKey: "AIzaSyD_qB4O4YxV4_jVj8Zp2hB6g4wQyYt3r1E",
+  authDomain: "polisafe-429913.firebaseapp.com",
+  projectId: "polisafe-429913",
+  storageBucket: "polisafe-429913.appspot.com",
+  messagingSenderId: "367202359858",
+  appId: "1:367202359858:web:715f5d377b55345d3c81e2"
 };
 
 // Inițializează Firebase
