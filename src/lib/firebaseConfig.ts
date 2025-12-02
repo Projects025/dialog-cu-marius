@@ -1,7 +1,7 @@
-
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getFunctions } from "firebase/functions";
 
 // Adaugă aici configurația ta Firebase
 const firebaseConfig = {
@@ -23,5 +23,6 @@ if (!getApps().length) {
 
 const auth = getAuth(app);
 const db = getFirestore(app);
+const functions = getFunctions(app);
 
-export { app, auth, db };
+export { app, auth, db, functions };

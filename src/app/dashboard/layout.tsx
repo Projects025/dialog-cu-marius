@@ -8,7 +8,7 @@ import { User, signOut, onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebaseConfig";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Users, FileText, LogOut, Menu, X, UserCircle } from "lucide-react";
+import { LayoutDashboard, Users, FileText, LogOut, Menu, X, UserCircle, CreditCard } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 
 const NavLink = ({ href, children, icon: Icon, onClick }: { href: string; children: ReactNode; icon: React.ElementType, onClick?: () => void }) => {
@@ -56,6 +56,7 @@ const SidebarContent = ({ onLinkClick }: { onLinkClick?: () => void }) => {
                     <NavLink href="/dashboard" icon={LayoutDashboard} onClick={onLinkClick}>Sumar</NavLink>
                     <NavLink href="/dashboard/leads" icon={Users} onClick={onLinkClick}>Clienții Tăi</NavLink>
                     <NavLink href="/dashboard/forms" icon={FileText} onClick={onLinkClick}>Formulare</NavLink>
+                    <NavLink href="/dashboard/abonament" icon={CreditCard} onClick={onLinkClick}>Abonament</NavLink>
                     <NavLink href="/dashboard/profile" icon={UserCircle} onClick={onLinkClick}>Profil</NavLink>
                 </nav>
             </div>
