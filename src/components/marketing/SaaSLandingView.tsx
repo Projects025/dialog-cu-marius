@@ -1,8 +1,12 @@
 "use client";
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/ui/Navbar';
 import Footer from '@/components/ui/Footer';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 
 const SaaSLandingView = () => {
@@ -14,6 +18,52 @@ const SaaSLandingView = () => {
     alert("Mesajul tău a fost trimis (simulare). Verifică consola dezvoltatorului.");
     e.currentTarget.reset();
   };
+  
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+
+  const plans = [
+    {
+      name: "Agent Pro",
+      price: { monthly: 15, yearly: 150 },
+      description: "Planul perfect pentru consultantul individual care vrea să-și digitalizeze procesul de calificare.",
+      features: [
+        "Asistent virtual inteligent",
+        "Analiză de vulnerabilitate",
+        "CRM pentru managementul clienților",
+        "Link personalizat și cod QR",
+        "Dashboard cu statistici",
+        "Suport tehnic prin email",
+        "1 formular personalizat"
+      ],
+      isPopular: true
+    },
+    {
+      name: "Team Leader",
+      price: { monthly: 45, yearly: 450 },
+      description: "Pentru liderii de echipă care vor să-și standardizeze procesul și să monitorizeze performanța.",
+      features: [
+        "Toate beneficiile 'Agent Pro'",
+        "Export & Print rapoarte clienți",
+        "5 formulare personalizate",
+        "Cont de administrator de echipă",
+        "Rapoarte de performanță lunare",
+      ],
+      isPopular: false
+    },
+    {
+      name: "Enterprise",
+      price: { monthly: null, yearly: null },
+      description: "Soluții dedicate pentru agenții și companii de brokeraj cu nevoi complexe și volume mari.",
+      features: [
+        "Toate beneficiile 'Team Leader'",
+        "Formulare și fluxuri nelimitate",
+        "Personalizări avansate și branding",
+        "Acces API pentru integrări",
+        "Suport prioritar și training dedicat",
+      ],
+      isPopular: false
+    }
+  ];
 
   return (
     <div className='h-screen w-full bg-slate-950 text-white relative overflow-y-auto overflow-x-hidden no-scrollbar'>
@@ -121,40 +171,61 @@ const SaaSLandingView = () => {
 
         {/* Pricing Section */}
         <section id="pricing" className="py-20 sm:py-32 px-4 bg-background/50">
-          <div className="max-w-5xl mx-auto text-center">
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">Investiție Minimă, Rezultate Maxime</h2>
-            <p className="text-lg text-slate-400 mb-12 max-w-2xl mx-auto">Alege planul care ți se potrivește și începe să atragi clienți calificați chiar de azi.</p>
+          <div className="max-w-6xl mx-auto text-center">
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">Alege planul potrivit pentru tine</h2>
+            <div className="flex items-center justify-center gap-4 mb-12">
+              <Label htmlFor="billing-cycle" className={cn(billingCycle === 'monthly' ? 'text-white' : 'text-slate-500')}>
+                Lunar
+              </Label>
+              <Switch
+                id="billing-cycle"
+                checked={billingCycle === 'yearly'}
+                onCheckedChange={(checked) => setBillingCycle(checked ? 'yearly' : 'monthly')}
+              />
+              <Label htmlFor="billing-cycle" className={cn(billingCycle === 'yearly' ? 'text-white' : 'text-slate-500')}>
+                Anual <span className="text-amber-400 font-bold ml-1">(-17%)</span>
+              </Label>
+            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Agent Pro Card */}
-              <div className="p-8 rounded-3xl bg-white/5 border border-primary/30 backdrop-blur-xl text-left flex flex-col shadow-2xl shadow-primary/10">
-                <h3 className="text-2xl font-semibold text-primary mb-2">Agent Pro</h3>
-                <p className="text-4xl font-bold mb-4">15€<span className="text-base font-normal text-slate-400"> / lună</span></p>
-                <p className="text-sm text-slate-400 min-h-[40px]">Planul perfect pentru consultantul individual care vrea să-și digitalizeze procesul de calificare.</p>
-                <ul className="space-y-3 mt-8 text-sm flex-grow">
-                  {["Formular Master Complet", "CRM Integrat pentru Leads", "Link & QR Code Personal", "Notificări Email Instant"].map(feat => (
-                    <li key={feat} className="flex items-center gap-3"><span className="text-primary">✅</span><span className="text-slate-300">{feat}</span></li>
-                  ))}
-                </ul>
-                <Link href="/login?mode=signup" className="mt-8 block w-full text-center px-8 py-4 bg-primary text-primary-foreground font-bold rounded-full hover:scale-105 transition-transform">
-                  Alege Pro
-                </Link>
-              </div>
-
-              {/* Enterprise Card */}
-               <div className="p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl text-left flex flex-col">
-                <h3 className="text-2xl font-semibold text-white mb-2">Enterprise</h3>
-                <p className="text-4xl font-bold mb-4">Personalizat</p>
-                 <p className="text-sm text-slate-400 min-h-[40px]">Pentru agenții și brokeri care doresc soluții personalizate și integrări avansate.</p>
-                <ul className="space-y-3 mt-8 text-sm flex-grow">
-                   {["Toate beneficiile Pro", "Formulare 100% Customizate", "Integrări API (alte CRM-uri)", "Training & Suport Prioritar"].map(feat => (
-                    <li key={feat} className="flex items-center gap-3"><span className="text-slate-400">✅</span><span className="text-slate-300">{feat}</span></li>
-                  ))}
-                </ul>
-                <a href="mailto:contact@dialogcumarius.ro" className="mt-8 block w-full text-center px-8 py-4 bg-white/10 text-white font-bold rounded-full hover:bg-white/20 transition-colors">
-                  Contactează-ne
-                </a>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {plans.map((plan, i) => (
+                <div key={i} className={cn(
+                  "p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl text-left flex flex-col transition-all duration-300",
+                  plan.isPopular ? "border-amber-500/50 shadow-2xl shadow-amber-500/10" : "hover:border-white/20"
+                )}>
+                  <h3 className={cn("text-2xl font-semibold mb-2", plan.isPopular ? "text-amber-400" : "text-white")}>{plan.name}</h3>
+                  <div className="flex items-baseline gap-2 mb-4">
+                     {plan.price.monthly !== null ? (
+                        <>
+                         <span className="text-5xl font-bold tracking-tight">
+                            €{billingCycle === 'monthly' ? plan.price.monthly : Math.round(plan.price.yearly / 12)}
+                          </span>
+                          <span className="text-slate-400">/ lună</span>
+                        </>
+                     ) : (
+                        <span className="text-3xl font-bold tracking-tight">Personalizat</span>
+                     )}
+                  </div>
+                  <p className="text-sm text-slate-400 min-h-[60px]">{plan.description}</p>
+                  <ul className="space-y-3 mt-8 text-sm flex-grow">
+                    {plan.features.map(feat => (
+                      <li key={feat} className="flex items-start gap-3">
+                        <Check className="w-4 h-4 text-amber-400 mt-1 flex-shrink-0" />
+                        <span className="text-slate-300">{feat}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  {plan.name === "Enterprise" ? (
+                     <a href="#contact" className="mt-8 block w-full text-center px-8 py-3 bg-white/10 text-white font-bold rounded-full hover:bg-white/20 transition-colors">
+                        Contactează-ne
+                      </a>
+                  ) : (
+                     <Link href="/login?mode=signup" className="mt-8 block w-full text-center px-8 py-3 bg-amber-500 text-slate-950 font-bold rounded-full hover:bg-amber-400 transition-colors">
+                        Alege Planul
+                      </Link>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         </section>
