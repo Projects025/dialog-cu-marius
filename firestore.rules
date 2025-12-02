@@ -1,0 +1,73 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. AGENȚI
+    // Oricine poate citi profilul (pentru a încărca formularul), dar doar agentul poate scrie.
+    match /agents/{agentId} {
+      allow read: if true;
+      allow write: if request.auth.uid == agentId;
+    }
+
+    // 2. CLIENȚI (LEADS)
+    // Oricine poate trimite date (create).
+    // Doar agentul care deține lead-ul îl poate vedea sau modifica.
+    match /leads/{leadId} {
+      allow create: if true;
+      allow read, update, delete: if request.auth != null && resource.data.agentId == request.auth.uid;
+    }
+
+    // 3. FORMULARE (TEMPLATES)
+    // Oricine poate citi șabloanele (pentru a rula chat-ul).
+    // Doar agenții logați pot crea formulare noi.
+    // Doar proprietarul poate edita/șterge formularul său (sau dacă nu are proprietar).
+    match /formTemplates/{formId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && (resource.data.ownerId == request.auth.uid || resource.data.ownerId == null);
+    }
+    
+    // 4. PRODUSE STRIPE (NOU)
+    // Permite oricui să citească produsele și prețurile pentru a le afișa în pagina de abonamente.
+    match /products/{id} {
+      allow read: if true;
+      match /prices/{id} {
+        allow read: if true;
+      }
+      match /tax_rates/{id} {
+        allow read: if true;
+      }
+    }
+
+    // 5. CLIENȚI STRIPE (CUSTOMERS) (NOU)
+    // Reguli pentru gestionarea datelor de plată și abonamente.
+    match /customers/{uid} {
+      // Agentul își poate citi propriul document de client Stripe.
+      allow read: if request.auth.uid == uid;
+
+      // Agentul poate crea și citi sesiuni de checkout pentru el însuși.
+      match /checkout_sessions/{id} {
+        allow read, write: if request.auth.uid == uid;
+      }
+      
+      // CRITIC: Oricine poate citi statusul unui abonament. 
+      // Necesar pentru ca "gardianul" (paywall) să poată verifica dacă un agent are abonament activ.
+      match /subscriptions/{id} {
+        allow read: if true;
+      }
+      
+      // Doar agentul își poate vedea istoricul de plăți.
+      match /payments/{id} {
+        allow read: if request.auth.uid == uid;
+      }
+    }
+
+    // 6. ANALYTICS (Pentru Statistici)
+    // Oricine poate înregistra un eveniment (ex: "A început conversația").
+    // Agentul poate citi doar statisticile care îi aparțin lui.
+    match /analytics/{eventId} {
+      allow create: if true;
+      allow read: if request.auth != null && resource.data.agentId == request.auth.uid;
+    }
+  }
+}
