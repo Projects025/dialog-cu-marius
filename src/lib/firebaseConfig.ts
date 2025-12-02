@@ -3,14 +3,14 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getFunctions } from "firebase/functions";
 
-// Adaugă aici configurația ta Firebase
+// ADAUGAȚI AICI NOUA CONFIGURAȚIE DE LA NOUL PROIECT FIREBASE
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: "chatasigurare.firebaseapp.com",
-  projectId: "chatasigurare",
-  storageBucket: "chatasigurare.appspot.com",
-  messagingSenderId: "427525310173",
-  appId: "1:427525310173:web:490358bade52e7cc61bd34"
+  apiKey: "REPLACE_WITH_YOUR_NEW_API_KEY",
+  authDomain: "REPLACE_WITH_YOUR_NEW_AUTH_DOMAIN",
+  projectId: "REPLACE_WITH_YOUR_NEW_PROJECT_ID",
+  storageBucket: "REPLACE_WITH_YOUR_NEW_STORAGE_BUCKET",
+  messagingSenderId: "REPLACE_WITH_YOUR_NEW_MESSAGING_SENDER_ID",
+  appId: "REPLACE_WITH_YOUR_NEW_APP_ID"
 };
 
 // Inițializează Firebase
