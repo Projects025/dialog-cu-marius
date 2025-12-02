@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { onAuthStateChanged, type User } from 'firebase/auth';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { collection, doc, onSnapshot, query, where } from 'firebase/firestore';
 import { loadStripe } from '@stripe/stripe-js';
 import { auth, db } from '@/lib/firebaseConfig';
 import { Button } from '@/components/ui/button';
@@ -35,15 +35,15 @@ const SubscriptionPage = () => {
     useEffect(() => {
         if (!user) return;
 
-        // Ascultă în timp real pentru modificări la abonamentele utilizatorului
-        const unsubscribeSub = onSnapshot(doc(db, 'customers', user.uid), (doc) => {
-            if (doc.exists()) {
-                const customerData = doc.data();
-                // De obicei, extensia stochează abonamentele într-o subcolecție.
-                // Acest listener ar trebui adaptat la structura exactă pe care o creează extensia.
-                // Momentan, presupunem o structură simplă pentru afișare.
-                // TODO: Ascultă subcolecția `subscriptions`
-                setSubscription(customerData.activeSubscription || null); // Exemplu
+        const subscriptionsQuery = query(
+            collection(db, 'customers', user.uid, 'subscriptions'),
+            where('status', 'in', ['active', 'trialing', 'past_due'])
+        );
+        
+        const unsubscribeSub = onSnapshot(subscriptionsQuery, (snapshot) => {
+            if (!snapshot.empty) {
+                const subData = snapshot.docs[0].data();
+                setSubscription(subData);
             } else {
                 setSubscription(null);
             }
@@ -134,7 +134,7 @@ const SubscriptionPage = () => {
                     ) : (
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 rounded-lg bg-muted/50">
                             <div className="flex items-center gap-3">
-                                <span className="font-semibold text-lg">Agent Pro</span>
+                                <span className="font-semibold text-lg">{subscription ? subscription.items[0].price.product.name : 'Niciun plan'}</span>
                                 <Badge variant={currentStatus.variant} className="gap-2">
                                      {currentStatus.icon}
                                     {currentStatus.text}
@@ -142,7 +142,7 @@ const SubscriptionPage = () => {
                             </div>
                             <p className="text-muted-foreground text-sm mt-2 sm:mt-0">
                                 {isActive
-                                    ? `Următoarea plată: ${subscription?.current_period_end ? new Date(subscription.current_period_end.seconds * 1000).toLocaleDateString('ro-RO') : 'N/A'}`
+                                    ? `Se reînnoiește pe: ${subscription?.current_period_end ? new Date(subscription.current_period_end.seconds * 1000).toLocaleDateString('ro-RO') : 'N/A'}`
                                     : 'Funcționalitățile PRO sunt dezactivate.'}
                             </p>
                         </div>
@@ -167,10 +167,10 @@ const SubscriptionPage = () => {
                             </div>
                         ) : (
                              <div className="space-y-4">
-                                <p className="text-muted-foreground">Treci la planul "Agent Pro" pentru 15€/lună și deblochează toate funcționalitățile platformei.</p>
+                                <p className="text-muted-foreground">Treci la un plan PRO pentru a debloca toate funcționalitățile platformei.</p>
                                 <Button onClick={handleCheckout} disabled={isProcessing}>
                                      {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
-                                    Treci la PRO
+                                    Vezi Planurile
                                 </Button>
                             </div>
                         )}

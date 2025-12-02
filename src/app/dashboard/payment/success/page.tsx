@@ -24,7 +24,7 @@ export default function PaymentSuccessPage() {
                         Poți acum să creezi formulare noi și să folosești link-ul tău de client la capacitate maximă.
                     </p>
                     <Button asChild className="w-full">
-                        <Link href="/dashboard">Mergi la Panoul de Control</Link>
+                        <Link href="/dashboard/abonament">Mergi la pagina de abonament</Link>
                     </Button>
                 </CardContent>
             </Card>
