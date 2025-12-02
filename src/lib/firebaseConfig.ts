@@ -4,7 +4,7 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getFunctions } from "firebase/functions";
 
-// Am înlocuit variabilele de mediu cu valorile directe pentru a garanta conexiunea.
+// Hardcoded config to ensure it's always available and correct.
 const firebaseConfig = {
   apiKey: "AIzaSyDr-L6H2TCScpkSxkV9mY5fIac4yF_uY9s",
   authDomain: "chatasigurare.firebaseapp.com",
@@ -14,7 +14,7 @@ const firebaseConfig = {
   appId: "1:427525310173:web:490358bade52e7cc61bd34"
 };
 
-// Inițializează Firebase
+// Initialize Firebase
 let app;
 if (!getApps().length) {
   app = initializeApp(firebaseConfig);
