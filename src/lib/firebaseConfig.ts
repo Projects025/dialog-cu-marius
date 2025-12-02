@@ -4,14 +4,15 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getFunctions } from "firebase/functions";
 
-// Hardcoded config to ensure it's always available and correct.
+// Configurația este acum preluată dintr-un mediu sigur, nu mai este hardcodată.
+// Aceasta este practica recomandată pentru a evita expunerea cheilor API.
 const firebaseConfig = {
-  apiKey: "AIzaSyDr-L6H2TCScpkSxkV9mY5fIac4yF_uY9s",
-  authDomain: "chatasigurare.firebaseapp.com",
-  projectId: "chatasigurare",
-  storageBucket: "chatasigurare.appspot.com",
-  messagingSenderId: "427525310173",
-  appId: "1:427525310173:web:490358bade52e7cc61bd34"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
 // Initialize Firebase
