@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
@@ -96,15 +97,19 @@ function LoginContent() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen bg-slate-950 text-white relative overflow-hidden">
+        <div className="absolute inset-0 w-full h-full pointer-events-none">
+            <div className="absolute top-[-10%] left-[-10%] w-[40rem] h-[40rem] bg-purple-500/20 rounded-full mix-blend-screen filter blur-[100px] animate-blob"></div>
+            <div className="absolute top-[-10%] right-[-10%] w-[35rem] h-[35rem] bg-amber-500/10 rounded-full mix-blend-screen filter blur-[100px] animate-blob animation-delay-2000"></div>
+        </div>
       <Navbar />
-      <div className="flex-grow flex items-center justify-center">
-        <Card className="w-full max-w-md mx-4">
+      <div className="flex-grow flex items-center justify-center relative z-10 px-4">
+        <Card className="w-full max-w-md mx-4 bg-slate-900/40 border-white/10 backdrop-blur-lg">
             <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold">
+            <CardTitle className="text-2xl font-bold text-white">
                 {isSignUp ? "Creează Cont Agent" : "Autentificare Agent"}
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-slate-400">
                 {isSignUp ? "Completează datele pentru a începe" : "Introdu credențialele pentru a accesa panoul"}
             </CardDescription>
             </CardHeader>
@@ -112,7 +117,7 @@ function LoginContent() {
             <form onSubmit={handleAuth} className="space-y-6">
                 {isSignUp && (
                 <div className="space-y-2">
-                    <Label htmlFor="name">Nume Prenume</Label>
+                    <Label htmlFor="name" className="text-slate-300">Nume Prenume</Label>
                     <Input
                     id="name"
                     type="text"
@@ -120,12 +125,12 @@ function LoginContent() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
-                    className="h-12"
+                    className="h-12 bg-white/5 border-white/10 placeholder:text-slate-500"
                     />
                 </div>
                 )}
                 <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="text-slate-300">Email</Label>
                 <Input
                     id="email"
                     type="email"
@@ -133,11 +138,11 @@ function LoginContent() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="h-12"
+                    className="h-12 bg-white/5 border-white/10 placeholder:text-slate-500"
                 />
                 </div>
                 <div className="space-y-2">
-                <Label htmlFor="password">Parolă</Label>
+                <Label htmlFor="password" className="text-slate-300">Parolă</Label>
                 <Input
                     id="password"
                     type="password"
@@ -145,20 +150,20 @@ function LoginContent() {
                     placeholder="Minim 6 caractere"
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="h-12"
+                    className="h-12 bg-white/5 border-white/10 placeholder:text-slate-500"
                 />
                 </div>
                 {error && (
-                <p className="text-sm text-center text-destructive">{error}</p>
+                <p className="text-sm text-center text-red-400">{error}</p>
                 )}
-                <Button type="submit" className="w-full h-12 font-semibold" disabled={loading}>
+                <Button type="submit" className="w-full h-12 font-semibold bg-amber-500 text-slate-900 hover:bg-amber-400 transition-colors" disabled={loading}>
                 {loading ? "Se procesează..." : (isSignUp ? "Creează Cont" : "Intră în cont")}
                 </Button>
             </form>
             <div className="mt-6 text-center text-sm">
                 <button
                 onClick={toggleAuthMode}
-                className="cursor-pointer font-medium text-primary hover:underline"
+                className="cursor-pointer font-medium text-amber-400 hover:underline"
                 >
                 {isSignUp
                     ? "Ai deja cont? Autentifică-te"
@@ -176,7 +181,7 @@ function LoginContent() {
 // Componenta principală exportată, care înfășoară logica în Suspense
 export default function LoginPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background text-foreground">Se încarcă...</div>}>
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">Se încarcă...</div>}>
             <LoginContent />
         </Suspense>
     );
