@@ -12,15 +12,13 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
-// Lista statică de produse. 
-// IMPORTANT: Înlocuiește 'price_...' cu ID-ul real al prețului din contul tău Stripe.
-// Poți găsi Price ID-ul în panoul Stripe, la secțiunea Products -> (produsul tău) -> Pricing.
+// Lista statică de produse cu ID-urile de preț reale din Stripe.
 const productPlans = [
     {
         id: 'prod_TWi5UrIFpY0u6R',
         name: 'Basic - PoliSafe',
         description: 'Ideal pentru consultanții la început de drum.',
-        priceId: 'price_REPLACE_WITH_BASIC_PRICE_ID', // <--- ÎNLOCUIEȘTE AICI
+        priceId: 'price_1SZefIPb5IYvItKJhsm8xybf',
         price: 75,
         interval: 'lună',
         features: [
@@ -35,7 +33,7 @@ const productPlans = [
         name: 'Pro - PoliSafe',
         description: 'Planul perfect pentru consultantul individual.',
         isPopular: true,
-        priceId: 'price_REPLACE_WITH_PRO_PRICE_ID', // <--- ÎNLOCUIEȘTE AICI
+        priceId: 'price_1Sa05gPb5IYvItKJyVlgBvxZ',
         price: 100,
         interval: 'lună',
         features: [
@@ -49,7 +47,7 @@ const productPlans = [
         id: 'prod_TX4ED5ZsoiCwFx',
         name: 'Team - PoliSafe',
         description: 'Pentru liderii de echipă care vor performanță.',
-        priceId: 'price_REPLACE_WITH_TEAM_PRICE_ID', // <--- ÎNLOCUIEȘTE AICI
+        priceId: 'price_1Sa06TPb5IYvItKJbzhZuc7R',
         price: 125,
         interval: 'lună',
         features: [
@@ -274,5 +272,3 @@ const SubscriptionPage = () => {
 };
 
 export default SubscriptionPage;
-
-    
