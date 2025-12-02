@@ -14,6 +14,7 @@ import {
   updateDoc, 
   collection, 
   query, 
+  where,
   getDocs, 
   serverTimestamp 
 } from "firebase/firestore";
@@ -24,7 +25,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Edit, Trash2, Copy, AlertTriangle, FilePlus2 } from "lucide-react";
+import { Edit, Trash2, Copy, AlertTriangle, FilePlus2, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
@@ -45,6 +46,7 @@ export default function FormsPage() {
   
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [hasSubscription, setHasSubscription] = useState(false);
   const [loading, setLoading] = useState(true);
   const [formTemplates, setFormTemplates] = useState<FormTemplate[]>([]);
   const [activeFormId, setActiveFormId] = useState<string | null>(null);
@@ -72,16 +74,27 @@ export default function FormsPage() {
         router.push("/login");
       } else {
         setUser(currentUser);
-        setIsAdmin(currentUser.email === ADMIN_EMAIL);
-        fetchData(currentUser);
+        const isAdminUser = currentUser.email === ADMIN_EMAIL;
+        setIsAdmin(isAdminUser);
+        fetchData(currentUser, isAdminUser);
       }
     });
     return () => unsubscribe();
   }, [router]);
 
-  const fetchData = async (currentUser: User) => {
+  const fetchData = async (currentUser: User, isAdminUser: boolean) => {
     try {
       setLoading(true);
+      
+      // Check for active subscription
+      if (isAdminUser) {
+        setHasSubscription(true);
+      } else {
+        const subsQuery = query(collection(db, 'customers', currentUser.uid, 'subscriptions'), where('status', 'in', ['trialing', 'active']));
+        const subsSnap = await getDocs(subsQuery);
+        setHasSubscription(!subsSnap.empty);
+      }
+      
       const agentDoc = await getDoc(doc(db, "agents", currentUser.uid));
       if (agentDoc.exists()) {
         setActiveFormId(agentDoc.data().activeFormId || null);
@@ -104,6 +117,33 @@ export default function FormsPage() {
       setLoading(false);
     }
   };
+
+    const handleSubscriptionCheck = () => {
+        if (hasSubscription) return true;
+        
+        toast({
+            variant: "destructive",
+            title: "Funcționalitate Premium",
+            description: "Crearea de formulare noi este disponibilă doar cu un abonament activ.",
+        });
+        router.push('/dashboard/abonament');
+        return false;
+    }
+
+  const handleCreateClick = () => {
+    if (handleSubscriptionCheck()) {
+        setIsCreateModalOpen(true);
+    }
+  };
+
+  const handleCloneClick = (form: FormTemplate) => {
+      if (handleSubscriptionCheck()) {
+        setSourceTemplateId(form.id); 
+        setNewFormTitle(form.title + " (Copie)"); 
+        setIsCreateModalOpen(true);
+      }
+  };
+
 
   const copyToClipboard = () => {
     if (!user) return;
@@ -193,7 +233,7 @@ export default function FormsPage() {
       setIsCreateModalOpen(false);
       setNewFormTitle("");
       
-      await fetchData(user);
+      await fetchData(user, isAdmin);
       router.push(`/dashboard/form-editor/${ref.id}`);
 
     } catch (e: any) {
@@ -709,7 +749,7 @@ export default function FormsPage() {
         await setDoc(doc(db, "formTemplates", "master_standard_v1"), masterData);
         setConfirmModalOpen(false);
         toast({ title: "Succes", description: "Master Form a fost regenerat!" });
-        fetchData(auth.currentUser as User);
+        fetchData(auth.currentUser as User, isAdmin);
       } catch (e: any) {
         setConfirmModalOpen(false);
         toast({ variant: "destructive", title: "Eroare la regenerare", description: e.message });
@@ -728,7 +768,8 @@ export default function FormsPage() {
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Management Formulare</h1>
-        <Button onClick={() => setIsCreateModalOpen(true)} className="bg-amber-500 text-black font-bold">
+        <Button onClick={handleCreateClick} className="bg-amber-500 text-black font-bold">
+           {!hasSubscription && <Lock className="mr-2 h-4 w-4" />}
            <FilePlus2 className="mr-2 h-4 w-4"/> Creează Formular Nou
         </Button>
       </div>
@@ -782,7 +823,8 @@ export default function FormsPage() {
               {standardForms.map(form => (
                   <div key={form.id} className="flex items-center justify-between p-4 bg-gray-800 rounded-lg border border-gray-700">
                       <span className="font-medium">{form.title}</span>
-                      <Button size="sm" variant="outline" onClick={() => { setSourceTemplateId(form.id); setNewFormTitle(form.title + " (Copie)"); setIsCreateModalOpen(true); }}>
+                      <Button size="sm" variant="outline" onClick={() => handleCloneClick(form)}>
+                          {!hasSubscription && <Lock className="w-4 h-4 mr-2"/>}
                           <Copy className="w-4 h-4 mr-2"/> Clonează
                       </Button>
                   </div>
@@ -865,4 +907,4 @@ export default function FormsPage() {
   );
 }
 
-  
+    
