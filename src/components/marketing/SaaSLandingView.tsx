@@ -23,9 +23,9 @@ const SaaSLandingView = () => {
 
   const plans = [
     {
-      name: "Agent Pro",
-      price: { monthly: 15, yearly: 150 },
-      description: "Planul perfect pentru consultantul individual care vrea să-și digitalizeze procesul de calificare.",
+      name: "Basic",
+      price: { monthly: 75, yearly: 750 },
+      description: "Ideal pentru consultanții la început de drum care doresc să facă primii pași în digitalizare.",
       features: [
         "Asistent virtual inteligent",
         "Analiză de vulnerabilitate",
@@ -35,16 +35,26 @@ const SaaSLandingView = () => {
         "Suport tehnic prin email",
         "1 formular personalizat"
       ],
+      isPopular: false
+    },
+    {
+      name: "Pro",
+      price: { monthly: 100, yearly: 900 },
+      description: "Planul perfect pentru consultantul individual care vrea să-și scaleze afacerea.",
+      features: [
+        "Toate beneficiile 'Basic'",
+        "Export & Print rapoarte clienți",
+        "5 formulare personalizate",
+      ],
       isPopular: true
     },
     {
-      name: "Team Leader",
-      price: { monthly: 45, yearly: 450 },
+      name: "Team",
+      price: { monthly: 125, yearly: 1000 },
       description: "Pentru liderii de echipă care vor să-și standardizeze procesul și să monitorizeze performanța.",
       features: [
-        "Toate beneficiile 'Agent Pro'",
-        "Export & Print rapoarte clienți",
-        "5 formulare personalizate",
+        "Toate beneficiile 'Pro'",
+        "Formulare nelimitate",
         "Cont de administrator de echipă",
         "Rapoarte de performanță lunare",
       ],
@@ -55,10 +65,10 @@ const SaaSLandingView = () => {
       price: { monthly: null, yearly: null },
       description: "Soluții dedicate pentru agenții și companii de brokeraj cu nevoi complexe și volume mari.",
       features: [
-        "Toate beneficiile 'Team Leader'",
-        "Formulare și fluxuri nelimitate",
+        "Toate beneficiile 'Team'",
         "Personalizări avansate și branding",
         "Acces API pentru integrări",
+        "Acces Toptrigger",
         "Suport prioritar și training dedicat",
       ],
       isPopular: false
@@ -171,7 +181,7 @@ const SaaSLandingView = () => {
 
         {/* Pricing Section */}
         <section id="pricing" className="py-20 sm:py-32 px-4 bg-background/50">
-          <div className="max-w-6xl mx-auto text-center">
+          <div className="max-w-7xl mx-auto text-center">
             <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">Alege planul potrivit pentru tine</h2>
             <div className="flex items-center justify-center gap-4 mb-12">
               <Label htmlFor="billing-cycle" className={cn(billingCycle === 'monthly' ? 'text-white' : 'text-slate-500')}>
@@ -183,11 +193,11 @@ const SaaSLandingView = () => {
                 onCheckedChange={(checked) => setBillingCycle(checked ? 'yearly' : 'monthly')}
               />
               <Label htmlFor="billing-cycle" className={cn(billingCycle === 'yearly' ? 'text-white' : 'text-slate-500')}>
-                Anual <span className="text-amber-400 font-bold ml-1">(-17%)</span>
+                Anual <span className="text-amber-400 font-bold ml-1">(-25%)</span>
               </Label>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
               {plans.map((plan, i) => (
                 <div key={i} className={cn(
                   "p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl text-left flex flex-col transition-all duration-300",
@@ -198,9 +208,9 @@ const SaaSLandingView = () => {
                      {plan.price.monthly !== null ? (
                         <>
                          <span className="text-5xl font-bold tracking-tight">
-                            €{billingCycle === 'monthly' ? plan.price.monthly : Math.round(plan.price.yearly / 12)}
+                            {billingCycle === 'monthly' ? plan.price.monthly : Math.round(plan.price.yearly / 12)}
                           </span>
-                          <span className="text-slate-400">/ lună</span>
+                          <span className="text-slate-400">RON / lună</span>
                         </>
                      ) : (
                         <span className="text-3xl font-bold tracking-tight">Personalizat</span>
@@ -220,7 +230,12 @@ const SaaSLandingView = () => {
                         Contactează-ne
                       </a>
                   ) : (
-                     <Link href="/login?mode=signup" className="mt-8 block w-full text-center px-8 py-3 bg-amber-500 text-slate-950 font-bold rounded-full hover:bg-amber-400 transition-colors">
+                     <Link href="/login?mode=signup" className={cn(
+                       "mt-8 block w-full text-center px-8 py-3 font-bold rounded-full transition-colors",
+                       plan.isPopular 
+                        ? "bg-amber-500 text-slate-950 hover:bg-amber-400"
+                        : "bg-white/10 text-white hover:bg-white/20"
+                     )}>
                         Alege Planul
                       </Link>
                   )}
