@@ -1,3 +1,4 @@
+
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
@@ -12,8 +13,8 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Dialog cu Marius",
-  description: "Generator de Aplicație Conversațională pentru Analiză Financiară",
+  title: "PoliSafe",
+  description: "Asistentul tău financiar inteligent",
 };
 
 export default function RootLayout({
