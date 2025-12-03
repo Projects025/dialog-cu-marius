@@ -77,6 +77,7 @@ export default function ProfilePage() {
     const [subscription, setSubscription] = useState<any>(null);
     const [loadingSubscription, setLoadingSubscription] = useState(true);
     const [isProcessingCheckout, setIsProcessingCheckout] = useState<string | null>(null);
+    const [isManagingSubscription, setIsManagingSubscription] = useState(false);
 
     const { toast } = useToast();
     const router = useRouter();
@@ -221,25 +222,28 @@ export default function ProfilePage() {
 
     const handleManageSubscription = async () => {
         if (!user) return;
+        setIsManagingSubscription(true);
         toast({ title: 'Se deschide portalul de client...' });
         
-        const docRef = doc(collection(db, 'customers', user.uid, 'portal_links'));
+        try {
+            const portalLinkRef = await addDoc(collection(db, `customers/${user.uid}/portal_links`), {
+                return_url: window.location.href,
+            });
 
-        await setDoc(docRef, {
-            return_url: window.location.href,
-        });
-
-        onSnapshot(docRef, (snap) => {
-            const data = snap.data();
-            const error = data?.error;
-            const url = data?.url;
-            if (error) {
-                toast({ variant: 'destructive', title: 'Eroare', description: error.message });
-            }
-            if (url) {
-                window.location.assign(url);
-            }
-        });
+            onSnapshot(portalLinkRef, (snap) => {
+                const data = snap.data();
+                if (data?.url) {
+                    window.location.assign(data.url);
+                }
+                if (data?.error) {
+                    toast({ variant: 'destructive', title: 'Eroare', description: data.error.message });
+                    setIsManagingSubscription(false);
+                }
+            });
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: 'Eroare la creare portal', description: error.message });
+            setIsManagingSubscription(false);
+        }
     };
 
     const getStatusText = (status: string | null) => {
@@ -361,9 +365,9 @@ export default function ProfilePage() {
                         )}
                     </CardContent>
                     <CardFooter>
-                        <Button onClick={handleManageSubscription} disabled={!isActive}>
-                            <ExternalLink className="mr-2 h-4 w-4"/>
-                            Gestionează în portalul Stripe
+                        <Button onClick={handleManageSubscription} disabled={!isActive || isManagingSubscription}>
+                            {isManagingSubscription ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <ExternalLink className="mr-2 h-4 w-4"/>}
+                            {isManagingSubscription ? 'Se deschide...' : 'Gestionează în portalul Stripe'}
                         </Button>
                     </CardFooter>
                 </Card>
