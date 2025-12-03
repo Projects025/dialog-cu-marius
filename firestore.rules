@@ -50,8 +50,8 @@ service cloud.firestore {
 
     // DATE CLIENȚI STRIPE
     match /customers/{uid} {
-      // Agentul își vede propriile date
-      allow read: if request.auth.uid == uid;
+      // Agentul își vede propriile date și poate crea documentul de client
+      allow read, create: if request.auth.uid == uid;
 
       // Checkout (Inițiere Plată)
       match /checkout_sessions/{id} {
