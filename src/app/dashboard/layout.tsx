@@ -9,7 +9,7 @@ import { auth } from "@/lib/firebaseConfig";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { LayoutDashboard, Users, FileText, Menu, X, UserCircle } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 
 const NavLink = ({ href, children, icon: Icon, onClick }: { href: string; children: ReactNode; icon: React.ElementType, onClick?: () => void }) => {
     const pathname = usePathname();
@@ -104,7 +104,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                             </Button>
                         </SheetTrigger>
                          <SheetContent side="left" className="flex flex-col p-0 w-[280px] sm:w-[320px]">
-                             <SidebarContent onLinkClick={() => setIsMobileMenuOpen(false)}/>
+                            <SheetHeader className="p-4 border-b">
+                               <SheetTitle className="text-left text-lg">Meniu Principal</SheetTitle>
+                            </SheetHeader>
+                            <div className="flex-1 overflow-y-auto">
+                                <SidebarContent onLinkClick={() => setIsMobileMenuOpen(false)}/>
+                            </div>
                         </SheetContent>
                     </Sheet>
                     <div className="flex-1 md:hidden">
