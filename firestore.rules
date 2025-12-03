@@ -3,29 +3,22 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // =================================================================
-    // 1. REGULI EXISTENTE (Platforma Ta)
+    // 1. REGULI PLATFORMĂ (EXISTENTE)
     // =================================================================
 
     // AGENȚI
-    // Oricine poate citi profilul (pentru a încărca formularul/verifica statusul).
-    // Doar agentul își poate modifica propriul profil.
     match /agents/{agentId} {
       allow read: if true;
       allow write: if request.auth.uid == agentId;
     }
 
     // CLIENȚI (LEADS)
-    // Oricine poate trimite date (create) - pentru formularele publice.
-    // Doar agentul care deține lead-ul îl poate vedea sau modifica.
     match /leads/{leadId} {
       allow create: if true;
       allow read, update, delete: if request.auth != null && resource.data.agentId == request.auth.uid;
     }
 
     // FORMULARE (TEMPLATES)
-    // Oricine poate citi șabloanele (pentru a rula chat-ul).
-    // Doar agenții logați pot crea formulare noi.
-    // Doar proprietarul poate edita/șterge formularul său (sau dacă nu are proprietar).
     match /formTemplates/{formId} {
       allow read: if true;
       allow create: if request.auth != null;
@@ -39,47 +32,55 @@ service cloud.firestore {
     }
 
     // =================================================================
-    // 2. REGULI NOI (STRIPE PAYMENT EXTENSION)
+    // 2. REGULI STRIPE (CRITICE PENTRU PLĂȚI)
     // =================================================================
 
-    // PRODUSE ȘI PREȚURI (Sincronizate din Stripe)
-    // Trebuie să fie publice la citire pentru a afișa pagina de abonamente.
+    // PRODUSE (Trebuie să fie publice pentru a afișa prețurile în Dashboard)
     match /products/{id} {
       allow read: if true;
 
-      match /prices/{id} {
+      match /prices/{priceId} {
         allow read: if true;
       }
-
+      
       match /tax_rates/{id} {
         allow read: if true;
       }
     }
 
-    // DATE CLIENȚI STRIPE (CUSTOMERS)
-    // Aici se ține evidența abonamentelor.
+    // DATE CLIENȚI STRIPE
     match /customers/{uid} {
-      // Doar utilizatorul își poate citi propriul ID de client Stripe.
+      // Agentul își vede propriile date
       allow read: if request.auth.uid == uid;
 
-      // SESIUNI DE PLATĂ (Pentru a iniția plata)
-      // Agentul trebuie să poată scrie aici pentru a genera link-ul de plată.
+      // Checkout (Inițiere Plată)
       match /checkout_sessions/{id} {
         allow read, write: if request.auth.uid == uid;
       }
 
       // ABONAMENTE (SUBSCRIPTIONS)
-      // CRITIC: Trebuie să fie "public read" pentru ca link-ul tău de client (chat-ul)
-      // să poată verifica dacă agentul {uid} are un abonament 'active' sau nu.
+      // *** CRITIC ***: Public read pentru ca link-ul public să verifice Paywall-ul
       match /subscriptions/{id} {
         allow read: if true;
       }
 
-      // PLĂȚI (Istoric)
-      // Doar agentul își vede istoricul.
+      // ISTORIC PLĂȚI
       match /payments/{id} {
         allow read: if request.auth.uid == uid;
       }
+
+      // PORTAL CLIENT (Gestionează Abonament)
+      // *** CRITIC ***: Fără asta, butonul "Gestionează" dă eroare
+      match /portal_links/{id} {
+        allow read, write: if request.auth.uid == uid;
+      }
+    }
+    
+    // =================================================================
+    // 3. REGULĂ SPECIALĂ (Pentru afișarea cardurilor de preț)
+    // =================================================================
+    match /{path=**}/prices/{priceId} {
+        allow read: if true;
     }
   }
 }
