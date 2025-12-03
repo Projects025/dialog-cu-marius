@@ -122,6 +122,7 @@ const SubscriptionPage = () => {
                 price: priceId,
                 success_url: `${window.location.origin}/dashboard/payment/success`,
                 cancel_url: `${window.location.origin}/dashboard/payment/cancel`,
+                allow_promotion_codes: true,
             });
 
             onSnapshot(checkoutSessionRef, (snap) => {
