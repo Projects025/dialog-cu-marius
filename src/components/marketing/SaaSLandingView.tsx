@@ -20,8 +20,6 @@ const SaaSLandingView = () => {
     e.currentTarget.reset();
   };
   
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
-
   const plans = [
     {
       name: "Basic",
@@ -100,7 +98,7 @@ const SaaSLandingView = () => {
             </h1>
             
             <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-light">
-              Primul CRM conversațional care educă clientul și îți filtrează lead-urile automat. Concentrează-te pe rezultate, nu pe blocaje. Abordează clienții cu încredere și valorifică fiecare oportunitate din portofoliu.
+              Primul CRM conversațional care educă clientul și îți filtrează lead-urile automat. Scapă de explicațiile repetitive și concentrează-te pe încheierea contractelor.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
               <Link href="/login?mode=signup" className="px-8 py-4 bg-amber-500 text-slate-950 font-bold rounded-full shadow-[0_0_30px_-10px_rgba(245,158,11,0.5)] hover:scale-105 transition-transform">
@@ -123,7 +121,7 @@ const SaaSLandingView = () => {
               },
               {
                 title: "Link Personalizat",
-                desc: "Primești propriul tău URL unic și cod QR pentru a colecta lead-uri de oriunde.",
+                desc: "Primești propriul tău URL unic pentru a colecta lead-uri de oriunde.",
                 icon: (
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
@@ -181,21 +179,8 @@ const SaaSLandingView = () => {
         {/* Pricing Section */}
         <section id="pricing" className="py-20 sm:py-32 px-4 bg-background/50">
           <div className="max-w-7xl mx-auto text-center">
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">Alege planul potrivit pentru tine</h2>
-            <div className="flex items-center justify-center gap-4 mb-12">
-              <Label htmlFor="billing-cycle" className={cn(billingCycle === 'monthly' ? 'text-white' : 'text-slate-500')}>
-                Lunar
-              </Label>
-              <Switch
-                id="billing-cycle"
-                checked={billingCycle === 'yearly'}
-                onCheckedChange={(checked) => setBillingCycle(checked ? 'yearly' : 'monthly')}
-              />
-              <Label htmlFor="billing-cycle" className={cn(billingCycle === 'yearly' ? 'text-white' : 'text-slate-500')}>
-                Anual <span className="text-amber-400 font-bold ml-1">(-25%)</span>
-              </Label>
-            </div>
-
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-12">Alege planul potrivit pentru tine</h2>
+            
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
               {plans.map((plan, i) => (
                 <div key={i} className={cn(
@@ -207,7 +192,7 @@ const SaaSLandingView = () => {
                      {plan.price.monthly !== null ? (
                         <>
                          <span className="text-5xl font-bold tracking-tight">
-                            {billingCycle === 'monthly' ? plan.price.monthly : Math.round(plan.price.yearly / 12)}
+                            {plan.price.monthly}
                           </span>
                           <span className="text-slate-400">RON / lună</span>
                         </>
