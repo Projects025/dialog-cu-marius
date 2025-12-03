@@ -49,7 +49,7 @@ const SaaSLandingView = () => {
       price: { monthly: 125, yearly: 1000 },
       description: "Pentru liderii de echipă (minim 10 conturi) care vor să-și standardizeze procesul și să monitorizeze performanța.",
       features: [
-        "Toate beneficiile 'Pro'",
+        "Toate beneficiile 'Team'",
         "Formulare nelimitate",
         "Cont de administrator de echipă",
         "Rapoarte de performanță lunare",
@@ -96,11 +96,13 @@ const SaaSLandingView = () => {
               </span>
             </h1>
             
-            <div className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-light space-y-4">
-              <p>Primul CRM conversațional care educă clientul și îți filtrează lead-urile automat.</p>
-              <p className="text-amber-400">Concentrează-te pe rezultate, nu pe blocaje.</p>
-              <p>Abordează clienții cu încredere și valorifică fiecare oportunitate din portofoliu.</p>
+             <div className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-light space-y-4">
+                <p>Primul CRM conversațional care educă clientul și îți filtrează lead-urile automat. Abordează clienții cu încredere și valorifică fiecare oportunitate din portofoliu.</p>
+                <blockquote className="border-l-2 border-amber-400 pl-4 italic text-amber-400">
+                    Concentrează-te pe rezultate, nu pe blocaje.
+                </blockquote>
             </div>
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
               <Link href="/login?mode=signup" className="px-8 py-4 bg-amber-500 text-slate-950 font-bold rounded-full shadow-[0_0_30px_-10px_rgba(245,158,11,0.5)] hover:scale-105 transition-transform">
                 Începe Gratuit
