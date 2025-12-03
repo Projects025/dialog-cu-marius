@@ -3,81 +3,64 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // =================================================================
-    // 1. REGULI PLATFORMĂ (EXISTENTE)
+    // 1. REGULI PLATFORMĂ
     // =================================================================
 
-    // AGENȚI
     match /agents/{agentId} {
       allow read: if true;
       allow write: if request.auth.uid == agentId;
     }
 
-    // CLIENȚI (LEADS)
     match /leads/{leadId} {
       allow create: if true;
       allow read, update, delete: if request.auth != null && resource.data.agentId == request.auth.uid;
     }
 
-    // FORMULARE (TEMPLATES)
     match /formTemplates/{formId} {
       allow read: if true;
       allow create: if request.auth != null;
       allow update, delete: if request.auth != null && (resource.data.ownerId == request.auth.uid || resource.data.ownerId == null);
     }
 
-    // ANALYTICS
     match /analytics/{eventId} {
       allow create: if true;
       allow read: if request.auth != null && resource.data.agentId == request.auth.uid;
     }
 
     // =================================================================
-    // 2. REGULI STRIPE (CRITICE PENTRU PLĂȚI)
+    // 2. REGULI STRIPE
     // =================================================================
 
-    // PRODUSE (Trebuie să fie publice pentru a afișa prețurile în Dashboard)
     match /products/{id} {
       allow read: if true;
-
-      match /prices/{priceId} {
-        allow read: if true;
-      }
-      
-      match /tax_rates/{id} {
-        allow read: if true;
-      }
+      match /prices/{id} { allow read: if true; }
+      match /tax_rates/{id} { allow read: if true; }
     }
 
-    // DATE CLIENȚI STRIPE
     match /customers/{uid} {
-      // Agentul își vede propriile date
       allow read: if request.auth.uid == uid;
 
-      // Checkout (Inițiere Plată)
       match /checkout_sessions/{id} {
         allow read, write: if request.auth.uid == uid;
       }
 
-      // ABONAMENTE (SUBSCRIPTIONS)
-      // *** CRITIC ***: Public read pentru ca link-ul public să verifice Paywall-ul
       match /subscriptions/{id} {
         allow read: if true;
       }
 
-      // ISTORIC PLĂȚI
       match /payments/{id} {
         allow read: if request.auth.uid == uid;
       }
 
-      // PORTAL CLIENT (Gestionează Abonament)
-      // *** CRITIC ***: Fără asta, butonul "Gestionează" dă eroare
+      // 👇👇👇 ACEASTA ESTE REGULA CARE ÎȚI LIPSEA 👇👇👇
       match /portal_links/{id} {
         allow read, write: if request.auth.uid == uid;
       }
+      // 👆👆👆 FĂRĂ EA, BUTONUL NU MERGE 👆👆👆
     }
     
     // =================================================================
-    // 3. REGULĂ SPECIALĂ (Pentru afișarea cardurilor de preț)
+    // 3. REGULĂ SPECIALĂ (Afișare Prețuri)
     // =================================================================
     match /{path=**}/prices/{priceId} {
         allow read: if true;
