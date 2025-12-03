@@ -64,7 +64,7 @@ const SaaSLandingView = () => {
         "Toate beneficiile 'Team'",
         "Personalizări avansate și branding",
         "Acces API pentru integrări",
-        "Acces Toptrigger",
+        "TopTrigger.Thinkific",
         "Suport prioritar și training dedicat",
       ],
       isPopular: false
@@ -155,7 +155,9 @@ const SaaSLandingView = () => {
         {/* Demo Section */}
         <section className="py-20 sm:py-32 px-4">
           <div className="max-w-4xl mx-auto text-center">
-             <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6"><span className="text-amber-400">PoliSafe</span> nu este un simplu formular.</h2>
+             <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">
+                <span className="text-amber-400">PoliSafe</span> nu este un simplu formular.
+             </h2>
              <p className="text-lg text-slate-400 mb-12 max-w-2xl mx-auto">Poli Safe este un asistent virtual care îl ajută pe client să conștientizeze vulnerabilitățile financiare și îl încurajează să ceară sprijinul agentului.</p>
             <div className="max-w-md mx-auto bg-slate-900/70 rounded-2xl p-6 border border-white/10 shadow-2xl">
               <div className="space-y-4 text-left text-sm">
