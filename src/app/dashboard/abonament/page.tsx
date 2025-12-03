@@ -228,7 +228,7 @@ const SubscriptionPage = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {productPlans.map((plan) => (
                         <Card key={plan.id} className={cn(
-                            "flex flex-col transition-all duration-300",
+                            "flex flex-col transition-all duration-300 relative",
                             plan.isPopular ? "border-amber-500 shadow-amber-500/10 shadow-lg" : "hover:border-primary"
                         )}>
                              {plan.isPopular && (
@@ -274,4 +274,5 @@ const SubscriptionPage = () => {
 
 export default SubscriptionPage;
 
+    
     
