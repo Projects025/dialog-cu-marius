@@ -1,3 +1,4 @@
+
 "use client";
 import React, { useState } from 'react';
 import Link from 'next/link';
@@ -27,10 +28,8 @@ const SaaSLandingView = () => {
       price: { monthly: 75, yearly: 750 },
       description: "Ideal pentru consultanții la început de drum care doresc să facă primii pași în digitalizare.",
       features: [
-        "Asistent virtual inteligent",
-        "Analiză de vulnerabilitate",
         "CRM pentru managementul clienților",
-        "Link personalizat și cod QR",
+        "Link personalizat",
         "Dashboard cu statistici",
         "Suport tehnic prin email",
         "1 formular personalizat"
@@ -51,7 +50,7 @@ const SaaSLandingView = () => {
     {
       name: "Team",
       price: { monthly: 125, yearly: 1000 },
-      description: "Pentru liderii de echipă care vor să-și standardizeze procesul și să monitorizeze performanța.",
+      description: "Pentru liderii de echipă (minim 10 conturi) care vor să-și standardizeze procesul și să monitorizeze performanța.",
       features: [
         "Toate beneficiile 'Pro'",
         "Formulare nelimitate",
@@ -63,7 +62,7 @@ const SaaSLandingView = () => {
     {
       name: "Enterprise",
       price: { monthly: null, yearly: null },
-      description: "Soluții dedicate pentru agenții și companii de brokeraj cu nevoi complexe și volume mari.",
+      description: "Soluții dedicate pentru agenții și companii de brokeraj cu nevoi complexe și volume mari (minim 50 de conturi).",
       features: [
         "Toate beneficiile 'Team'",
         "Personalizări avansate și branding",
@@ -90,7 +89,7 @@ const SaaSLandingView = () => {
         <main className="flex flex-col items-center justify-center min-h-screen px-4 text-center pt-20">
           <div className="animate-fade-in-up space-y-8 max-w-4xl">
             <div className="inline-flex items-center px-3 py-1 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-400 text-xs font-medium mb-4">
-              ✨ Platformă pentru Consultanți Financiari
+              ✨ Platformă pentru Consultanți
             </div>
             
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-tight">
@@ -101,7 +100,7 @@ const SaaSLandingView = () => {
             </h1>
             
             <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-light">
-              Primul CRM conversațional care educă clientul și îți filtrează lead-urile automat. Scapă de explicațiile repetitive și concentrează-te pe încheierea contractelor.
+              Primul CRM conversațional care educă clientul și îți filtrează lead-urile automat. Concentrează-te pe rezultate, nu pe blocaje. Abordează clienții cu încredere și valorifică fiecare oportunitate din portofoliu.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
               <Link href="/login?mode=signup" className="px-8 py-4 bg-amber-500 text-slate-950 font-bold rounded-full shadow-[0_0_30px_-10px_rgba(245,158,11,0.5)] hover:scale-105 transition-transform">
@@ -155,8 +154,8 @@ const SaaSLandingView = () => {
         {/* Demo Section */}
         <section className="py-20 sm:py-32 px-4">
           <div className="max-w-4xl mx-auto text-center">
-             <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">Conversații care Convertesc</h2>
-             <p className="text-lg text-slate-400 mb-12 max-w-2xl mx-auto">Marius nu este un simplu formular. Este un asistent virtual care ghidează clientul printr-o analiză reală, construind încredere.</p>
+             <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">PoliSafe nu este un simplu formular.</h2>
+             <p className="text-lg text-slate-400 mb-12 max-w-2xl mx-auto">Poli Safe este un asistent virtual care îl ajută pe client să conștientizeze vulnerabilitățile financiare și îl încurajează să ceară sprijinul agentului.</p>
             <div className="max-w-md mx-auto bg-slate-900/70 rounded-2xl p-6 border border-white/10 shadow-2xl">
               <div className="space-y-4 text-left text-sm">
                 <div className="animate-chat-bubble-in">
