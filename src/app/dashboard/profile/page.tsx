@@ -258,7 +258,7 @@ export default function ProfilePage() {
 
 
     return (
-        <div className="space-y-8 max-w-6xl mx-auto">
+        <div className="space-y-8 max-w-6xl">
             <div>
                 <h1 className="text-xl font-bold md:text-2xl">Profil & Abonament</h1>
                 <p className="text-muted-foreground">Gestionează-ți datele personale, securitatea contului și planul tarifar.</p>
