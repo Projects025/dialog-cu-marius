@@ -96,9 +96,11 @@ const SaaSLandingView = () => {
               </span>
             </h1>
             
-            <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-light">
-              Primul CRM conversațional care educă clientul și îți filtrează lead-urile automat. Concentrează-te pe rezultate, nu pe blocaje. Abordează clienții cu încredere și valorifică fiecare oportunitate din portofoliu.
-            </p>
+            <div className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-light space-y-4">
+              <p>Primul CRM conversațional care educă clientul și îți filtrează lead-urile automat.</p>
+              <p>Concentrează-te pe rezultate, nu pe blocaje.</p>
+              <p>Abordează clienții cu încredere și valorifică fiecare oportunitate din portofoliu.</p>
+            </div>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
               <Link href="/login?mode=signup" className="px-8 py-4 bg-amber-500 text-slate-950 font-bold rounded-full shadow-[0_0_30px_-10px_rgba(245,158,11,0.5)] hover:scale-105 transition-transform">
                 Începe Gratuit
@@ -176,7 +178,7 @@ const SaaSLandingView = () => {
         </section>
 
         {/* Pricing Section */}
-        <section id="pricing" className="py-20 sm:py-32 px-4 bg-background/50">
+        <section id="pricing" className="py-20 sm:py-32 px-4">
           <div className="max-w-7xl mx-auto text-center">
             <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-12">Alege planul potrivit pentru tine</h2>
             
