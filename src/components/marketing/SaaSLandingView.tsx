@@ -86,7 +86,7 @@ const SaaSLandingView = () => {
         <main className="flex flex-col items-center justify-center min-h-screen px-4 text-center pt-20">
           <div className="animate-fade-in-up space-y-8 max-w-4xl">
             <div className="inline-flex items-center px-3 py-1 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-400 text-xs font-medium mb-4">
-               ✨ Platformă pentru Consultanți
+               ✨ Platforma pentru consultanti financiari si pentru intermediari in asigurari
             </div>
             
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-tight">
@@ -260,3 +260,5 @@ const SaaSLandingView = () => {
 }; 
 
 export default SaaSLandingView;
+
+    
