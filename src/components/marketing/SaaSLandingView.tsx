@@ -86,7 +86,7 @@ const SaaSLandingView = () => {
         <main className="flex flex-col items-center justify-center min-h-screen px-4 text-center pt-20">
           <div className="animate-fade-in-up space-y-8 max-w-4xl">
             <div className="inline-flex items-center px-3 py-1 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-400 text-xs font-medium mb-4">
-               ✨ Platforma pentru consultanti financiari si pentru intermediari in asigurari
+               ✨ Platforma pentru intermediari in asigurări
             </div>
             
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-tight">
@@ -98,7 +98,7 @@ const SaaSLandingView = () => {
             
              <div className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-light space-y-4">
                 <p>Primul CRM conversațional care educă clientul și îți filtrează lead-urile automat. Abordează clienții cu încredere și valorifică fiecare oportunitate din portofoliu.</p>
-                <blockquote className="border-l-2 border-amber-400 pl-4 italic text-amber-400">
+                <blockquote className="italic text-amber-400">
                     Concentrează-te pe rezultate, nu pe blocaje.
                 </blockquote>
             </div>
