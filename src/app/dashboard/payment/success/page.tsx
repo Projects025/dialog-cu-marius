@@ -14,7 +14,7 @@ export default function PaymentSuccessPage() {
     // Redirecționează automat după câteva secunde pentru o experiență mai bună
     useEffect(() => {
         const timer = setTimeout(() => {
-            router.push('/dashboard/abonament');
+            router.push('/dashboard/profile');
         }, 4000);
 
         return () => clearTimeout(timer);
@@ -37,7 +37,7 @@ export default function PaymentSuccessPage() {
                         Vei fi redirecționat automat către panoul de control.
                     </p>
                     <Button asChild className="w-full">
-                        <Link href="/dashboard/abonament">Mergi la pagina de abonament</Link>
+                        <Link href="/dashboard/profile">Mergi la pagina de abonament</Link>
                     </Button>
                 </CardContent>
             </Card>
