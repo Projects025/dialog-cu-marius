@@ -223,13 +223,16 @@ export default function ProfilePage() {
         if (!user) return;
         toast({ title: 'Se deschide portalul de client...' });
         
-        const portalLinkRef = collection(db, 'customers', user.uid, 'portal_links');
-        const docRef = await addDoc(portalLinkRef, {
+        const docRef = doc(collection(db, 'customers', user.uid, 'portal_links'));
+
+        await setDoc(docRef, {
             return_url: window.location.href,
         });
 
         onSnapshot(docRef, (snap) => {
-            const { error, url } = snap.data() as { error?: { message: string }; url?: string };
+            const data = snap.data();
+            const error = data?.error;
+            const url = data?.url;
             if (error) {
                 toast({ variant: 'destructive', title: 'Eroare', description: error.message });
             }
