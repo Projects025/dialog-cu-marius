@@ -321,90 +321,102 @@ export default function ProfilePage() {
                 </Card>
 
                 {/* Subscription Card */}
-                {loadingSubscription ? (
-                    <div className="flex items-center justify-center h-64 border rounded-lg bg-muted/40">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        <p className="ml-4 text-muted-foreground">Se încarcă abonamentul...</p>
-                    </div>
-                ) : isActive ? (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Planul Tău Actual</CardTitle>
-                            <CardDescription>Mulțumim că ești membru! Aici poți gestiona abonamentul.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 rounded-lg bg-muted/50 border">
-                                <div className="flex items-center gap-3">
-                                    <span className="font-semibold text-lg">{productPlans.find(p => p.id === activeProductId)?.name || 'Plan Activ'}</span>
-                                    <Badge variant={currentStatus.variant} className="gap-2">
-                                        {currentStatus.icon}
-                                        {currentStatus.text}
-                                    </Badge>
-                                </div>
-                                <p className="text-muted-foreground text-sm mt-2 sm:mt-0">
-                                    Se reînnoiește: {subscription?.current_period_end ? new Date(subscription.current_period_end.seconds * 1000).toLocaleDateString('ro-RO') : 'N/A'}
-                                </p>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Planul Tău Actual</CardTitle>
+                        <CardDescription>Aici poți vedea și administra planul tău curent.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                         {loadingSubscription ? (
+                             <div className="flex items-center justify-center h-24 border rounded-lg bg-muted/40">
+                                <Loader2 className="h-6 w-6 animate-spin text-primary" />
                             </div>
-                        </CardContent>
-                        <CardFooter>
-                            <Button onClick={handleManageSubscription}>
-                                <ExternalLink className="mr-2 h-4 w-4"/>
-                                Gestionează în portalul Stripe
-                            </Button>
-                        </CardFooter>
-                    </Card>
-                ) : (
-                     <Card className="border-amber-500/50 bg-amber-950/20 col-span-1 lg:col-span-2">
-                         <CardHeader className="text-center">
-                            <CardTitle>Nu ai un abonament activ</CardTitle>
-                            <CardDescription>Alege unul dintre planurile de mai jos pentru a debloca toate funcționalitățile platformei.</CardDescription>
-                        </CardHeader>
-                    </Card>
-                )}
+                        ) : (
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 rounded-lg bg-muted/50 border">
+                                {isActive ? (
+                                    <>
+                                        <div className="flex items-center gap-3">
+                                            <span className="font-semibold text-lg">{productPlans.find(p => p.id === activeProductId)?.name || 'Plan Activ'}</span>
+                                            <Badge variant={currentStatus.variant} className="gap-2">
+                                                {currentStatus.icon}
+                                                {currentStatus.text}
+                                            </Badge>
+                                        </div>
+                                        <p className="text-muted-foreground text-sm mt-2 sm:mt-0">
+                                            Se reînnoiește: {subscription?.current_period_end ? new Date(subscription.current_period_end.seconds * 1000).toLocaleDateString('ro-RO') : 'N/A'}
+                                        </p>
+                                    </>
+                                ) : (
+                                    <div className="flex items-center gap-3">
+                                        <span className="font-semibold text-lg">Niciun plan</span>
+                                         <Badge variant={currentStatus.variant} className="gap-2">
+                                            {currentStatus.icon}
+                                            {currentStatus.text}
+                                        </Badge>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </CardContent>
+                    <CardFooter>
+                        <Button onClick={handleManageSubscription} disabled={!isActive}>
+                            <ExternalLink className="mr-2 h-4 w-4"/>
+                            Gestionează în portalul Stripe
+                        </Button>
+                    </CardFooter>
+                </Card>
             </div>
 
-            {!isActive && !loadingSubscription && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {productPlans.map((plan) => (
-                        <Card key={plan.id} className={cn(
-                            "flex flex-col transition-all duration-300 relative",
-                            plan.isPopular ? "border-amber-500 shadow-amber-500/10 shadow-lg" : "hover:border-primary"
-                        )}>
-                             {plan.isPopular && (
-                                <Badge variant="secondary" className="absolute -top-3 left-1/2 -translate-x-1/2">Cel mai popular</Badge>
-                             )}
-                            <CardHeader>
-                                <CardTitle className={cn(plan.isPopular && "text-amber-400")}>{plan.name}</CardTitle>
-                                <CardDescription>{plan.description}</CardDescription>
-                            </CardHeader>
-                            <CardContent className="flex-grow space-y-6">
-                                <p className="text-4xl font-bold">
-                                    {plan.price}
-                                    <span className="text-sm font-normal text-muted-foreground"> RON / {plan.interval}</span>
-                                </p>
-                                <ul className="space-y-3 text-sm text-muted-foreground">
-                                    {plan.features.map((feature) => (
-                                        <li key={feature} className="flex items-start">
-                                            <Check className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                                            <span>{feature}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </CardContent>
-                            <CardFooter>
-                                <Button 
-                                    className={cn("w-full", plan.isPopular ? "bg-amber-500 text-black hover:bg-amber-400" : "")}
-                                    variant={plan.isPopular ? "default" : "outline"}
-                                    onClick={() => handleCheckout(plan.priceId)}
-                                    disabled={!!isProcessingCheckout}
-                                >
-                                    {isProcessingCheckout === plan.priceId ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
-                                    {isProcessingCheckout === plan.priceId ? 'Se procesează...' : 'Alege Planul'}
-                                </Button>
-                            </CardFooter>
-                        </Card>
-                    ))}
+            {loadingSubscription ? (
+                 <div className="mt-8 text-center text-muted-foreground">Se încarcă planurile...</div>
+            ) : !isActive && (
+                <>
+                <Separator className="my-8"/>
+                 <div>
+                    <h2 className="text-lg font-semibold mb-4">Alege un plan</h2>
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {productPlans.map((plan) => (
+                            <Card key={plan.id} className={cn(
+                                "flex flex-col transition-all duration-300 relative",
+                                plan.isPopular ? "border-amber-500 shadow-amber-500/10 shadow-lg" : "hover:border-primary"
+                            )}>
+                                 {plan.isPopular && (
+                                    <Badge variant="secondary" className="absolute -top-3 left-1/2 -translate-x-1/2">Cel mai popular</Badge>
+                                 )}
+                                <CardHeader>
+                                    <CardTitle className={cn(plan.isPopular && "text-amber-400")}>{plan.name}</CardTitle>
+                                    <CardDescription>{plan.description}</CardDescription>
+                                </CardHeader>
+                                <CardContent className="flex-grow space-y-6">
+                                    <p className="text-4xl font-bold">
+                                        {plan.price}
+                                        <span className="text-sm font-normal text-muted-foreground"> RON / {plan.interval}</span>
+                                    </p>
+                                    <ul className="space-y-3 text-sm text-muted-foreground">
+                                        {plan.features.map((feature) => (
+                                            <li key={feature} className="flex items-start">
+                                                <Check className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                                                <span>{feature}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </CardContent>
+                                <CardFooter>
+                                    <Button 
+                                        className={cn("w-full", plan.isPopular ? "bg-amber-500 text-black hover:bg-amber-400" : "")}
+                                        variant={plan.isPopular ? "default" : "outline"}
+                                        onClick={() => handleCheckout(plan.priceId)}
+                                        disabled={!!isProcessingCheckout}
+                                    >
+                                        {isProcessingCheckout === plan.priceId ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
+                                        {isProcessingCheckout === plan.priceId ? 'Se procesează...' : 'Alege Planul'}
+                                    </Button>
+                                </CardFooter>
+                            </Card>
+                        ))}
+                    </div>
                 </div>
+                </>
             )}
             
             <Separator className="my-8" />
@@ -418,5 +430,3 @@ export default function ProfilePage() {
         </div>
     );
 }
-
-    
