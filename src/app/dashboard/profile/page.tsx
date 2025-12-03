@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { onAuthStateChanged, updateProfile, updatePassword, signOut, type User } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-import { doc, getDoc, updateDoc, collection, addDoc, onSnapshot, query, where } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, collection, addDoc, onSnapshot, query, where, setDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebaseConfig';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
