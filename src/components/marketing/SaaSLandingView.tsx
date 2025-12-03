@@ -96,10 +96,16 @@ const SaaSLandingView = () => {
               </span>
             </h1>
             
+<<<<<<< HEAD
              <div className="text-lg md:text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed font-light space-y-4">
                 <p>Primul CRM conversațional care educă clientul și îți filtrează lead-urile automat.</p>
                 <p>Abordează clienții cu încredere și valorifică fiecare oportunitate din portofoliu.</p>
                 <blockquote className="italic text-amber-400 pt-2">
+=======
+             <div className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-light space-y-4">
+                <p>Primul CRM conversațional care educă clientul și îți filtrează <span className="whitespace-nowrap">lead-urile</span> automat. Abordează clienții cu încredere și valorifică fiecare oportunitate din portofoliu.</p>
+                <blockquote className="italic text-amber-400">
+>>>>>>> 316ee210e11e2052e3882a3303224a9731691fce
                     Concentrează-te pe rezultate, nu pe blocaje.
                 </blockquote>
             </div>
@@ -159,7 +165,7 @@ const SaaSLandingView = () => {
              <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">
                 <span className="text-amber-400">PoliSafe</span> nu este un simplu formular.
              </h2>
-             <p className="text-lg text-slate-400 mb-12 max-w-2xl mx-auto">Poli Safe este un asistent virtual care îl ajută pe client să conștientizeze vulnerabilitățile financiare și îl încurajează să ceară sprijinul agentului.</p>
+             <p className="text-lg text-slate-400 mb-12 max-w-2xl mx-auto">PoliSafe este un asistent virtual care îl ajută pe client să conștientizeze vulnerabilitățile financiare și îl încurajează să ceară sprijinul agentului.</p>
             <div className="max-w-md mx-auto bg-slate-900/70 rounded-2xl p-6 border border-white/10 shadow-2xl">
               <div className="space-y-4 text-left text-sm">
                 <div className="animate-chat-bubble-in">
@@ -267,3 +273,5 @@ const SaaSLandingView = () => {
 }; 
 
 export default SaaSLandingView;
+
+    
