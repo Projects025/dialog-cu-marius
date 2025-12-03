@@ -2,10 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // =================================================================
     // 1. REGULI PLATFORMĂ
-    // =================================================================
-
     match /agents/{agentId} {
       allow read: if true;
       allow write: if request.auth.uid == agentId;
@@ -27,13 +24,10 @@ service cloud.firestore {
       allow read: if request.auth != null && resource.data.agentId == request.auth.uid;
     }
 
-    // =================================================================
     // 2. REGULI STRIPE
-    // =================================================================
-
     match /products/{id} {
       allow read: if true;
-      match /prices/{id} { allow read: if true; }
+      match /prices/{priceId} { allow read: if true; }
       match /tax_rates/{id} { allow read: if true; }
     }
 
@@ -52,16 +46,13 @@ service cloud.firestore {
         allow read: if request.auth.uid == uid;
       }
 
-      // 👇👇👇 ACEASTA ESTE REGULA CARE ÎȚI LIPSEA 👇👇👇
+      // *** ACEASTA ESTE REGULA CARE LIPSEA ***
       match /portal_links/{id} {
         allow read, write: if request.auth.uid == uid;
       }
-      // 👆👆👆 FĂRĂ EA, BUTONUL NU MERGE 👆👆👆
     }
     
-    // =================================================================
-    // 3. REGULĂ SPECIALĂ (Afișare Prețuri)
-    // =================================================================
+    // 3. REGULĂ SPECIALĂ (Prețuri)
     match /{path=**}/prices/{priceId} {
         allow read: if true;
     }
