@@ -96,16 +96,9 @@ const SaaSLandingView = () => {
               </span>
             </h1>
             
-<<<<<<< HEAD
-             <div className="text-lg md:text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed font-light space-y-4">
-                <p>Primul CRM conversațional care educă clientul și îți filtrează lead-urile automat.</p>
-                <p>Abordează clienții cu încredere și valorifică fiecare oportunitate din portofoliu.</p>
-                <blockquote className="italic text-amber-400 pt-2">
-=======
              <div className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-light space-y-4">
                 <p>Primul CRM conversațional care educă clientul și îți filtrează <span className="whitespace-nowrap">lead-urile</span> automat. Abordează clienții cu încredere și valorifică fiecare oportunitate din portofoliu.</p>
                 <blockquote className="italic text-amber-400">
->>>>>>> 316ee210e11e2052e3882a3303224a9731691fce
                     Concentrează-te pe rezultate, nu pe blocaje.
                 </blockquote>
             </div>
@@ -273,5 +266,3 @@ const SaaSLandingView = () => {
 }; 
 
 export default SaaSLandingView;
-
-    
