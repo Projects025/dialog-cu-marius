@@ -95,10 +95,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 <SidebarContent />
             </div>
             <div className="flex flex-col">
-                <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6 md:hidden no-print">
+                <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6 no-print">
                     <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                         <SheetTrigger asChild>
-                            <Button variant="outline" size="icon" className="shrink-0">
+                            <Button variant="outline" size="icon" className="shrink-0 md:hidden">
                                 <Menu className="h-5 w-5" />
                                 <span className="sr-only">Deschide meniu</span>
                             </Button>
@@ -107,14 +107,14 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                              <SidebarContent onLinkClick={() => setIsMobileMenuOpen(false)}/>
                         </SheetContent>
                     </Sheet>
-                    <div className="flex-1">
+                    <div className="flex-1 md:hidden">
                         <Link href="/dashboard" className="flex items-center gap-2 text-lg font-semibold text-primary">
                              <LayoutDashboard className="h-5 w-5" />
                              <span>Panou Agent</span>
                         </Link>
                     </div>
                 </header>
-                <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-8">
+                <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
                     {children}
                 </main>
             </div>

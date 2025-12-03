@@ -30,7 +30,6 @@ const SaaSLandingView = () => {
         "Link personalizat",
         "Dashboard cu statistici",
         "Suport tehnic prin email",
-        "1 formular personalizat"
       ],
       isPopular: false
     },
@@ -87,7 +86,7 @@ const SaaSLandingView = () => {
         <main className="flex flex-col items-center justify-center min-h-screen px-4 text-center pt-20">
           <div className="animate-fade-in-up space-y-8 max-w-4xl">
             <div className="inline-flex items-center px-3 py-1 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-400 text-xs font-medium mb-4">
-              ✨ Platformă pentru Consultanți
+               ✨ Platformă pentru Consultanți
             </div>
             
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-tight">
@@ -98,7 +97,7 @@ const SaaSLandingView = () => {
             </h1>
             
             <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-light">
-              Primul CRM conversațional care educă clientul și îți filtrează lead-urile automat. Scapă de explicațiile repetitive și concentrează-te pe încheierea contractelor.
+              Primul CRM conversațional care educă clientul și îți filtrează lead-urile automat. Concentrează-te pe rezultate, nu pe blocaje. Abordează clienții cu încredere și valorifică fiecare oportunitate din portofoliu.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
               <Link href="/login?mode=signup" className="px-8 py-4 bg-amber-500 text-slate-950 font-bold rounded-full shadow-[0_0_30px_-10px_rgba(245,158,11,0.5)] hover:scale-105 transition-transform">
@@ -184,17 +183,17 @@ const SaaSLandingView = () => {
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
               {plans.map((plan, i) => (
                 <div key={i} className={cn(
-                  "p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl text-left flex flex-col transition-all duration-300",
+                  "p-6 sm:p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl text-left flex flex-col transition-all duration-300",
                   plan.isPopular ? "border-amber-500/50 shadow-2xl shadow-amber-500/10" : "hover:border-white/20"
                 )}>
                   <h3 className={cn("text-2xl font-semibold mb-2", plan.isPopular ? "text-amber-400" : "text-white")}>{plan.name}</h3>
                   <div className="flex items-baseline gap-2 mb-4">
                      {plan.price.monthly !== null ? (
                         <>
-                         <span className="text-5xl font-bold tracking-tight">
+                         <span className="text-4xl sm:text-5xl font-bold tracking-tight">
                             {plan.price.monthly}
                           </span>
-                          <span className="text-slate-400">RON / lună</span>
+                          <span className="text-slate-400 text-sm">RON / lună</span>
                         </>
                      ) : (
                         <span className="text-3xl font-bold tracking-tight">Personalizat</span>
@@ -210,12 +209,12 @@ const SaaSLandingView = () => {
                     ))}
                   </ul>
                   {plan.name === "Enterprise" ? (
-                     <a href="#contact" className="mt-8 block w-full text-center px-8 py-3 bg-white/10 text-white font-bold rounded-full hover:bg-white/20 transition-colors">
+                     <a href="#contact" className="mt-8 block w-full text-center px-6 py-3 bg-white/10 text-white font-bold rounded-full hover:bg-white/20 transition-colors">
                         Contactează-ne
                       </a>
                   ) : (
                      <Link href="/login?mode=signup" className={cn(
-                       "mt-8 block w-full text-center px-8 py-3 font-bold rounded-full transition-colors",
+                       "mt-8 block w-full text-center px-6 py-3 font-bold rounded-full transition-colors",
                        plan.isPopular 
                         ? "bg-amber-500 text-slate-950 hover:bg-amber-400"
                         : "bg-white/10 text-white hover:bg-white/20"

@@ -27,10 +27,10 @@ const productPlans = [
         price: 75,
         interval: 'lună',
         features: [
-            "Asistent virtual inteligent",
-            "Analiză de vulnerabilitate",
             "CRM pentru managementul clienților",
-            "Link personalizat și cod QR",
+            "Link personalizat",
+            "Dashboard cu statistici",
+            "Suport tehnic prin email",
         ]
     },
     {
@@ -43,7 +43,6 @@ const productPlans = [
         interval: 'lună',
         features: [
             "Toate beneficiile 'Basic'",
-            "Dashboard cu statistici avansate",
             "Export & Print rapoarte clienți",
             "5 formulare personalizate",
         ]
@@ -199,8 +198,8 @@ export default function ProfilePage() {
         try {
             const checkoutSessionRef = await addDoc(collection(db, 'customers', user.uid, 'checkout_sessions'), {
                 price: priceId,
-                success_url: `${window.location.origin}/dashboard/profile`,
-                cancel_url: `${window.location.origin}/dashboard/profile`,
+                success_url: `${window.location.origin}/dashboard/payment/success`,
+                cancel_url: `${window.location.origin}/dashboard/payment/cancel`,
                 allow_promotion_codes: true,
             });
 
