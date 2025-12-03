@@ -97,7 +97,7 @@ const SaaSLandingView = () => {
             </h1>
             
              <div className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-light space-y-4">
-                <p>Primul CRM conversațional care educă clientul și îți filtrează lead-urile automat. Abordează clienții cu încredere și valorifică fiecare oportunitate din portofoliu.</p>
+                <p>Primul CRM conversațional care educă clientul și îți filtrează lead-urile automat.<br /> Abordează clienții cu încredere și valorifică fiecare oportunitate din portofoliu.</p>
                 <blockquote className="italic text-amber-400">
                     Concentrează-te pe rezultate, nu pe blocaje.
                 </blockquote>
