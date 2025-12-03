@@ -98,7 +98,7 @@ const SaaSLandingView = () => {
             
             <div className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-light space-y-4">
               <p>Primul CRM conversațional care educă clientul și îți filtrează lead-urile automat.</p>
-              <p>Concentrează-te pe rezultate, nu pe blocaje.</p>
+              <p className="text-amber-400">Concentrează-te pe rezultate, nu pe blocaje.</p>
               <p>Abordează clienții cu încredere și valorifică fiecare oportunitate din portofoliu.</p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
@@ -262,5 +262,3 @@ const SaaSLandingView = () => {
 }; 
 
 export default SaaSLandingView;
-
-    
