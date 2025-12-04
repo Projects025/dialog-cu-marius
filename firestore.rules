@@ -45,8 +45,7 @@ service cloud.firestore {
       match /payments/{id} {
         allow read: if request.auth.uid == uid;
       }
-
-      // *** ACEASTA ESTE REGULA CARE LIPSEA ***
+      
       match /portal_links/{id} {
         allow read, write: if request.auth.uid == uid;
       }

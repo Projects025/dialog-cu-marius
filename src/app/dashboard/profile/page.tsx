@@ -226,20 +226,28 @@ export default function ProfilePage() {
         toast({ title: 'Se deschide portalul de client...' });
         
         try {
-            const portalLinkRef = await addDoc(collection(db, `customers/${user.uid}/portal_links`), {
+            const portalLinksCollection = collection(db, `customers/${user.uid}/portal_links`);
+            const portalLinkRef = await addDoc(portalLinksCollection, {
                 return_url: window.location.href,
             });
 
-            onSnapshot(portalLinkRef, (snap) => {
+            const unsubscribe = onSnapshot(portalLinkRef, (snap) => {
                 const data = snap.data();
                 if (data?.url) {
+                    unsubscribe();
                     window.location.assign(data.url);
                 }
                 if (data?.error) {
+                    unsubscribe();
                     toast({ variant: 'destructive', title: 'Eroare', description: data.error.message });
                     setIsManagingSubscription(false);
                 }
+            }, (error) => {
+                unsubscribe();
+                toast({ variant: 'destructive', title: 'Eroare de ascultare', description: error.message });
+                setIsManagingSubscription(false);
             });
+
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'Eroare la creare portal', description: error.message });
             setIsManagingSubscription(false);
