@@ -30,6 +30,10 @@
     --chart-2: 160 60% 45%;
     --chart-3: 40 82% 62%;
     --chart-4: 0 70% 50%;
+
+    --color-amber: 251 146 60;
+    --color-blue: 96 165 250;
+    --color-purple: 192 132 252;
   }
  
   .dark {
@@ -71,6 +75,63 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+    .feature-card {
+        @apply relative;
+        --mouse-x: 50%;
+        --mouse-y: 50%;
+    }
+    .feature-card .card-border {
+        @apply absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100;
+        background: radial-gradient(
+            350px circle at var(--mouse-x) var(--mouse-y),
+            hsl(var(--primary) / 0.4),
+            transparent 40%
+        );
+    }
+    .feature-card .card-spotlight {
+        @apply absolute inset-0 rounded-2xl;
+        background: radial-gradient(
+            200px circle at var(--mouse-x) var(--mouse-y),
+            rgba(255, 255, 255, 0.05),
+            transparent 100%
+        );
+    }
+
+    .feature-card::before {
+        content: "";
+        @apply absolute -inset-px rounded-2xl border border-transparent;
+        background: conic-gradient(from 180deg at 50% 50%, rgba(132, 118, 255, 0) 0deg, #8476FF 50%, rgba(132, 118, 255, 0) 360deg);
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        @apply opacity-0 transition-opacity duration-300 group-hover:opacity-60;
+    }
+    .feature-card .icon-glow {
+        transition: background-color 0.3s ease;
+    }
+    .feature-card.icon-amber .icon-glow {
+       background-color: hsl(var(--primary) / 0.5);
+    }
+    .feature-card.icon-amber svg {
+       color: hsl(var(--primary));
+    }
+    .feature-card.icon-blue .icon-glow {
+        background-color: rgba(var(--color-blue), 0.5);
+    }
+     .feature-card.icon-blue svg {
+        color: rgb(var(--color-blue));
+    }
+    .feature-card.icon-purple .icon-glow {
+        background-color: rgba(var(--color-purple), 0.5);
+    }
+     .feature-card.icon-purple svg {
+        color: rgb(var(--color-purple));
+    }
+
+}
+
 
 @layer utilities {
   .animation-delay-2000 { animation-delay: 2s; }
@@ -135,3 +196,5 @@ body {
     padding: 4px 6px; /* Reduce padding */
   }
 }
+
+    

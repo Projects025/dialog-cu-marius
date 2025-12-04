@@ -61,6 +61,43 @@ const useInView = (options?: IntersectionObserverInit) => {
   return [ref, isInView] as const;
 };
 
+const FeatureCard = ({ icon, title, desc, colorClass }: { icon: React.ReactNode, title: string, desc: string, colorClass: string }) => {
+    const cardRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            if (cardRef.current) {
+                const rect = cardRef.current.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                cardRef.current.style.setProperty('--mouse-x', `${x}px`);
+                cardRef.current.style.setProperty('--mouse-y', `${y}px`);
+            }
+        };
+        const currentCardRef = cardRef.current;
+        currentCardRef?.addEventListener('mousemove', handleMouseMove);
+
+        return () => {
+            currentCardRef?.removeEventListener('mousemove', handleMouseMove);
+        };
+    }, []);
+
+    return (
+        <div ref={cardRef} className={cn("feature-card group relative p-8 rounded-2xl text-left transition-all duration-300 overflow-hidden bg-slate-900/40 backdrop-blur-xl", colorClass)}>
+            <div className="card-border"></div>
+            <div className="card-spotlight"></div>
+            <div className="relative z-10">
+                <div className={cn("w-14 h-14 mb-6 rounded-lg bg-slate-800/80 border border-white/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg relative overflow-hidden")}>
+                    {React.cloneElement(icon as React.ReactElement, { className: "relative z-10 w-8 h-8" })}
+                    <div className="icon-glow absolute inset-0 blur-lg opacity-60"></div>
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
+                <p className="text-slate-400 text-sm leading-relaxed">{desc}</p>
+            </div>
+        </div>
+    );
+};
+
 
 const SaaSLandingView = () => {
   const handleContactSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -131,31 +168,31 @@ const SaaSLandingView = () => {
       title: "Formulare Dinamice",
       desc: "Clientul parcurge singur analiza, ghidat de un asistent virtual inteligent.",
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
         </svg>
       ),
-      number: "01"
+      colorClass: 'icon-amber'
     },
     {
       title: "Link Personalizat",
       desc: "Primești propriul tău URL unic pentru a colecta lead-uri de oriunde.",
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
         </svg>
       ),
-      number: "02"
+      colorClass: 'icon-blue'
     },
     {
       title: "CRM Integrat",
       desc: "Vezi lead-urile în timp real, gestionează statusul și închide mai multe deal-uri.",
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
         </svg>
       ),
-      number: "03"
+      colorClass: 'icon-purple'
     }
   ];
 
@@ -207,22 +244,15 @@ const SaaSLandingView = () => {
           
           {/* Features Grid */}
            <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl animate-fade-in-up opacity-0" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
-            {features.map((item, i) => (
-              <div key={i} className="group relative p-8 rounded-2xl text-left transition-all duration-300 overflow-hidden bg-gradient-to-br from-slate-900 to-purple-950/50 backdrop-blur-2xl border-t border-t-white/10 border-x border-x-white/5 hover:border-amber-500/30">
-                {/* Spotlight Effect */}
-                <div className="absolute -inset-px opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl" style={{
-                  background: `radial-gradient(300px at 50px 50px, ${item.icon.props.className.includes('text-amber-400') ? 'hsl(var(--primary) / 0.1)' : item.icon.props.className.includes('text-blue-400') ? 'hsl(217, 91%, 60%, 0.1)' : 'hsl(262, 85%, 60%, 0.1)'} 0%, transparent 80%)`,
-                }}></div>
-
-                <div className="relative z-10">
-                  <div className="w-14 h-14 mb-6 rounded-lg bg-slate-800/80 border border-white/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                    {item.icon}
-                  </div>
-                  <h3 className="text-xl font-bold text-white mb-2">{item.title}</h3>
-                  <p className="text-slate-400 text-sm leading-relaxed">{item.desc}</p>
-                </div>
-              </div>
-            ))}
+                {features.map((item, i) => (
+                    <FeatureCard 
+                        key={i} 
+                        icon={item.icon} 
+                        title={item.title} 
+                        desc={item.desc}
+                        colorClass={item.colorClass}
+                    />
+                ))}
           </div>
         </main>
         
@@ -276,7 +306,7 @@ const SaaSLandingView = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {plans.map((plan, i) => (
                 <div key={i} className={cn(
-                  "p-6 sm:p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl text-left flex flex-col transition-all duration-300",
+                  "p-6 sm:p-8 rounded-2xl bg-slate-900/40 border border-white/10 backdrop-blur-xl text-left flex flex-col transition-all duration-300",
                    plan.isPopular ? "border-amber-500/50 shadow-2xl shadow-amber-500/10" : "hover:border-white/20"
                 )}>
                   <h3 className={cn("text-2xl font-semibold mb-2", plan.isPopular ? "text-amber-400" : "text-white")}>{plan.name}</h3>
@@ -353,3 +383,5 @@ const SaaSLandingView = () => {
 }; 
 
 export default SaaSLandingView;
+
+    
