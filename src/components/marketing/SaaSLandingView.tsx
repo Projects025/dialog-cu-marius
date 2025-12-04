@@ -15,7 +15,7 @@ const Spotlight = () => {
     const handleMouseMove = (e: MouseEvent) => {
       if (spotlightRef.current) {
         const { clientX, clientY } = e;
-        spotlightRef.current.style.background = `radial-gradient(600px at ${clientX}px ${clientY}px, rgba(29, 78, 216, 0.15), transparent 80%)`;
+        spotlightRef.current.style.background = `radial-gradient(350px at ${clientX}px ${clientY}px, rgba(29, 78, 216, 0.15), transparent 80%)`;
       }
     };
 
@@ -194,7 +194,7 @@ const SaaSLandingView = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
                <Link 
                 href="/login?mode=signup" 
-                className="group relative inline-block px-8 py-4 bg-gradient-to-b from-amber-400 to-amber-500 text-slate-950 font-bold rounded-full hover:scale-105 transition-transform duration-300 shadow-[0_0_40px_-10px_theme(colors.amber.500)]"
+                className="group relative inline-block px-8 py-4 bg-gradient-to-b from-amber-400 to-amber-500 text-slate-950 font-bold rounded-full hover:scale-105 transition-transform duration-300"
               >
                   <span className="relative z-10">Începe Gratuit</span>
                   {/* Inner Highlight */}
@@ -206,7 +206,7 @@ const SaaSLandingView = () => {
           </div>
           
           {/* Features Grid */}
-           <div className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl animate-fade-in-up opacity-0" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
+           <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl animate-fade-in-up opacity-0" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
             {features.map((item, i) => (
               <div key={i} className="group relative p-8 rounded-2xl text-left transition-all duration-300 overflow-hidden bg-gradient-to-br from-slate-900 to-purple-950/50 backdrop-blur-2xl border-t border-t-white/10 border-x border-x-white/5 hover:border-amber-500/30">
                 {/* Spotlight Effect */}
