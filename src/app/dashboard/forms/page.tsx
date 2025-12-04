@@ -453,12 +453,12 @@ export default function FormsPage() {
             },
             pensie_asigurari_existente: { 
                 isProgressStep: true,
-                message: ["4. La acest moment, ai vreo asigurare de viață cu economisire / cu investiție pentru suplimentarea veniturilor la pensionare?", "Ce sumă s-a strâns (în lei)?"], 
+                message: ["4. La acest moment, ai vreo asigurare de viață cu economisire / cu investiție pentru suplimentarea veniturilor la pensionare?", "Care ar fi suma pe care ai putea conta?"], 
                 actionType: "input", options: { type: "number", placeholder: "Ex: 0" }, nextStep: "pensie_economii_existente" 
             },
             pensie_economii_existente: { 
                 isProgressStep: true,
-                message: "5. La acest moment, ai economii (ex. pensie pilon 2 sau pilonul 3) sau investiții pe care să le accesezi la pensionare? Ce sumă (în lei)?", 
+                message: ["5. La acest moment, ai economii (ex. pensie pilon 2 sau pilonul 3) sau investiții pe care să le accesezi la pensionare?", "Care ar fi suma pe care ai putea conta?"], 
                 actionType: "input", options: { type: "number", placeholder: "Ex: 40000" }, nextStep: "pensie_pregatire_rezultat" 
             },
              pensie_pregatire_rezultat: {
@@ -587,7 +587,7 @@ export default function FormsPage() {
             },
             studii_intro_dramatic: { 
                 isProgressStep: true,
-                message: ["Ar mai fi o nuanță aici... și nu e pozitivă...", "Ca părinte, pentru copiii tău trăiești. Pentru ei și pentru viitorul lor, orice sacrifiu pare natural.", "Pe de altă parte, nu avem garanția că vom fi alaturi de copiii noștri - in această lume venim pe rând, plecam pe sărite. Despre fiecare dintre noi se va vorbi odată la timpul trecut: \"A fost un om bun\"", "Dar cum s-ar schimba prezentul și viitorul copiilor tăi dacă nu ar mai putea conta pe sprijinul tău financiar?"],
+                message: ["Ar mai fi o nuanță aici... și nu e pozitivă...", "Ca părinte, pentru copiii tăi trăiești. Pentru ei și pentru viitorul lor, orice sacrificiu pare natural.", "Pe de altă parte, nu avem garanția că vom fi alături de copiii noștri - în această lume venim pe rând, plecăm pe sărite. Despre fiecare dintre noi se va vorbi odată la timpul trecut: \"A fost un om bun.\"", "Cum s-ar schimba prezentul și viitorul copiilor tăi dacă nu ar mai putea conta pe sprijinul tău financiar?"],
                 actionType: "buttons", 
                 options: [{label: "Continuă"}], 
                 nextStep: "studii_optiuni_dramatice" 
