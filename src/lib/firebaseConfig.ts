@@ -25,6 +25,7 @@ if (!getApps().length) {
 
 const auth = getAuth(app);
 const db = getFirestore(app);
-const functions = getFunctions(app);
+// NOTĂ: Asigură-te că 'europe-west3' este regiunea corectă unde ai instalat extensia Stripe.
+const functions = getFunctions(app, 'europe-west3');
 
 export { app, auth, db, functions };

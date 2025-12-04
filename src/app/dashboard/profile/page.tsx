@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { onAuthStateChanged, updateProfile, updatePassword, signOut, type User } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { doc, getDoc, updateDoc, collection, addDoc, onSnapshot, query, where, setDoc } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebaseConfig';
+import { httpsCallable } from 'firebase/functions';
+import { auth, db, functions } from '@/lib/firebaseConfig';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -223,33 +224,24 @@ export default function ProfilePage() {
     const handleManageSubscription = async () => {
         if (!user) return;
         setIsManagingSubscription(true);
-        toast({ title: 'Se deschide portalul de client...' });
+        toast({ title: "Se deschide portalul...", description: "Te redirecționăm către Stripe." });
         
         try {
-            const portalLinksCollection = collection(db, `customers/${user.uid}/portal_links`);
-            const portalLinkRef = await addDoc(portalLinksCollection, {
-                return_url: window.location.href,
+            const functionRef = httpsCallable(functions, 'ext-firestore-stripe-payments-createPortalLink');
+            
+            const { data }: any = await functionRef({
+                returnUrl: window.location.href,
+                locale: 'ro',
             });
 
-            const unsubscribe = onSnapshot(portalLinkRef, (snap) => {
-                const data = snap.data();
-                if (data?.url) {
-                    unsubscribe();
-                    window.location.assign(data.url);
-                }
-                if (data?.error) {
-                    unsubscribe();
-                    toast({ variant: 'destructive', title: 'Eroare', description: data.error.message });
-                    setIsManagingSubscription(false);
-                }
-            }, (error) => {
-                unsubscribe();
-                toast({ variant: 'destructive', title: 'Eroare de ascultare', description: error.message });
-                setIsManagingSubscription(false);
-            });
-
-        } catch (error: any) {
-            toast({ variant: 'destructive', title: 'Eroare la creare portal', description: error.message });
+            if (data?.url) {
+                window.location.assign(data.url);
+            } else {
+                throw new Error("Nu s-a primit URL-ul de la Stripe.");
+            }
+        } catch (e: any) {
+            console.error("Eroare Portal:", e);
+            toast({ variant: "destructive", title: "Eroare", description: e.message || "Asigură-te că ai un abonament activ și că Portalul este activat în Stripe." });
             setIsManagingSubscription(false);
         }
     };
