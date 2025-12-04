@@ -1,11 +1,42 @@
 
 "use client";
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/ui/Navbar';
 import Footer from '@/components/ui/Footer';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+
+// Custom hook to detect when an element is in the viewport
+const useInView = (options?: IntersectionObserverInit) => {
+  const [isInView, setIsInView] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setIsInView(true);
+        // We can unobserve once it's in view to avoid re-triggering
+        if (ref.current) {
+          observer.unobserve(ref.current);
+        }
+      }
+    }, options);
+
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+
+    return () => {
+      if (ref.current) {
+        observer.unobserve(ref.current);
+      }
+    };
+  }, [options]);
+
+  return [ref, isInView] as const;
+};
 
 
 const SaaSLandingView = () => {
@@ -69,6 +100,9 @@ const SaaSLandingView = () => {
     }
   ];
 
+  const [chatRef, isChatInView] = useInView({ threshold: 0.5 });
+
+
   return (
     <div className='h-screen w-full bg-slate-950 text-white relative overflow-y-auto overflow-x-hidden no-scrollbar'>
       <Navbar />
@@ -94,13 +128,13 @@ const SaaSLandingView = () => {
               </span>
             </h1>
             
-            <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8 text-lg md:text-xl text-slate-400 mb-10">
-               <div className='text-balance'>
-                  Primul CRM conversațional care educă clientul și îți filtrează <span className="whitespace-nowrap">lead-urile</span> automat.
-               </div>
-                <div className='text-balance'>
-                   Abordează clienții cu încredere și valorifică fiecare oportunitate din portofoliu. <span className="font-medium text-slate-300">Concentrează-te pe rezultate, nu pe blocaje.</span>
-                </div>
+            <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8 text-lg text-slate-400">
+               <p className='text-balance'>
+                  Primul CRM conversațional care educă clientul și îți filtrează <span className="text-slate-300 font-medium whitespace-nowrap">lead-urile</span> automat.
+               </p>
+                <p className='text-balance'>
+                   Abordează clienții cu încredere și valorifică fiecare oportunitate. <span className="font-medium text-slate-300">Concentrează-te pe rezultate, nu pe blocaje.</span>
+                </p>
             </div>
 
 
@@ -154,25 +188,25 @@ const SaaSLandingView = () => {
         </main>
         
         {/* Demo Section */}
-        <section className="py-16 sm:py-24 px-4">
+        <section className="py-12 sm:py-16 px-4">
           <div className="max-w-4xl mx-auto text-center">
              <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">
                 <span className="text-amber-400">PoliSafe</span> nu este un simplu formular.
              </h2>
              <p className="text-lg text-slate-400 mb-12 max-w-2xl mx-auto">PoliSafe este un asistent virtual care îl ajută pe client să conștientizeze vulnerabilitățile financiare și îl încurajează să ceară sprijinul agentului.</p>
-            <div className="max-w-md mx-auto bg-slate-900/70 rounded-2xl p-6 border border-white/10 shadow-2xl">
+            <div ref={chatRef} className="max-w-md mx-auto bg-slate-900/70 rounded-2xl p-6 border border-white/10 shadow-2xl">
               <div className="space-y-4 text-left text-sm">
-                <div className="animate-chat-bubble-in">
+                <div className={cn("transition-all duration-500", isChatInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4")}>
                   <div className="inline-block bg-secondary text-secondary-foreground rounded-2xl rounded-bl-none p-3 max-w-[80%]">
                     Salut! Sunt Marius, agentul tău. Despre ce subiect vrei să discutăm?
                   </div>
                 </div>
-                <div className="flex justify-end animate-chat-bubble-in" style={{animationDelay: '1s'}}>
+                <div className={cn("flex justify-end transition-all duration-500", isChatInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4")} style={{transitionDelay: '400ms'}}>
                    <div className="inline-block bg-primary text-primary-foreground rounded-2xl rounded-br-none p-3 max-w-[80%]">
                     Aș vrea să știu mai multe despre siguranța familiei în caz de deces.
                   </div>
                 </div>
-                 <div className="animate-chat-bubble-in" style={{animationDelay: '2s'}}>
+                 <div className={cn("transition-all duration-500", isChatInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4")} style={{transitionDelay: '800ms'}}>
                   <div className="inline-block bg-secondary text-secondary-foreground rounded-2xl rounded-bl-none p-3 max-w-[80%]">
                     Excelent. Vom parcurge 6 întrebări pentru a stabili exact care este deficitul financiar. Ești gata?
                   </div>
@@ -183,7 +217,7 @@ const SaaSLandingView = () => {
         </section>
 
         {/* Pricing Section */}
-        <section id="pricing" className="py-16 sm:py-24 px-4">
+        <section id="pricing" className="py-12 sm:py-16 px-4">
           <div className="max-w-7xl mx-auto text-center">
             <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-12">Alege planul potrivit pentru tine</h2>
             
