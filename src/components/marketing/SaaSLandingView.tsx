@@ -1,4 +1,3 @@
-
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
@@ -144,7 +143,7 @@ const SaaSLandingView = () => {
       {/* Fundal Dinamic */}
       <div className="fixed inset-0 w-full h-full pointer-events-none -z-10">
         <div className="absolute inset-0 w-full h-full bg-slate-950 [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]"></div>
-        <div className="absolute top-0 left-0 w-full h-full bg-[url('/grid.svg')] bg-repeat opacity-5 [mask-image:radial-gradient(ellipse_at_center,white,transparent_70%)]"></div>
+        <div className="absolute top-0 left-0 w-full h-full bg-[url('/grid.svg')] bg-repeat opacity-5 [mask-image:radial-gradient(ellipse_at_center,white_10%,transparent_70%)]"></div>
         <div className="absolute top-[-10%] left-[-10%] w-[40rem] h-[40rem] bg-purple-500/20 rounded-full mix-blend-screen filter blur-[100px] animate-blob"></div>
         <div className="absolute top-[-10%] right-[-10%] w-[35rem] h-[35rem] bg-amber-500/10 rounded-full mix-blend-screen filter blur-[100px] animate-blob animation-delay-2000"></div>
       </div>
@@ -193,20 +192,20 @@ const SaaSLandingView = () => {
           {/* Features Grid */}
           <div className="mt-32 grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl animate-fade-in-up opacity-0" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
             {features.map((item, i) => (
-                <div key={i} className="group relative p-8 rounded-3xl bg-gradient-to-br from-slate-900 to-purple-950/50 backdrop-blur-xl transition-all duration-300 text-left overflow-hidden">
-                  <div className="absolute inset-0 rounded-3xl [background:linear-gradient(120deg,rgba(255,255,255,0.15)_0%,rgba(255,255,255,0.05)_50%,rgba(255,255,255,0)_100%)_border-box] [mask:linear-gradient(#fff_0_0)_padding-box,linear-gradient(#fff_0_0)] [mask-composite:exclude]"></div>
-                   <div className="absolute -inset-px rounded-3xl opacity-0 transition-opacity duration-500 group-hover:opacity-100" style={{
-                    background: `radial-gradient(circle at 50% 50%, ${item.icon.props.className.includes('text-amber-400') ? 'hsl(var(--primary) / 0.1)' : item.icon.props.className.includes('text-blue-400') ? 'hsl(217, 91%, 60%, 0.1)' : 'hsl(262, 85%, 60%, 0.1)'} 0%, transparent 70%)`,
-                  }}></div>
-                  
-                  <div className="relative z-10">
-                    <div className="w-14 h-14 mb-6 rounded-2xl bg-slate-800/80 border border-white/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                      {item.icon}
-                    </div>
-                    <h3 className="text-xl font-bold text-white mb-2">{item.title}</h3>
-                    <p className="text-slate-400 text-sm leading-relaxed">{item.desc}</p>
+              <div key={i} className="group relative p-8 rounded-3xl text-left transition-all duration-300 overflow-hidden bg-slate-900/40 backdrop-blur-2xl border border-white/5 hover:border-amber-500/30">
+                {/* Efectul de lumina */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{
+                  background: `radial-gradient(circle at 40px 40px, ${item.icon.props.className.includes('text-amber-400') ? 'hsl(var(--primary) / 0.15)' : item.icon.props.className.includes('text-blue-400') ? 'hsl(217, 91%, 60%, 0.15)' : 'hsl(262, 85%, 60%, 0.15)'} 0%, transparent 60%)`,
+                }}></div>
+
+                <div className="relative z-10">
+                  <div className="w-14 h-14 mb-6 rounded-2xl bg-slate-800/80 border border-white/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                    {item.icon}
                   </div>
+                  <h3 className="text-xl font-bold text-white mb-2">{item.title}</h3>
+                  <p className="text-slate-400 text-sm leading-relaxed">{item.desc}</p>
                 </div>
+              </div>
             ))}
           </div>
         </main>
