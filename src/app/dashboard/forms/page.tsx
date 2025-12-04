@@ -263,9 +263,13 @@ export default function FormsPage() {
           flow: {
             secventa_intro: {
               message: [
-                "Viața produce pierderi financiare semnificative în patru situații majore.",
-                "Dintre acestea, două situații sunt previzibile, precis așezate pe axa vieții, iar două sunt total imprevizibile („ceasul rău, pisica neagră”).",
-                "**Previzibile:**\n1. Pensionarea – reducerea drastică a opțiunilor\n2. Studiile copiilor – cheltuieli complexe\n\n**Imprevizibile:**\n1. Decesul – detonează standardul de viață\n2. Bolile grave – impact major asupra economiilor"
+                "Totul e bine… până într-o zi.",
+                "Viața are 4 momente care pot schimba cursul unei familii, patru momente care îți pot schimba definitiv stabilitatea financiară.",
+                "Două vin încet, le vezi de departe.\nDouă lovesc pe neașteptate.",
+                "Previzibile:\n\n1. Pensionarea – veniturile scad exact când nevoile cresc.\n2. Viitorul copiilor – studii, start în viață, cheltuieli complexe.",
+                "Imprevizibile:\n\n1. Decesul – lasă în urmă gol emoțional și vulnerabilitate financiară.\n2. Bolile grave – într-o zi ești bine, în următoarea totul se schimbă.",
+                "Toate patru au un impact emoțional dramatic și un impact financiar sever.\nAdevărul?",
+                "Pot fi gestionate dacă știi din timp cât de expus ești și ce impact ar avea asupra familiei tale."
               ],
               isProgressStep: true,
               actionType: "buttons", 
@@ -527,7 +531,7 @@ export default function FormsPage() {
                 actionType: "input", options: { type: "number", placeholder: "Ex: 30000" }, nextStep: "studii_afisare_deficit_1" 
             },
             studii_afisare_deficit_1: { 
-                message: "Am calculat costul de bază: **{deficit1} lei** (Sumă anuală x Ani). Continuăm.", 
+                message: "Am calculat costul de bază: **{deficit1} lei** (Sumă anuală x Ani pe care esti dispus sa ii asiguri).", 
                 actionType: "buttons", options: [{label: "Continuă"}], nextStep: "studii_lista_extra" 
             },
             studii_lista_extra: { 
@@ -537,7 +541,7 @@ export default function FormsPage() {
             },
             studii_suma_extra: { 
                 isProgressStep: true,
-                message: "Fă un calcul total mental, apoi notează care ar fi suma de bani anuală necesară (în lei)?", 
+                message: "Acum, fă un calcul total mental, apoi notează care ar fi suma de bani anuală necesară (în lei)?", 
                 actionType: "input", options: { type: "number", placeholder: "Ex: 5000" }, nextStep: "studii_lista_proiecte" 
             },
             studii_lista_proiecte: { 
