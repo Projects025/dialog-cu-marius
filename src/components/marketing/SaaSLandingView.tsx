@@ -129,7 +129,7 @@ const SaaSLandingView = () => {
       title: "CRM Integrat",
       desc: "Vezi lead-urile în timp real, gestionează statusul și închide mai multe deal-uri.",
       icon: (
-        <svg xmlns="http://www.w3org/2000/svg" className="w-8 h-8 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
         </svg>
       ),
@@ -142,7 +142,9 @@ const SaaSLandingView = () => {
       <Navbar />
 
       {/* Fundal Dinamic */}
-      <div className="absolute inset-0 w-full h-full pointer-events-none">
+      <div className="fixed inset-0 w-full h-full pointer-events-none -z-10">
+        <div className="absolute inset-0 w-full h-full bg-slate-950 [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]"></div>
+        <div className="absolute top-0 left-0 w-full h-full bg-[url('/grid.svg')] bg-repeat opacity-5 [mask-image:radial-gradient(ellipse_at_center,white,transparent_70%)]"></div>
         <div className="absolute top-[-10%] left-[-10%] w-[40rem] h-[40rem] bg-purple-500/20 rounded-full mix-blend-screen filter blur-[100px] animate-blob"></div>
         <div className="absolute top-[-10%] right-[-10%] w-[35rem] h-[35rem] bg-amber-500/10 rounded-full mix-blend-screen filter blur-[100px] animate-blob animation-delay-2000"></div>
       </div>
@@ -155,7 +157,7 @@ const SaaSLandingView = () => {
                ✨ Platforma pentru intermediari in asigurări
             </div>
             
-            <h1 className="text-4xl md:text-7xl font-bold tracking-tight leading-tight">
+            <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-tight text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-400 drop-shadow-[0_2px_8px_rgba(245,158,11,0.2)]">
               Digitalizează-ți <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-200 to-slate-500">
                 Viața și Sănătatea
@@ -175,23 +177,26 @@ const SaaSLandingView = () => {
 
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
-              <Link href="/login?mode=signup" className="px-8 py-4 bg-amber-500 text-slate-950 font-bold rounded-full shadow-[0_0_30px_-10px_rgba(245,158,11,0.5)] hover:scale-105 transition-transform">
-                Începe Gratuit
+              <Link 
+                href="/login?mode=signup" 
+                className="group relative px-8 py-4 bg-amber-500 text-slate-950 font-bold rounded-full shadow-[0_0_30px_-10px_rgba(245,158,11,0.5)] hover:scale-105 transition-transform duration-300"
+              >
+                  <span className="relative z-10">Începe Gratuit</span>
+                  <div className="absolute inset-0 rounded-full bg-inherit shadow-[inset_0_2px_0_rgba(255,255,255,0.4),inset_0_-2px_2px_rgba(0,0,0,0.2)]"></div>
+                  <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" 
+                       style={{background: 'radial-gradient(circle at 50% -20%, hsl(var(--primary) / 0.7), transparent 70%)'}}>
+                  </div>
               </Link>
             </div>
           </div>
           
           {/* Features Grid */}
-            <div className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl animate-fade-in-up opacity-0" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
+          <div className="mt-32 grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl animate-fade-in-up opacity-0" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
             {features.map((item, i) => (
-                <div key={i} className="group relative p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-slate-900 to-purple-950/50 backdrop-blur-xl transition-all duration-300 text-left overflow-hidden">
-                  {/* Bordura cu gradient */}
-                  <div className="absolute inset-0 rounded-3xl border border-transparent [background:linear-gradient(120deg,rgba(255,255,255,0.15)_0%,rgba(255,255,255,0.05)_50%,rgba(255,255,255,0)_100%)_border-box] 
-                                          [mask:linear-gradient(#fff_0_0)_padding-box,linear-gradient(#fff_0_0)] [mask-composite:exclude]"></div>
-                  
-                  {/* Lumina spotlight */}
+                <div key={i} className="group relative p-8 rounded-3xl bg-gradient-to-br from-slate-900 to-purple-950/50 backdrop-blur-xl transition-all duration-300 text-left overflow-hidden">
+                  <div className="absolute inset-0 rounded-3xl [background:linear-gradient(120deg,rgba(255,255,255,0.15)_0%,rgba(255,255,255,0.05)_50%,rgba(255,255,255,0)_100%)_border-box] [mask:linear-gradient(#fff_0_0)_padding-box,linear-gradient(#fff_0_0)] [mask-composite:exclude]"></div>
                    <div className="absolute -inset-px rounded-3xl opacity-0 transition-opacity duration-500 group-hover:opacity-100" style={{
-                    background: 'radial-gradient(circle at 50% 50%, hsl(var(--primary) / 0.1) 0%, transparent 70%)',
+                    background: `radial-gradient(circle at 50% 50%, ${item.icon.props.className.includes('text-amber-400') ? 'hsl(var(--primary) / 0.1)' : item.icon.props.className.includes('text-blue-400') ? 'hsl(217, 91%, 60%, 0.1)' : 'hsl(262, 85%, 60%, 0.1)'} 0%, transparent 70%)`,
                   }}></div>
                   
                   <div className="relative z-10">
@@ -206,6 +211,12 @@ const SaaSLandingView = () => {
           </div>
         </main>
         
+        {/* Light Beam Separator */}
+        <div className="relative w-full h-32 flex items-center justify-center my-16">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl h-[1px] bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-32 bg-amber-500/10 blur-3xl"></div>
+        </div>
+
         {/* Demo Section */}
         <section className="py-20 sm:py-24 px-4">
           <div className="max-w-4xl mx-auto text-center">
@@ -213,21 +224,28 @@ const SaaSLandingView = () => {
                 <span className="text-amber-400">PoliSafe</span> nu este un simplu formular.
              </h2>
              <p className="text-lg text-slate-400 mb-12 max-w-2xl mx-auto">PoliSafe este un asistent virtual care îl ajută pe client să conștientizeze vulnerabilitățile financiare și îl încurajează să ceară sprijinul agentului.</p>
-            <div ref={chatRef} className="max-w-md mx-auto bg-slate-900/70 rounded-2xl p-6 border border-white/10 shadow-2xl">
-              <div className="space-y-4 text-left text-sm">
-                <div className={cn("transition-all duration-700", isChatInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4")}>
-                  <div className="inline-block bg-secondary text-secondary-foreground rounded-2xl rounded-bl-none p-3 max-w-[80%]">
-                    Salut! Sunt Marius, agentul tău. Despre ce subiect vrei să discutăm?
+            <div ref={chatRef} className="[perspective:1000px]">
+              <div className="group relative max-w-md mx-auto bg-slate-900/70 rounded-2xl p-6 border-t border-t-white/10 border-x border-x-white/5 shadow-2xl transition-transform duration-700 [transform-style:preserve-3d] group-hover:rotate-x-0" style={{ transform: isChatInView ? 'rotateX(0deg)' : 'rotateX(-15deg)' }}>
+                {/* Inner Glow */}
+                <div className="absolute inset-0 rounded-2xl border-b border-b-white/10 [mask-image:linear-gradient(to_bottom,white,transparent)]"></div>
+                {/* Glossy Reflection */}
+                <div className="absolute top-0 left-0 w-full h-full rounded-2xl bg-gradient-to-br from-white/5 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-700"></div>
+
+                <div className="relative space-y-4 text-left text-sm">
+                  <div className={cn("transition-all duration-700", isChatInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4")}>
+                    <div className="inline-block bg-secondary text-secondary-foreground rounded-2xl rounded-bl-none p-3 max-w-[80%]">
+                      Salut! Sunt Marius, agentul tău. Despre ce subiect vrei să discutăm?
+                    </div>
                   </div>
-                </div>
-                <div className={cn("flex justify-end transition-all duration-700", isChatInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4")} style={{transitionDelay: '700ms'}}>
-                   <div className="inline-block bg-primary text-primary-foreground rounded-2xl rounded-br-none p-3 max-w-[80%]">
-                    Aș vrea să știu mai multe despre siguranța familiei în caz de deces.
+                  <div className={cn("flex justify-end transition-all duration-700", isChatInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4")} style={{transitionDelay: '700ms'}}>
+                    <div className="inline-block bg-primary text-primary-foreground rounded-2xl rounded-br-none p-3 max-w-[80%]">
+                      Aș vrea să știu mai multe despre siguranța familiei în caz de deces.
+                    </div>
                   </div>
-                </div>
-                 <div className={cn("transition-all duration-700", isChatInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4")} style={{transitionDelay: '1400ms'}}>
-                  <div className="inline-block bg-secondary text-secondary-foreground rounded-2xl rounded-bl-none p-3 max-w-[80%]">
-                    Excelent. Vom parcurge 6 întrebări pentru a stabili exact care este deficitul financiar. Ești gata?
+                  <div className={cn("transition-all duration-700", isChatInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4")} style={{transitionDelay: '1400ms'}}>
+                    <div className="inline-block bg-secondary text-secondary-foreground rounded-2xl rounded-bl-none p-3 max-w-[80%]">
+                      Excelent. Vom parcurge 6 întrebări pentru a stabili exact care este deficitul financiar. Ești gata?
+                    </div>
                   </div>
                 </div>
               </div>
