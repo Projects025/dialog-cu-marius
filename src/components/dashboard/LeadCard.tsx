@@ -1,12 +1,12 @@
 
 "use client";
 
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Phone, Mail, User } from "lucide-react";
 import { Avatar, AvatarFallback } from "../ui/avatar";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 
 const LeadCard = ({ lead, onStatusChange, onCardClick }: { lead: any; onStatusChange: (leadId: string, newStatus: string) => void; onCardClick: () => void; }) => {
     
@@ -19,8 +19,12 @@ const LeadCard = ({ lead, onStatusChange, onCardClick }: { lead: any; onStatusCh
         }
     };
     
+    const handleSelectClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+    };
+
     return (
-        <Card onClick={onCardClick} className="cursor-pointer flex flex-col transition-all bg-muted/30 hover:border-primary/50">
+        <Card onClick={onCardClick} className="cursor-pointer flex flex-col transition-all bg-muted/40 hover:border-primary/50">
              <CardContent className="p-4 flex-grow">
                 <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10">
@@ -52,7 +56,7 @@ const LeadCard = ({ lead, onStatusChange, onCardClick }: { lead: any; onStatusCh
                 </div>
             </CardContent>
             <CardFooter className="p-3 bg-muted/50 border-t">
-                <div className="w-full" onClick={(e) => e.stopPropagation()}>
+                <div className="w-full" onClick={handleSelectClick}>
                     <Select 
                         value={lead.status || "Nou"}
                         onValueChange={(newStatus) => onStatusChange(lead.id, newStatus)}
