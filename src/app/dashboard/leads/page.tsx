@@ -35,8 +35,10 @@ const LeadDetailItem = ({ label, value }: { label: string, value: any }) => {
     let displayValue;
     if (typeof value === 'number') {
         displayValue = value.toLocaleString('ro-RO');
-    } else if (value instanceof Date || (typeof value === 'string' && !isNaN(Date.parse(value)))) {
-        const date = value instanceof Date ? value : parseISO(value);
+    } else if (value instanceof Date) { // Check for Date object first
+        displayValue = format(value, 'dd/MM/yyyy HH:mm');
+    } else if (typeof value === 'string' && !isNaN(Date.parse(value))) { // Then check for valid date string
+        const date = parseISO(value);
         displayValue = format(date, 'dd/MM/yyyy HH:mm');
     } else if (typeof value === 'boolean') {
         displayValue = value ? 'Da' : 'Nu';
@@ -158,11 +160,16 @@ export default function LeadsPage() {
     try {
         const leadRef = doc(db, "leads", leadId);
         await updateDoc(leadRef, { status: newStatus });
-        setLeads(prevLeads => 
-            prevLeads.map(lead => 
-                lead.id === leadId ? { ...lead, status: newStatus } : lead
-            )
-        );
+        setLeads(prevLeads => {
+            const leadIndex = prevLeads.findIndex(lead => lead.id === leadId);
+            if (leadIndex === -1) return prevLeads;
+
+            const newLeads = [...prevLeads];
+            const updatedLead = { ...newLeads[leadIndex], status: newStatus };
+            newLeads[leadIndex] = updatedLead;
+
+            return newLeads;
+        });
     } catch (error) {
         console.error("Error updating status:", error);
     }
@@ -256,10 +263,10 @@ export default function LeadsPage() {
           </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 gap-4 md:hidden no-print">
-          {loading ? <p className="text-center text-sm py-4">Se încarcă clienții...</p> : filteredLeads.length > 0 ? (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden no-print">
+          {loading ? <p className="text-center text-sm py-4 col-span-full">Se încarcă clienții...</p> : filteredLeads.length > 0 ? (
               filteredLeads.map(lead => <LeadCard key={lead.id} lead={lead} onStatusChange={handleStatusChange} onCardClick={() => setSelectedLead(lead)} />)
-          ) : <div className="text-center text-sm py-4 text-muted-foreground">Niciun client găsit. Încearcă alte filtre.</div> }
+          ) : <div className="text-center text-sm py-4 text-muted-foreground col-span-full">Niciun client găsit. Încearcă alte filtre.</div> }
       </div>
       
       <div id="print-area">
