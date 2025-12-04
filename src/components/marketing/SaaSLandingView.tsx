@@ -94,16 +94,12 @@ const SaaSLandingView = () => {
               </span>
             </h1>
             
-            <div className="max-w-3xl mx-auto grid md:grid-cols-2 gap-8 text-lg md:text-xl text-slate-400 mb-10">
-               <div>
-                  <p className="text-balance">
-                    Primul CRM conversațional care educă clientul și îți filtrează <span className="whitespace-nowrap">lead-urile</span> automat.
-                  </p>
+            <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8 text-lg md:text-xl text-slate-400 mb-10">
+               <div className='text-balance'>
+                  Primul CRM conversațional care educă clientul și îți filtrează <span className="whitespace-nowrap">lead-urile</span> automat.
                </div>
-                <div>
-                   <p className="text-balance">
-                      Abordează clienții cu încredere și valorifică fiecare oportunitate din portofoliu. <span className="font-medium text-slate-300">Concentrează-te pe rezultate, nu pe blocaje.</span>
-                   </p>
+                <div className='text-balance'>
+                   Abordează clienții cu încredere și valorifică fiecare oportunitate din portofoliu. <span className="font-medium text-slate-300">Concentrează-te pe rezultate, nu pe blocaje.</span>
                 </div>
             </div>
 
@@ -158,7 +154,7 @@ const SaaSLandingView = () => {
         </main>
         
         {/* Demo Section */}
-        <section className="py-20 sm:py-32 px-4">
+        <section className="py-16 sm:py-24 px-4">
           <div className="max-w-4xl mx-auto text-center">
              <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">
                 <span className="text-amber-400">PoliSafe</span> nu este un simplu formular.
@@ -187,7 +183,7 @@ const SaaSLandingView = () => {
         </section>
 
         {/* Pricing Section */}
-        <section id="pricing" className="py-20 sm:py-32 px-4">
+        <section id="pricing" className="py-16 sm:py-24 px-4">
           <div className="max-w-7xl mx-auto text-center">
             <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-12">Alege planul potrivit pentru tine</h2>
             
