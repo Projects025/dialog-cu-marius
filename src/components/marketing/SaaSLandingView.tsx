@@ -129,7 +129,7 @@ const SaaSLandingView = () => {
       title: "CRM Integrat",
       desc: "Vezi lead-urile în timp real, gestionează statusul și închide mai multe deal-uri.",
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <svg xmlns="http://www.w3org/2000/svg" className="w-8 h-8 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
         </svg>
       ),
@@ -184,21 +184,16 @@ const SaaSLandingView = () => {
           {/* Features Grid */}
             <div className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl animate-fade-in-up opacity-0" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
             {features.map((item, i) => (
-                <div key={i} className="group relative p-6 sm:p-8 rounded-3xl bg-slate-900/40 backdrop-blur-xl transition-all duration-300 text-left overflow-hidden [--glow-color:hsl(var(--primary))]
-                                        before:absolute before:inset-0 before:-translate-x-full before:transition-transform before:duration-700 before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent
-                                        hover:before:translate-x-full">
+                <div key={i} className="group relative p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-slate-900 to-purple-950/50 backdrop-blur-xl transition-all duration-300 text-left overflow-hidden">
                   {/* Bordura cu gradient */}
-                  <div className="absolute inset-0 rounded-3xl border border-transparent [background:linear-gradient(120deg,rgba(255,255,255,0.1)_0%,rgba(255,255,255,0)_50%,rgba(255,255,255,0.1)_100%)_border-box] 
+                  <div className="absolute inset-0 rounded-3xl border border-transparent [background:linear-gradient(120deg,rgba(255,255,255,0.15)_0%,rgba(255,255,255,0.05)_50%,rgba(255,255,255,0)_100%)_border-box] 
                                           [mask:linear-gradient(#fff_0_0)_padding-box,linear-gradient(#fff_0_0)] [mask-composite:exclude]"></div>
                   
                   {/* Lumina spotlight */}
-                  <div className="absolute -inset-px rounded-3xl opacity-0 transition-opacity duration-500 group-hover:opacity-100" style={{
+                   <div className="absolute -inset-px rounded-3xl opacity-0 transition-opacity duration-500 group-hover:opacity-100" style={{
                     background: 'radial-gradient(circle at 50% 50%, hsl(var(--primary) / 0.1) 0%, transparent 70%)',
                   }}></div>
                   
-                  {/* Watermark Number */}
-                  <span className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 text-[200px] font-bold text-white/5 pointer-events-none z-0">{item.number}</span>
-
                   <div className="relative z-10">
                     <div className="w-14 h-14 mb-6 rounded-2xl bg-slate-800/80 border border-white/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
                       {item.icon}
