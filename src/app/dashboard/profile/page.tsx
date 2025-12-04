@@ -234,14 +234,14 @@ export default function ProfilePage() {
                 locale: 'ro',
             });
 
-            if (data?.url) {
+            if (data && data.url) {
                 window.location.assign(data.url);
             } else {
                 throw new Error("Nu s-a primit URL-ul de la Stripe.");
             }
         } catch (e: any) {
-            console.error("Eroare Portal:", e);
-            toast({ variant: "destructive", title: "Eroare", description: e.message || "Asigură-te că ai un abonament activ și că Portalul este activat în Stripe." });
+            console.error("Eroare la apelarea functiei Portal:", e);
+            toast({ variant: "destructive", title: "Eroare Portal", description: e.message || "Asigură-te că ai un abonament activ și că Portalul este activat în Stripe." });
             setIsManagingSubscription(false);
         }
     };
