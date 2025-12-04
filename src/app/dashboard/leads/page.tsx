@@ -35,17 +35,19 @@ const LeadDetailItem = ({ label, value }: { label: string, value: any }) => {
     let displayValue;
     let dateToFormat: Date | null = null;
     
+    // Check for Firestore Timestamp
     if (value && typeof value.toDate === 'function') {
-        dateToFormat = value.toDate(); // Firestore Timestamp
+        dateToFormat = value.toDate();
+    // Check for native JavaScript Date
     } else if (value instanceof Date) {
-        dateToFormat = value; // JavaScript Date object
+        dateToFormat = value;
+    // Check for a valid date string
     } else if (typeof value === 'string') {
-        const parsedDate = parseISO(value); // Try to parse ISO string
+        const parsedDate = parseISO(value);
         if (isValid(parsedDate)) {
             dateToFormat = parsedDate;
         }
     }
-    
 
     if (dateToFormat && isValid(dateToFormat)) {
         displayValue = format(dateToFormat, 'dd/MM/yyyy HH:mm');
@@ -114,7 +116,7 @@ export default function LeadsPage() {
             return {
               id: doc.id,
               ...data,
-              timestamp: data.timestamp?.toDate() // Convert Firestore Timestamp to JS Date
+              timestamp: data.timestamp // Keep as Firestore Timestamp or null
             }
           });
           setLeads(leadsData);
@@ -147,13 +149,17 @@ export default function LeadsPage() {
         const sourceMatch = sourceFilter !== 'all' ? lead.source === sourceFilter : true;
 
         let dateMatch = true;
-        if (dateRange?.from && lead.timestamp && isValid(new Date(lead.timestamp))) {
-             const leadDate = new Date(lead.timestamp);
-             dateMatch = leadDate >= dateRange.from;
-             if (dateRange.to) {
-                 const toDate = new Date(dateRange.to);
-                 toDate.setHours(23, 59, 59, 999);
-                 dateMatch = dateMatch && leadDate <= toDate;
+        if (dateRange?.from && lead.timestamp) {
+             const leadDate = lead.timestamp.toDate ? lead.timestamp.toDate() : new Date(lead.timestamp);
+             if(isValid(leadDate)) {
+                 dateMatch = leadDate >= dateRange.from;
+                 if (dateRange.to) {
+                     const toDate = new Date(dateRange.to);
+                     toDate.setHours(23, 59, 59, 999);
+                     dateMatch = dateMatch && leadDate <= toDate;
+                 }
+             } else {
+                dateMatch = false;
              }
         } else if (dateRange?.from) {
             dateMatch = false;
@@ -189,6 +195,7 @@ export default function LeadsPage() {
     };
     try {
         const docRef = await addDoc(collection(db, 'leads'), newClientData);
+        // Add with JS Date object for immediate optimistic update
         setLeads(prev => [{ id: docRef.id, ...newClientData, timestamp: new Date() }, ...prev]);
         setIsModalOpen(false); setNewName(''); setNewEmail(''); setNewPhone(''); setNewStatus('Nou');
     } catch (serverError: any) {
@@ -247,7 +254,7 @@ export default function LeadsPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input placeholder="Caută după nume..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:flex gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:flex lg:flex-wrap gap-2">
                 <div className="grid grid-cols-2 gap-2">
                     <Select value={statusFilter} onValueChange={setStatusFilter}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Toate Statusurile</SelectItem><SelectItem value="Nou">Nou</SelectItem><SelectItem value="De contactat">De contactat</SelectItem><SelectItem value="Contactat">Contactat</SelectItem><SelectItem value="Ofertă trimisă">Ofertă trimisă</SelectItem><SelectItem value="Convertit">Convertit</SelectItem><SelectItem value="Inactiv">Inactiv</SelectItem></SelectContent></Select>
                     <Select value={sourceFilter} onValueChange={setSourceFilter}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Toate Sursele</SelectItem><SelectItem value="Link Client">Link Client</SelectItem><SelectItem value="Manual">Manual</SelectItem></SelectContent></Select>
@@ -270,7 +277,7 @@ export default function LeadsPage() {
           </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden no-print">
+       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden no-print">
           {loading ? <p className="text-center text-sm py-4 col-span-full">Se încarcă clienții...</p> : filteredLeads.length > 0 ? (
               filteredLeads.map(lead => <LeadCard key={lead.id} lead={lead} onStatusChange={handleStatusChange} onCardClick={() => setSelectedLead(lead)} />)
           ) : <div className="text-center text-sm py-4 text-muted-foreground col-span-full">Niciun client găsit. Încearcă alte filtre.</div> }
@@ -286,13 +293,13 @@ export default function LeadsPage() {
                         {loading ? <TableRow><TableCell colSpan={6} className="text-center h-24">Se încarcă...</TableCell></TableRow> : filteredLeads.length > 0 ? (
                             filteredLeads.map((lead) => (
                             <TableRow key={lead.id} className="hover:bg-muted/30">
-                                <TableCell className="text-xs">{lead.timestamp && isValid(new Date(lead.timestamp)) ? format(new Date(lead.timestamp), 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                                <TableCell className="text-xs">{lead.timestamp && isValid(lead.timestamp.toDate ? lead.timestamp.toDate() : new Date(lead.timestamp)) ? format(lead.timestamp.toDate ? lead.timestamp.toDate() : new Date(lead.timestamp), 'dd/MM/yyyy') : 'N/A'}</TableCell>
                                 <TableCell className="font-medium">{lead.contact?.name || "N/A"}</TableCell>
                                 <TableCell><div className="flex flex-col"><span className="text-xs">{lead.contact?.email || ""}</span><span className="text-xs text-muted-foreground">{lead.contact?.phone || ""}</span></div></TableCell>
                                 <TableCell><Badge variant={lead.source === 'Manual' ? 'secondary' : 'default'} className="text-xs">{lead.source || 'N/A'}</Badge></TableCell>
                                 <TableCell><Badge variant={getStatusBadgeVariant(lead.status || 'Nou')} className="text-xs">{lead.status || "Nou"}</Badge></TableCell>
                                 <TableCell className="text-right no-print">
-                                    <Button variant="ghost" size="sm" onClick={() => setSelectedLead(lead)}>Detalii</Button>
+                                    <Button variant="default" size="sm" onClick={() => setSelectedLead(lead)}>Detalii</Button>
                                     <div className="inline-block" onClick={(e) => e.stopPropagation()}>
                                     <Select value={lead.status || "Nou"} onValueChange={(newStatus) => handleStatusChange(lead.id, newStatus)}>
                                       <SelectTrigger className="w-32 h-8 text-xs inline-flex ml-2"><SelectValue /></SelectTrigger>
