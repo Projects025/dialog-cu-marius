@@ -7,6 +7,28 @@ import Footer from '@/components/ui/Footer';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+// Componenta pentru efectul de spotlight
+const Spotlight = () => {
+  const spotlightRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (spotlightRef.current) {
+        const { clientX, clientY } = e;
+        spotlightRef.current.style.background = `radial-gradient(600px at ${clientX}px ${clientY}px, rgba(29, 78, 216, 0.15), transparent 80%)`;
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, []);
+
+  return <div ref={spotlightRef} className="pointer-events-none fixed inset-0 z-30 transition-all duration-300" />;
+};
+
 
 // Custom hook to detect when an element is in the viewport
 const useInView = (options?: IntersectionObserverInit) => {
@@ -139,6 +161,7 @@ const SaaSLandingView = () => {
 
   return (
     <div className='h-screen w-full bg-slate-950 text-white relative overflow-y-auto overflow-x-hidden no-scrollbar'>
+      <Spotlight />
       <Navbar />
 
       {/* Fundal Dinamic */}
@@ -152,7 +175,7 @@ const SaaSLandingView = () => {
       <div className="relative z-10">
         {/* Hero Content */}
         <main className="flex flex-col items-center justify-center min-h-screen px-4 text-center pt-20">
-          <div className="animate-fade-in-up space-y-8 max-w-4xl">
+          <div className="animate-fade-in-up space-y-4 max-w-4xl">
             <div className="inline-flex items-center px-4 py-2 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-400 text-xs font-medium mb-4">
                ✨ Platforma pentru intermediari in asigurări
             </div>
@@ -164,17 +187,9 @@ const SaaSLandingView = () => {
               </span>
             </h1>
             
-            <div className="max-w-7xl mx-auto text-lg md:text-xl mb-10 text-slate-400">
-               <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-                    <div className="text-balance">
-                        Primul CRM conversațional care educă clientul și îți filtrează <span className="text-slate-300 font-medium whitespace-nowrap">lead-urile</span> automat.
-                    </div>
-                    <div className="text-balance">
-                       Abordează clienții cu încredere și valorifică fiecare oportunitate. <span className="font-medium text-slate-300">Concentrează-te pe rezultate, nu pe blocaje.</span>
-                    </div>
-                </div>
-            </div>
-
+            <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto">
+              Primul CRM conversațional care educă clientul și îți filtrează lead-urile automat. Concentrează-te pe rezultate, nu pe blocaje.
+            </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
                <Link 
@@ -191,16 +206,16 @@ const SaaSLandingView = () => {
           </div>
           
           {/* Features Grid */}
-           <div className="mt-32 grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl animate-fade-in-up opacity-0" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
+           <div className="mt-28 grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl animate-fade-in-up opacity-0" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
             {features.map((item, i) => (
-              <div key={i} className="group relative p-8 rounded-3xl text-left transition-all duration-300 overflow-hidden bg-slate-900/50 backdrop-blur-2xl border-t border-t-white/10 border-x border-x-white/5 border-b border-b-black/20 hover:border-amber-500/30">
+              <div key={i} className="group relative p-8 rounded-2xl text-left transition-all duration-300 overflow-hidden bg-slate-900/50 backdrop-blur-2xl border-t border-t-white/10 border-x border-x-white/5 hover:border-amber-500/30">
                 {/* Spotlight Effect */}
-                <div className="absolute -inset-px opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl" style={{
-                  background: `radial-gradient(300px at 50px 50px, ${item.icon.props.className.includes('text-amber-400') ? 'hsl(var(--primary) / 0.15)' : item.icon.props.className.includes('text-blue-400') ? 'hsl(217, 91%, 60%, 0.15)' : 'hsl(262, 85%, 60%, 0.15)'} 0%, transparent 80%)`,
+                <div className="absolute -inset-px opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl" style={{
+                  background: `radial-gradient(300px at 50px 50px, ${item.icon.props.className.includes('text-amber-400') ? 'hsl(var(--primary) / 0.1)' : item.icon.props.className.includes('text-blue-400') ? 'hsl(217, 91%, 60%, 0.1)' : 'hsl(262, 85%, 60%, 0.1)'} 0%, transparent 80%)`,
                 }}></div>
 
                 <div className="relative z-10">
-                  <div className="w-14 h-14 mb-6 rounded-2xl bg-slate-800/80 border border-white/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                  <div className="w-14 h-14 mb-6 rounded-lg bg-slate-800/80 border border-white/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     {item.icon}
                   </div>
                   <h3 className="text-xl font-bold text-white mb-2">{item.title}</h3>
@@ -212,13 +227,13 @@ const SaaSLandingView = () => {
         </main>
         
         {/* Light Beam Separator */}
-        <div className="relative w-full h-32 flex items-center justify-center my-16">
+        <div className="relative w-full h-24 flex items-center justify-center my-8">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl h-[1px] bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-32 bg-amber-500/10 blur-3xl"></div>
         </div>
 
         {/* Demo Section */}
-        <section className="py-20 sm:py-24 px-4">
+        <section className="py-16 sm:py-20 px-4">
           <div className="max-w-4xl mx-auto text-center">
              <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">
                 <span className="text-amber-400">PoliSafe</span> nu este un simplu formular.
@@ -254,15 +269,15 @@ const SaaSLandingView = () => {
         </section>
 
         {/* Pricing Section */}
-        <section id="pricing" className="py-16 sm:py-24 px-4">
+        <section id="pricing" className="py-16 sm:py-20 px-4">
           <div className="max-w-7xl mx-auto text-center">
             <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-12">Alege planul potrivit pentru tine</h2>
             
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
               {plans.map((plan, i) => (
                 <div key={i} className={cn(
-                  "p-6 sm:p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl text-left flex flex-col transition-all duration-300",
-                  plan.isPopular ? "border-amber-500/50 shadow-2xl shadow-amber-500/10" : "hover:border-white/20"
+                  "p-6 sm:p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl text-left flex flex-col transition-all duration-300",
+                  plan.isPopular ? "border-amber-500/50 shadow-2xl shadow-amber-500/10 lg:col-span-2" : "hover:border-white/20"
                 )}>
                   <h3 className={cn("text-2xl font-semibold mb-2", plan.isPopular ? "text-amber-400" : "text-white")}>{plan.name}</h3>
                   <div className="flex items-baseline gap-2 mb-4">
@@ -307,7 +322,7 @@ const SaaSLandingView = () => {
         </section>
         
         {/* Contact Section */}
-        <section id="contact" className="py-20 sm:py-32 px-4">
+        <section id="contact" className="py-16 sm:py-24 px-4">
            <div className="max-w-2xl mx-auto text-center">
               <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">Ai întrebări?</h2>
               <p className="text-lg text-slate-400 mb-12">Completează formularul de mai jos și revenim cu un răspuns în cel mai scurt timp.</p>
@@ -338,3 +353,5 @@ const SaaSLandingView = () => {
 }; 
 
 export default SaaSLandingView;
+
+    
