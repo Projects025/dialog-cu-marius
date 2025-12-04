@@ -30,6 +30,7 @@ const useInView = (options?: IntersectionObserverInit) => {
 
     return () => {
       if (ref.current) {
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         observer.unobserve(ref.current);
       }
     };
@@ -122,9 +123,9 @@ const SaaSLandingView = () => {
             </div>
             
             <h1 className="text-4xl md:text-7xl font-bold tracking-tight leading-tight">
-              Digitalizeaza-ti <br />
+              Digitalizează-ți <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-200 to-slate-500">
-                Viata si Sanatatea
+                Viața și Sănătatea
               </span>
             </h1>
             
@@ -148,7 +149,7 @@ const SaaSLandingView = () => {
           </div>
           
           {/* Features Grid */}
-            <div className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl animate-fade-in-up opacity-0" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
+            <div className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl animate-fade-in-up opacity-0" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
             {[
               {
                 title: "Formulare Dinamice",
@@ -178,14 +179,14 @@ const SaaSLandingView = () => {
                 )
               }
             ].map((item, i) => (
-                <div key={i} className="group relative p-6 sm:p-8 rounded-3xl bg-slate-900/40 border border-white/10 backdrop-blur-sm transition-all duration-300 text-left overflow-hidden hover:border-amber-500/30">
+                <div key={i} className="group relative p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-slate-900 to-purple-950/50 border border-white/10 backdrop-blur-sm transition-all duration-300 text-left overflow-hidden hover:border-primary/50">
                   {/* Spotlight Effect */}
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{
-                    background: 'radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0) 70%)',
+                  <div className="absolute -inset-px rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{
+                    background: 'radial-gradient(circle at 50% 50%, hsl(var(--primary) / 0.15) 0%, transparent 70%)',
                   }}></div>
 
                   <div className="relative z-10">
-                    <div className="w-14 h-14 mb-6 rounded-2xl bg-slate-800/60 border border-white/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                    <div className="w-14 h-14 mb-6 rounded-2xl bg-slate-800/80 border border-white/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
                       {item.icon}
                     </div>
                     <h3 className="text-xl font-bold text-white mb-2">{item.title}</h3>
