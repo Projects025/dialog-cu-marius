@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from "react";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { collection, query, where, getDocs, orderBy, doc, updateDoc, addDoc, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-import { format, parseISO } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 
 import { auth, db } from "@/lib/firebaseConfig";
@@ -33,19 +33,24 @@ const LeadDetailItem = ({ label, value }: { label: string, value: any }) => {
     }
 
     let displayValue;
-    if (typeof value === 'number') {
+    // Check if it's a date-like value
+    const isDateObject = value instanceof Date;
+    const isFirebaseTimestamp = value && typeof value.toDate === 'function';
+    
+    if (isDateObject || isFirebaseTimestamp) {
+        const dateToFormat = isFirebaseTimestamp ? value.toDate() : value;
+        if (isValid(dateToFormat)) {
+            displayValue = format(dateToFormat, 'dd/MM/yyyy HH:mm');
+        } else {
+            displayValue = 'Dată invalidă';
+        }
+    } else if (typeof value === 'number') {
         displayValue = value.toLocaleString('ro-RO');
-    } else if (value instanceof Date) { // Check for Date object first
-        displayValue = format(value, 'dd/MM/yyyy HH:mm');
-    } else if (typeof value === 'string' && !isNaN(Date.parse(value))) { // Then check for valid date string
-        const date = parseISO(value);
-        displayValue = format(date, 'dd/MM/yyyy HH:mm');
     } else if (typeof value === 'boolean') {
         displayValue = value ? 'Da' : 'Nu';
     } else if (Array.isArray(value)) {
         displayValue = value.join(', ');
-    }
-    else {
+    } else {
         displayValue = String(value);
     }
     
@@ -344,3 +349,5 @@ export default function LeadsPage() {
     </div>
   );
 }
+
+    
