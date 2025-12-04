@@ -25,8 +25,7 @@ if (!getApps().length) {
 
 const auth = getAuth(app);
 const db = getFirestore(app);
-// Inițializăm funcțiile fără a specifica regiunea; SDK-ul o va detecta automat.
-// Acest lucru este mai robust, în special în medii de dezvoltare.
-const functions = getFunctions(app);
+// Specificarea regiunii este OBLIGATORIE pentru a apela funcția corectă a extensiei Stripe.
+const functions = getFunctions(app, 'europe-west3');
 
 export { app, auth, db, functions };
