@@ -20,7 +20,7 @@ const LeadCard = ({ lead, onStatusChange, onCardClick }: { lead: any; onStatusCh
     };
     
     return (
-        <Card onClick={onCardClick} className="cursor-pointer flex flex-col transition-all hover:border-primary/50">
+        <Card onClick={onCardClick} className="cursor-pointer flex flex-col transition-all bg-muted/30 hover:border-primary/50">
              <CardContent className="p-4 flex-grow">
                 <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10">
@@ -31,7 +31,7 @@ const LeadCard = ({ lead, onStatusChange, onCardClick }: { lead: any; onStatusCh
                     <div className="flex-grow">
                          <p className="font-bold text-base leading-tight">{lead.contact?.name || "N/A"}</p>
                          <p className="text-xs text-muted-foreground">
-                            {lead.timestamp ? format(lead.timestamp, 'dd/MM/yyyy') : 'N/A'}
+                            {lead.timestamp ? format(new Date(lead.timestamp), 'dd/MM/yyyy') : 'N/A'}
                          </p>
                     </div>
                     <Badge variant={lead.source === 'Manual' ? 'secondary' : 'default'} className="text-xs self-start">{lead.source || 'N/A'}</Badge>
@@ -51,7 +51,7 @@ const LeadCard = ({ lead, onStatusChange, onCardClick }: { lead: any; onStatusCh
                     )}
                 </div>
             </CardContent>
-            <CardFooter className="p-3 bg-muted/30 border-t">
+            <CardFooter className="p-3 bg-muted/50 border-t">
                  <Select 
                     value={lead.status || "Nou"}
                     onValueChange={(newStatus) => {
@@ -80,3 +80,5 @@ const LeadCard = ({ lead, onStatusChange, onCardClick }: { lead: any; onStatusCh
 }
 
 export default LeadCard;
+
+    

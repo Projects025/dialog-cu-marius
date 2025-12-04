@@ -33,17 +33,11 @@ const LeadDetailItem = ({ label, value }: { label: string, value: any }) => {
     }
 
     let displayValue;
-    // Check if it's a date-like value
-    const isDateObject = value instanceof Date;
     const isFirebaseTimestamp = value && typeof value.toDate === 'function';
-    
-    if (isDateObject || isFirebaseTimestamp) {
-        const dateToFormat = isFirebaseTimestamp ? value.toDate() : value;
-        if (isValid(dateToFormat)) {
-            displayValue = format(dateToFormat, 'dd/MM/yyyy HH:mm');
-        } else {
-            displayValue = 'Dată invalidă';
-        }
+    const dateToFormat = isFirebaseTimestamp ? value.toDate() : new Date(value);
+
+    if (isValid(dateToFormat) && (isFirebaseTimestamp || (typeof value === 'string' && value.includes('-')) || value instanceof Date)) {
+        displayValue = format(dateToFormat, 'dd/MM/yyyy HH:mm');
     } else if (typeof value === 'number') {
         displayValue = value.toLocaleString('ro-RO');
     } else if (typeof value === 'boolean') {
@@ -166,14 +160,9 @@ export default function LeadsPage() {
         const leadRef = doc(db, "leads", leadId);
         await updateDoc(leadRef, { status: newStatus });
         setLeads(prevLeads => {
-            const leadIndex = prevLeads.findIndex(lead => lead.id === leadId);
-            if (leadIndex === -1) return prevLeads;
-
-            const newLeads = [...prevLeads];
-            const updatedLead = { ...newLeads[leadIndex], status: newStatus };
-            newLeads[leadIndex] = updatedLead;
-
-            return newLeads;
+            return prevLeads.map(lead => 
+                lead.id === leadId ? { ...lead, status: newStatus } : lead
+            );
         });
     } catch (error) {
         console.error("Error updating status:", error);
@@ -244,21 +233,25 @@ export default function LeadsPage() {
       </div>
 
       <Card className="no-print">
-          <CardContent className="p-4 flex flex-col md:flex-row gap-4">
+          <CardContent className="p-4 flex flex-col gap-4">
               <div className="relative flex-grow">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input placeholder="Caută după nume..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
               </div>
-              <div className="grid grid-cols-2 md:flex gap-2">
-                <Select value={statusFilter} onValueChange={setStatusFilter}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Toate Statusurile</SelectItem><SelectItem value="Nou">Nou</SelectItem><SelectItem value="De contactat">De contactat</SelectItem><SelectItem value="Contactat">Contactat</SelectItem><SelectItem value="Ofertă trimisă">Ofertă trimisă</SelectItem><SelectItem value="Convertit">Convertit</SelectItem><SelectItem value="Inactiv">Inactiv</SelectItem></SelectContent></Select>
-                <Select value={sourceFilter} onValueChange={setSourceFilter}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Toate Sursele</SelectItem><SelectItem value="Link Client">Link Client</SelectItem><SelectItem value="Manual">Manual</SelectItem></SelectContent></Select>
-                <Popover>
-                    <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-start text-left font-normal"><CalendarIcon className="mr-2 h-4 w-4" />{dateRange?.from ? (dateRange.to ? `${format(dateRange.from, "LLL dd, y")} - ${format(dateRange.to, "LLL dd, y")}` : format(dateRange.from, "LLL dd, y")) : <span>Alege data</span>}</Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0"><Calendar mode="range" selected={dateRange} onSelect={setDateRange} numberOfMonths={2} /></PopoverContent>
-                </Popover>
-                 {(searchTerm || statusFilter !== 'all' || sourceFilter !== 'all' || dateRange) && <Button variant="ghost" onClick={clearFilters}><X className="h-4 w-4 mr-2"/>Curăță</Button>}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:flex gap-2">
+                <div className="grid grid-cols-2 gap-2">
+                    <Select value={statusFilter} onValueChange={setStatusFilter}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Toate Statusurile</SelectItem><SelectItem value="Nou">Nou</SelectItem><SelectItem value="De contactat">De contactat</SelectItem><SelectItem value="Contactat">Contactat</SelectItem><SelectItem value="Ofertă trimisă">Ofertă trimisă</SelectItem><SelectItem value="Convertit">Convertit</SelectItem><SelectItem value="Inactiv">Inactiv</SelectItem></SelectContent></Select>
+                    <Select value={sourceFilter} onValueChange={setSourceFilter}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Toate Sursele</SelectItem><SelectItem value="Link Client">Link Client</SelectItem><SelectItem value="Manual">Manual</SelectItem></SelectContent></Select>
+                </div>
+                <div className="flex gap-2">
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button variant="outline" className="w-full justify-start text-left font-normal"><CalendarIcon className="mr-2 h-4 w-4" />{dateRange?.from ? (dateRange.to ? `${format(dateRange.from, "LLL dd, y")} - ${format(dateRange.to, "LLL dd, y")}` : format(dateRange.from, "LLL dd, y")) : <span>Alege data</span>}</Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0"><Calendar mode="range" selected={dateRange} onSelect={setDateRange} numberOfMonths={2} /></PopoverContent>
+                    </Popover>
+                    {(searchTerm || statusFilter !== 'all' || sourceFilter !== 'all' || dateRange) && <Button variant="ghost" size="icon" onClick={clearFilters}><X className="h-4 w-4"/></Button>}
+                </div>
               </div>
           </CardContent>
           <CardContent className="p-4 pt-0 border-t">
@@ -307,7 +300,7 @@ export default function LeadsPage() {
       </div>
 
       <Dialog open={!!selectedLead} onOpenChange={(isOpen) => !isOpen && setSelectedLead(null)}>
-            <DialogContent className="sm:max-w-lg no-print p-0">
+            <DialogContent className="sm:max-w-md no-print p-0">
                  <DialogHeader className="p-6 pb-4">
                     <div className="flex items-center gap-4">
                         <Avatar className="h-12 w-12"><AvatarFallback className="bg-primary/20 text-primary font-bold"><UserIcon /></AvatarFallback></Avatar>
