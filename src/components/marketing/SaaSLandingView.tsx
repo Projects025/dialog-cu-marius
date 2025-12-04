@@ -1,3 +1,4 @@
+
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
@@ -176,26 +177,26 @@ const SaaSLandingView = () => {
 
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
-              <Link 
+               <Link 
                 href="/login?mode=signup" 
-                className="group relative px-8 py-4 bg-amber-500 text-slate-950 font-bold rounded-full shadow-[0_0_30px_-10px_rgba(245,158,11,0.5)] hover:scale-105 transition-transform duration-300"
+                className="group relative inline-block px-8 py-4 bg-gradient-to-b from-amber-400 to-amber-500 text-slate-950 font-bold rounded-full hover:scale-105 transition-transform duration-300 shadow-[0_0_40px_-10px_theme(colors.amber.500)]"
               >
                   <span className="relative z-10">Începe Gratuit</span>
-                  <div className="absolute inset-0 rounded-full bg-inherit shadow-[inset_0_2px_0_rgba(255,255,255,0.4),inset_0_-2px_2px_rgba(0,0,0,0.2)]"></div>
-                  <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" 
-                       style={{background: 'radial-gradient(circle at 50% -20%, hsl(var(--primary) / 0.7), transparent 70%)'}}>
-                  </div>
+                  {/* Inner Highlight */}
+                  <div className="absolute top-[1px] left-[1px] right-[1px] h-8 rounded-full bg-white/30 blur-[10px] opacity-70"></div>
+                  {/* Glossy overlay */}
+                  <div className="absolute inset-0 rounded-full" style={{background: 'radial-gradient(circle at 50% -20%, hsl(var(--primary) / 0.7), transparent 70%)'}}></div>
               </Link>
             </div>
           </div>
           
           {/* Features Grid */}
-          <div className="mt-32 grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl animate-fade-in-up opacity-0" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
+           <div className="mt-32 grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl animate-fade-in-up opacity-0" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
             {features.map((item, i) => (
-              <div key={i} className="group relative p-8 rounded-3xl text-left transition-all duration-300 overflow-hidden bg-slate-900/40 backdrop-blur-2xl border border-white/5 hover:border-amber-500/30">
-                {/* Efectul de lumina */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{
-                  background: `radial-gradient(circle at 40px 40px, ${item.icon.props.className.includes('text-amber-400') ? 'hsl(var(--primary) / 0.15)' : item.icon.props.className.includes('text-blue-400') ? 'hsl(217, 91%, 60%, 0.15)' : 'hsl(262, 85%, 60%, 0.15)'} 0%, transparent 60%)`,
+              <div key={i} className="group relative p-8 rounded-3xl text-left transition-all duration-300 overflow-hidden bg-slate-900/50 backdrop-blur-2xl border-t border-t-white/10 border-x border-x-white/5 border-b border-b-black/20 hover:border-amber-500/30">
+                {/* Spotlight Effect */}
+                <div className="absolute -inset-px opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl" style={{
+                  background: `radial-gradient(300px at 50px 50px, ${item.icon.props.className.includes('text-amber-400') ? 'hsl(var(--primary) / 0.15)' : item.icon.props.className.includes('text-blue-400') ? 'hsl(217, 91%, 60%, 0.15)' : 'hsl(262, 85%, 60%, 0.15)'} 0%, transparent 80%)`,
                 }}></div>
 
                 <div className="relative z-10">
