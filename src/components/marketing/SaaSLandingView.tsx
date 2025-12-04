@@ -191,7 +191,7 @@ const SaaSLandingView = () => {
               Primul CRM conversațional care educă clientul și îți filtrează lead-urile automat. Concentrează-te pe rezultate, nu pe blocaje.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
                <Link 
                 href="/login?mode=signup" 
                 className="group relative inline-block px-8 py-4 bg-gradient-to-b from-amber-400 to-amber-500 text-slate-950 font-bold rounded-full hover:scale-105 transition-transform duration-300 shadow-[0_0_40px_-10px_theme(colors.amber.500)]"
@@ -206,9 +206,9 @@ const SaaSLandingView = () => {
           </div>
           
           {/* Features Grid */}
-           <div className="mt-28 grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl animate-fade-in-up opacity-0" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
+           <div className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl animate-fade-in-up opacity-0" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
             {features.map((item, i) => (
-              <div key={i} className="group relative p-8 rounded-2xl text-left transition-all duration-300 overflow-hidden bg-slate-900/50 backdrop-blur-2xl border-t border-t-white/10 border-x border-x-white/5 hover:border-amber-500/30">
+              <div key={i} className="group relative p-8 rounded-2xl text-left transition-all duration-300 overflow-hidden bg-gradient-to-br from-slate-900 to-purple-950/50 backdrop-blur-2xl border-t border-t-white/10 border-x border-x-white/5 hover:border-amber-500/30">
                 {/* Spotlight Effect */}
                 <div className="absolute -inset-px opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl" style={{
                   background: `radial-gradient(300px at 50px 50px, ${item.icon.props.className.includes('text-amber-400') ? 'hsl(var(--primary) / 0.1)' : item.icon.props.className.includes('text-blue-400') ? 'hsl(217, 91%, 60%, 0.1)' : 'hsl(262, 85%, 60%, 0.1)'} 0%, transparent 80%)`,
@@ -227,7 +227,7 @@ const SaaSLandingView = () => {
         </main>
         
         {/* Light Beam Separator */}
-        <div className="relative w-full h-24 flex items-center justify-center my-8">
+        <div className="relative w-full h-16 flex items-center justify-center my-4">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl h-[1px] bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-32 bg-amber-500/10 blur-3xl"></div>
         </div>
@@ -273,11 +273,11 @@ const SaaSLandingView = () => {
           <div className="max-w-7xl mx-auto text-center">
             <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-12">Alege planul potrivit pentru tine</h2>
             
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {plans.map((plan, i) => (
                 <div key={i} className={cn(
                   "p-6 sm:p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl text-left flex flex-col transition-all duration-300",
-                  plan.isPopular ? "border-amber-500/50 shadow-2xl shadow-amber-500/10 lg:col-span-2" : "hover:border-white/20"
+                   plan.isPopular ? "border-amber-500/50 shadow-2xl shadow-amber-500/10" : "hover:border-white/20"
                 )}>
                   <h3 className={cn("text-2xl font-semibold mb-2", plan.isPopular ? "text-amber-400" : "text-white")}>{plan.name}</h3>
                   <div className="flex items-baseline gap-2 mb-4">
@@ -353,5 +353,3 @@ const SaaSLandingView = () => {
 }; 
 
 export default SaaSLandingView;
-
-    
