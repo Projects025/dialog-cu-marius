@@ -31,7 +31,7 @@ const LeadCard = ({ lead, onStatusChange, onCardClick }: { lead: any; onStatusCh
                     <div className="flex-grow">
                          <p className="font-bold text-base leading-tight">{lead.contact?.name || "N/A"}</p>
                          <p className="text-xs text-muted-foreground">
-                            {lead.timestamp ? format(new Date(lead.timestamp), 'dd/MM/yyyy') : 'N/A'}
+                            {lead.timestamp && isValid(new Date(lead.timestamp)) ? format(new Date(lead.timestamp), 'dd/MM/yyyy') : 'N/A'}
                          </p>
                     </div>
                     <Badge variant={lead.source === 'Manual' ? 'secondary' : 'default'} className="text-xs self-start">{lead.source || 'N/A'}</Badge>
@@ -52,33 +52,30 @@ const LeadCard = ({ lead, onStatusChange, onCardClick }: { lead: any; onStatusCh
                 </div>
             </CardContent>
             <CardFooter className="p-3 bg-muted/50 border-t">
-                 <Select 
-                    value={lead.status || "Nou"}
-                    onValueChange={(newStatus) => {
-                        (event as React.MouseEvent).stopPropagation();
-                        onStatusChange(lead.id, newStatus);
-                    }}
-                >
-                    <SelectTrigger className="w-full h-9 text-xs">
-                        <div className="flex items-center gap-2">
-                             <div className={`w-2 h-2 rounded-full ${lead.status === 'Convertit' ? 'bg-green-500' : 'bg-primary'}`}></div>
-                             <SelectValue />
-                        </div>
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="Nou">Nou</SelectItem>
-                        <SelectItem value="De contactat">De contactat</SelectItem>
-                        <SelectItem value="Contactat">Contactat</SelectItem>
-                        <SelectItem value="Ofertă trimisă">Ofertă trimisă</SelectItem>
-                        <SelectItem value="Convertit">Convertit</SelectItem>
-                        <SelectItem value="Inactiv">Inactiv</SelectItem>
-                    </SelectContent>
-                </Select>
+                <div className="w-full" onClick={(e) => e.stopPropagation()}>
+                    <Select 
+                        value={lead.status || "Nou"}
+                        onValueChange={(newStatus) => onStatusChange(lead.id, newStatus)}
+                    >
+                        <SelectTrigger className="w-full h-9 text-xs">
+                            <div className="flex items-center gap-2">
+                                 <div className={`w-2 h-2 rounded-full ${lead.status === 'Convertit' ? 'bg-green-500' : 'bg-primary'}`}></div>
+                                 <SelectValue />
+                            </div>
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="Nou">Nou</SelectItem>
+                            <SelectItem value="De contactat">De contactat</SelectItem>
+                            <SelectItem value="Contactat">Contactat</SelectItem>
+                            <SelectItem value="Ofertă trimisă">Ofertă trimisă</SelectItem>
+                            <SelectItem value="Convertit">Convertit</SelectItem>
+                            <SelectItem value="Inactiv">Inactiv</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
             </CardFooter>
         </Card>
     )
 }
 
 export default LeadCard;
-
-    

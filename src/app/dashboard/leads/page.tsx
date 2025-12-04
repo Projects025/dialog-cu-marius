@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from "react";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { collection, query, where, getDocs, orderBy, doc, updateDoc, addDoc, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-import { format, isValid } from 'date-fns';
+import { format, isValid, parseISO } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 
 import { auth, db } from "@/lib/firebaseConfig";
@@ -33,10 +33,21 @@ const LeadDetailItem = ({ label, value }: { label: string, value: any }) => {
     }
 
     let displayValue;
-    const isFirebaseTimestamp = value && typeof value.toDate === 'function';
-    const dateToFormat = isFirebaseTimestamp ? value.toDate() : new Date(value);
+    let dateToFormat: Date | null = null;
+    
+    if (value && typeof value.toDate === 'function') {
+        dateToFormat = value.toDate(); // Firestore Timestamp
+    } else if (value instanceof Date) {
+        dateToFormat = value; // JavaScript Date object
+    } else if (typeof value === 'string') {
+        const parsedDate = parseISO(value); // Try to parse ISO string
+        if (isValid(parsedDate)) {
+            dateToFormat = parsedDate;
+        }
+    }
+    
 
-    if (isValid(dateToFormat) && (isFirebaseTimestamp || (typeof value === 'string' && value.includes('-')) || value instanceof Date)) {
+    if (dateToFormat && isValid(dateToFormat)) {
         displayValue = format(dateToFormat, 'dd/MM/yyyy HH:mm');
     } else if (typeof value === 'number') {
         displayValue = value.toLocaleString('ro-RO');
@@ -103,7 +114,7 @@ export default function LeadsPage() {
             return {
               id: doc.id,
               ...data,
-              timestamp: data.timestamp?.toDate()
+              timestamp: data.timestamp?.toDate() // Convert Firestore Timestamp to JS Date
             }
           });
           setLeads(leadsData);
@@ -136,18 +147,16 @@ export default function LeadsPage() {
         const sourceMatch = sourceFilter !== 'all' ? lead.source === sourceFilter : true;
 
         let dateMatch = true;
-        if (dateRange?.from) {
-             if (!lead.timestamp) {
-                dateMatch = false;
-            } else {
-                const leadDate = lead.timestamp;
-                dateMatch = leadDate >= dateRange.from;
-                if (dateRange.to) {
-                    const toDate = new Date(dateRange.to);
-                    toDate.setHours(23, 59, 59, 999);
-                    dateMatch = dateMatch && leadDate <= toDate;
-                }
-            }
+        if (dateRange?.from && lead.timestamp && isValid(new Date(lead.timestamp))) {
+             const leadDate = new Date(lead.timestamp);
+             dateMatch = leadDate >= dateRange.from;
+             if (dateRange.to) {
+                 const toDate = new Date(dateRange.to);
+                 toDate.setHours(23, 59, 59, 999);
+                 dateMatch = dateMatch && leadDate <= toDate;
+             }
+        } else if (dateRange?.from) {
+            dateMatch = false;
         }
 
         return nameMatch && statusMatch && sourceMatch && dateMatch;
@@ -159,11 +168,11 @@ export default function LeadsPage() {
     try {
         const leadRef = doc(db, "leads", leadId);
         await updateDoc(leadRef, { status: newStatus });
-        setLeads(prevLeads => {
-            return prevLeads.map(lead => 
+        setLeads(prevLeads => 
+            prevLeads.map(lead => 
                 lead.id === leadId ? { ...lead, status: newStatus } : lead
-            );
-        });
+            )
+        );
     } catch (error) {
         console.error("Error updating status:", error);
     }
@@ -277,17 +286,19 @@ export default function LeadsPage() {
                         {loading ? <TableRow><TableCell colSpan={6} className="text-center h-24">Se încarcă...</TableCell></TableRow> : filteredLeads.length > 0 ? (
                             filteredLeads.map((lead) => (
                             <TableRow key={lead.id} className="hover:bg-muted/30">
-                                <TableCell className="text-xs">{lead.timestamp ? format(lead.timestamp, 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                                <TableCell className="text-xs">{lead.timestamp && isValid(new Date(lead.timestamp)) ? format(new Date(lead.timestamp), 'dd/MM/yyyy') : 'N/A'}</TableCell>
                                 <TableCell className="font-medium">{lead.contact?.name || "N/A"}</TableCell>
                                 <TableCell><div className="flex flex-col"><span className="text-xs">{lead.contact?.email || ""}</span><span className="text-xs text-muted-foreground">{lead.contact?.phone || ""}</span></div></TableCell>
                                 <TableCell><Badge variant={lead.source === 'Manual' ? 'secondary' : 'default'} className="text-xs">{lead.source || 'N/A'}</Badge></TableCell>
                                 <TableCell><Badge variant={getStatusBadgeVariant(lead.status || 'Nou')} className="text-xs">{lead.status || "Nou"}</Badge></TableCell>
                                 <TableCell className="text-right no-print">
                                     <Button variant="ghost" size="sm" onClick={() => setSelectedLead(lead)}>Detalii</Button>
+                                    <div className="inline-block" onClick={(e) => e.stopPropagation()}>
                                     <Select value={lead.status || "Nou"} onValueChange={(newStatus) => handleStatusChange(lead.id, newStatus)}>
                                       <SelectTrigger className="w-32 h-8 text-xs inline-flex ml-2"><SelectValue /></SelectTrigger>
                                       <SelectContent><SelectItem value="Nou">Nou</SelectItem><SelectItem value="De contactat">De contactat</SelectItem><SelectItem value="Contactat">Contactat</SelectItem><SelectItem value="Ofertă trimisă">Ofertă trimisă</SelectItem><SelectItem value="Convertit">Convertit</SelectItem><SelectItem value="Inactiv">Inactiv</SelectItem></SelectContent>
                                     </Select>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                             ))
@@ -342,5 +353,3 @@ export default function LeadsPage() {
     </div>
   );
 }
-
-    
