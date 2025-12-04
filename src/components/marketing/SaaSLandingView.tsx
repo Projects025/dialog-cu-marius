@@ -1,11 +1,9 @@
 
 "use client";
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/ui/Navbar';
 import Footer from '@/components/ui/Footer';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -96,10 +94,15 @@ const SaaSLandingView = () => {
               </span>
             </h1>
             
-             <div className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-light space-y-4">
-                <p className="text-balance">Primul CRM conversațional care educă clientul și îți filtrează <span className="whitespace-nowrap">lead-urile</span> automat.</p>
-                <p className="text-balance">Abordează clienții cu încredere și valorifică fiecare oportunitate din portofoliu. <span className="font-medium text-slate-300">Concentrează-te pe rezultate, nu pe blocaje.</span></p>
+            <div className="max-w-3xl mx-auto text-lg md:text-xl text-slate-300 space-y-6 mb-10">
+                <p className="text-balance">
+                    Primul CRM conversațional care educă clientul și îți filtrează <span className="whitespace-nowrap">lead-urile</span> automat.
+                </p>
+                <p className="text-balance">
+                    Abordează clienții cu încredere și valorifică fiecare oportunitate din portofoliu. <span className="font-medium text-slate-400">Concentrează-te pe rezultate, nu pe blocaje.</span>
+                </p>
             </div>
+
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
               <Link href="/login?mode=signup" className="px-8 py-4 bg-amber-500 text-slate-950 font-bold rounded-full shadow-[0_0_30px_-10px_rgba(245,158,11,0.5)] hover:scale-105 transition-transform">
