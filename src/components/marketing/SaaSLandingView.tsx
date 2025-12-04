@@ -95,10 +95,10 @@ const SaaSLandingView = () => {
             </h1>
             
             <div className="max-w-2xl mx-auto text-lg md:text-xl text-slate-300 space-y-6 mb-10">
-                <p className="text-balance">
+                <p className="max-w-xl mx-auto">
                     Primul CRM conversațional care educă clientul și îți filtrează <span className="whitespace-nowrap">lead-urile</span> automat.
                 </p>
-                <p className="text-balance">
+                <p className="max-w-xl mx-auto text-slate-400">
                     Abordează clienții cu încredere și valorifică fiecare oportunitate din portofoliu. <span className="font-medium text-slate-400">Concentrează-te pe rezultate, nu pe blocaje.</span>
                 </p>
             </div>
