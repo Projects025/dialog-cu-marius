@@ -104,6 +104,39 @@ const SaaSLandingView = () => {
   const [chatRef, isChatInView] = useInView({ threshold: 0.5 });
 
 
+  const features = [
+    {
+      title: "Formulare Dinamice",
+      desc: "Clientul parcurge singur analiza, ghidat de un asistent virtual inteligent.",
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+        </svg>
+      ),
+      number: "01"
+    },
+    {
+      title: "Link Personalizat",
+      desc: "Primești propriul tău URL unic pentru a colecta lead-uri de oriunde.",
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+        </svg>
+      ),
+      number: "02"
+    },
+    {
+      title: "CRM Integrat",
+      desc: "Vezi lead-urile în timp real, gestionează statusul și închide mai multe deal-uri.",
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+        </svg>
+      ),
+      number: "03"
+    }
+  ];
+
   return (
     <div className='h-screen w-full bg-slate-950 text-white relative overflow-y-auto overflow-x-hidden no-scrollbar'>
       <Navbar />
@@ -150,40 +183,21 @@ const SaaSLandingView = () => {
           
           {/* Features Grid */}
             <div className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl animate-fade-in-up opacity-0" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
-            {[
-              {
-                title: "Formulare Dinamice",
-                desc: "Clientul parcurge singur analiza, ghidat de un asistent virtual inteligent.",
-                icon: (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                  </svg>
-                )
-              },
-              {
-                title: "Link Personalizat",
-                desc: "Primești propriul tău URL unic pentru a colecta lead-uri de oriunde.",
-                icon: (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
-                  </svg>
-                )
-              },
-              {
-                title: "CRM Integrat",
-                desc: "Vezi lead-urile în timp real, gestionează statusul și închide mai multe deal-uri.",
-                icon: (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-                  </svg>
-                )
-              }
-            ].map((item, i) => (
-                <div key={i} className="group relative p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-slate-900 to-purple-950/50 border border-white/10 backdrop-blur-sm transition-all duration-300 text-left overflow-hidden hover:border-primary/50">
-                  {/* Spotlight Effect */}
-                  <div className="absolute -inset-px rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{
-                    background: 'radial-gradient(circle at 50% 50%, hsl(var(--primary) / 0.15) 0%, transparent 70%)',
+            {features.map((item, i) => (
+                <div key={i} className="group relative p-6 sm:p-8 rounded-3xl bg-slate-900/40 backdrop-blur-xl transition-all duration-300 text-left overflow-hidden [--glow-color:hsl(var(--primary))]
+                                        before:absolute before:inset-0 before:-translate-x-full before:transition-transform before:duration-700 before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent
+                                        hover:before:translate-x-full">
+                  {/* Bordura cu gradient */}
+                  <div className="absolute inset-0 rounded-3xl border border-transparent [background:linear-gradient(120deg,rgba(255,255,255,0.1)_0%,rgba(255,255,255,0)_50%,rgba(255,255,255,0.1)_100%)_border-box] 
+                                          [mask:linear-gradient(#fff_0_0)_padding-box,linear-gradient(#fff_0_0)] [mask-composite:exclude]"></div>
+                  
+                  {/* Lumina spotlight */}
+                  <div className="absolute -inset-px rounded-3xl opacity-0 transition-opacity duration-500 group-hover:opacity-100" style={{
+                    background: 'radial-gradient(circle at 50% 50%, hsl(var(--primary) / 0.1) 0%, transparent 70%)',
                   }}></div>
+                  
+                  {/* Watermark Number */}
+                  <span className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 text-[200px] font-bold text-white/5 pointer-events-none z-0">{item.number}</span>
 
                   <div className="relative z-10">
                     <div className="w-14 h-14 mb-6 rounded-2xl bg-slate-800/80 border border-white/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
