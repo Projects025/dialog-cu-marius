@@ -170,18 +170,17 @@ export default function LeadsPage() {
 }, [leads, searchTerm, statusFilter, sourceFilter, dateRange]);
 
 
-  const handleStatusChange = async (leadId: string, newStatus: string) => {
-    try {
-        const leadRef = doc(db, "leads", leadId);
-        await updateDoc(leadRef, { status: newStatus });
-        setLeads(prevLeads => 
-            prevLeads.map(lead => 
-                lead.id === leadId ? { ...lead, status: newStatus } : lead
-            )
-        );
-    } catch (error) {
-        console.error("Error updating status:", error);
-    }
+  const handleStatusChange = (leadId: string, newStatus: string) => {
+    const leadRef = doc(db, "leads", leadId);
+    updateDoc(leadRef, { status: newStatus }).then(() => {
+      setLeads(prevLeads =>
+        prevLeads.map(lead =>
+          lead.id === leadId ? { ...lead, status: newStatus } : lead
+        )
+      );
+    }).catch(error => {
+      console.error("Error updating status:", error);
+    });
   };
 
   const handleSaveClient = async () => {
@@ -296,7 +295,7 @@ export default function LeadsPage() {
                                 <TableCell className="text-xs">{lead.timestamp && isValid(lead.timestamp.toDate ? lead.timestamp.toDate() : new Date(lead.timestamp)) ? format(lead.timestamp.toDate ? lead.timestamp.toDate() : new Date(lead.timestamp), 'dd/MM/yyyy') : 'N/A'}</TableCell>
                                 <TableCell className="font-medium">{lead.contact?.name || "N/A"}</TableCell>
                                 <TableCell><div className="flex flex-col"><span className="text-xs">{lead.contact?.email || ""}</span><span className="text-xs text-muted-foreground">{lead.contact?.phone || ""}</span></div></TableCell>
-                                <TableCell><Badge variant={lead.source === 'Manual' ? 'secondary' : 'default'} className="text-xs">{lead.source || 'N/A'}</Badge></TableCell>
+                                <TableCell><Badge variant={lead.source === 'Manual' ? 'secondary' : 'outline'} className="text-xs">{lead.source || 'N/A'}</Badge></TableCell>
                                 <TableCell><Badge variant={getStatusBadgeVariant(lead.status || 'Nou')} className="text-xs">{lead.status || "Nou"}</Badge></TableCell>
                                 <TableCell className="text-right no-print">
                                     <Button variant="default" size="sm" onClick={() => setSelectedLead(lead)}>Detalii</Button>
@@ -325,7 +324,7 @@ export default function LeadsPage() {
                         <div>
                              <DialogTitle className="text-xl mb-1">{selectedLead?.contact?.name || 'Detalii Client'}</DialogTitle>
                              <div className="flex items-center gap-2">
-                                <Badge variant={selectedLead?.source === 'Manual' ? 'secondary' : 'default'}>{selectedLead?.source || 'N/A'}</Badge>
+                                <Badge variant={selectedLead?.source === 'Manual' ? 'secondary' : 'outline'}>{selectedLead?.source || 'N/A'}</Badge>
                                 <Badge variant={getStatusBadgeVariant(selectedLead?.status || 'Nou')}>{selectedLead?.status || 'Nou'}</Badge>
                              </div>
                         </div>

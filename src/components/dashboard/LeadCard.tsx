@@ -35,10 +35,10 @@ const LeadCard = ({ lead, onStatusChange, onCardClick }: { lead: any; onStatusCh
                     <div className="flex-grow">
                          <p className="font-bold text-base leading-tight">{lead.contact?.name || "N/A"}</p>
                          <p className="text-xs text-muted-foreground">
-                            {lead.timestamp && isValid(new Date(lead.timestamp)) ? format(new Date(lead.timestamp), 'dd/MM/yyyy') : 'N/A'}
+                            {lead.timestamp && isValid(lead.timestamp.toDate ? lead.timestamp.toDate() : new Date(lead.timestamp)) ? format(lead.timestamp.toDate ? lead.timestamp.toDate() : new Date(lead.timestamp), 'dd/MM/yyyy') : 'N/A'}
                          </p>
                     </div>
-                    <Badge variant={lead.source === 'Manual' ? 'secondary' : 'default'} className="text-xs self-start">{lead.source || 'N/A'}</Badge>
+                    <Badge variant={lead.source === 'Manual' ? 'secondary' : 'outline'} className="text-xs self-start">{lead.source || 'N/A'}</Badge>
                 </div>
                 <div className="mt-4 space-y-2.5 text-sm pl-2">
                     {lead.contact?.phone && (
