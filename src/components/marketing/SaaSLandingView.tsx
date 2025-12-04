@@ -128,13 +128,15 @@ const SaaSLandingView = () => {
               </span>
             </h1>
             
-            <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8 text-lg text-slate-400">
-               <p className='text-balance'>
-                  Primul CRM conversațional care educă clientul și îți filtrează <span className="text-slate-300 font-medium whitespace-nowrap">lead-urile</span> automat.
-               </p>
-                <p className='text-balance'>
-                   Abordează clienții cu încredere și valorifică fiecare oportunitate. <span className="font-medium text-slate-300">Concentrează-te pe rezultate, nu pe blocaje.</span>
-                </p>
+            <div className="max-w-7xl mx-auto text-lg md:text-xl mb-10 text-slate-400">
+               <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                    <div className="text-balance">
+                        Primul CRM conversațional care educă clientul și îți filtrează <span className="text-slate-300 font-medium whitespace-nowrap">lead-urile</span> automat.
+                    </div>
+                    <div className="text-balance">
+                       Abordează clienții cu încredere și valorifică fiecare oportunitate. <span className="font-medium text-slate-300">Concentrează-te pe rezultate, nu pe blocaje.</span>
+                    </div>
+                </div>
             </div>
 
 
@@ -196,17 +198,17 @@ const SaaSLandingView = () => {
              <p className="text-lg text-slate-400 mb-12 max-w-2xl mx-auto">PoliSafe este un asistent virtual care îl ajută pe client să conștientizeze vulnerabilitățile financiare și îl încurajează să ceară sprijinul agentului.</p>
             <div ref={chatRef} className="max-w-md mx-auto bg-slate-900/70 rounded-2xl p-6 border border-white/10 shadow-2xl">
               <div className="space-y-4 text-left text-sm">
-                <div className={cn("transition-all duration-500", isChatInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4")}>
+                <div className={cn("transition-all duration-700", isChatInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4")}>
                   <div className="inline-block bg-secondary text-secondary-foreground rounded-2xl rounded-bl-none p-3 max-w-[80%]">
                     Salut! Sunt Marius, agentul tău. Despre ce subiect vrei să discutăm?
                   </div>
                 </div>
-                <div className={cn("flex justify-end transition-all duration-500", isChatInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4")} style={{transitionDelay: '400ms'}}>
+                <div className={cn("flex justify-end transition-all duration-700", isChatInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4")} style={{transitionDelay: '700ms'}}>
                    <div className="inline-block bg-primary text-primary-foreground rounded-2xl rounded-br-none p-3 max-w-[80%]">
                     Aș vrea să știu mai multe despre siguranța familiei în caz de deces.
                   </div>
                 </div>
-                 <div className={cn("transition-all duration-500", isChatInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4")} style={{transitionDelay: '800ms'}}>
+                 <div className={cn("transition-all duration-700", isChatInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4")} style={{transitionDelay: '1400ms'}}>
                   <div className="inline-block bg-secondary text-secondary-foreground rounded-2xl rounded-bl-none p-3 max-w-[80%]">
                     Excelent. Vom parcurge 6 întrebări pentru a stabili exact care este deficitul financiar. Ești gata?
                   </div>
@@ -217,7 +219,7 @@ const SaaSLandingView = () => {
         </section>
 
         {/* Pricing Section */}
-        <section id="pricing" className="py-12 sm:py-16 px-4">
+        <section id="pricing" className="py-16 sm:py-24 px-4">
           <div className="max-w-7xl mx-auto text-center">
             <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-12">Alege planul potrivit pentru tine</h2>
             
