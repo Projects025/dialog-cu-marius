@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail } from "firebase/auth";
 import { doc, setDoc, collection, addDoc, onSnapshot } from "firebase/firestore";
 import { auth, db } from "@/lib/firebaseConfig";
 import { Button } from "@/components/ui/button";
@@ -12,9 +12,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import Navbar from "@/components/ui/Navbar";
 import Footer from "@/components/ui/Footer";
-import { Check, Loader2 } from "lucide-react";
+import { Check, Loader2, Mail, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+
 
 const plans = [
   {
@@ -37,6 +40,109 @@ const plans = [
     description: "Pentru echipe.",
   }
 ];
+
+function ResetPasswordDialog() {
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handlePasswordReset = async () => {
+    setError(null);
+    if (!email) {
+      setError("Te rog introdu adresa de email.");
+      return;
+    }
+    setLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, email);
+      // Indiferent dacă userul există sau nu, afișăm succes pentru securitate.
+      setIsSuccess(true);
+    } catch (err: any) {
+      if (err.code === 'auth/invalid-email') {
+        setError("Adresa de email nu are un format valid.");
+      } else {
+        // Pentru orice altă eroare (ex: network), tot afișăm succes pentru a nu expune informații.
+        setIsSuccess(true);
+        console.error("Password reset error:", err); // Logăm eroarea în consolă pentru debug.
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handleOpenChange = (open: boolean) => {
+    setIsDialogOpen(open);
+    if (!open) {
+      // Reset state on close
+      setTimeout(() => {
+        setEmail('');
+        setError(null);
+        setLoading(false);
+        setIsSuccess(false);
+      }, 300);
+    }
+  }
+
+  return (
+    <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
+      <DialogTrigger asChild>
+        <button className="text-xs text-amber-400 hover:underline mt-2 text-right w-full">Ai uitat parola?</button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Resetare Parolă</DialogTitle>
+          <DialogDescription>
+            {isSuccess ? "Verifică-ți emailul pentru instrucțiuni." : "Introdu adresa de email asociată contului tău."}
+          </DialogDescription>
+        </DialogHeader>
+        {isSuccess ? (
+          <div className="py-4 space-y-4">
+              <div className="text-center p-6 bg-green-900/20 rounded-lg">
+                <Mail className="mx-auto h-12 w-12 text-green-500 mb-4" />
+                <p className="text-foreground">Un email de resetare a fost trimis către <span className="font-bold">{email}</span>.</p>
+              </div>
+              <Alert variant="default" className="bg-amber-500/10 border-amber-500/30 text-amber-300">
+                <AlertTriangle className="h-4 w-4 !text-amber-400" />
+                <AlertDescription>
+                    Nu uita să verifici și folderul Spam / Junk dacă nu găsești email-ul.
+                </AlertDescription>
+              </Alert>
+          </div>
+        ) : (
+          <div className="py-4 space-y-4">
+            <div className="grid gap-2">
+              <Label htmlFor="reset-email">Email</Label>
+              <Input
+                id="reset-email"
+                type="email"
+                placeholder="exemplu@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handlePasswordReset()}
+              />
+               {error && <p className="text-sm text-red-500">{error}</p>}
+            </div>
+          </div>
+        )}
+        <DialogFooter>
+          {isSuccess ? (
+            <Button variant="outline" onClick={() => handleOpenChange(false)}>Închide</Button>
+          ) : (
+            <>
+              <Button variant="outline" onClick={() => handleOpenChange(false)} disabled={loading}>Anulează</Button>
+              <Button onClick={handlePasswordReset} disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {loading ? "Se trimite..." : "Trimite"}
+              </Button>
+            </>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 
 // Componenta care conține logica, pentru a putea fi înfășurată în Suspense
@@ -188,8 +294,11 @@ function LoginContent() {
                 <Input id="email" type="email" placeholder="agent@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-12 bg-white/5 border-white/10 placeholder:text-slate-500" />
                 </div>
                 <div className="space-y-2">
-                <Label htmlFor="password" className="text-slate-300">Parolă</Label>
-                <Input id="password" type="password" value={password} placeholder="Minim 6 caractere" onChange={(e) => setPassword(e.target.value)} required className="h-12 bg-white/5 border-white/10 placeholder:text-slate-500" />
+                    <div className="flex justify-between items-center">
+                        <Label htmlFor="password" className="text-slate-300">Parolă</Label>
+                         {!isSignUp && <ResetPasswordDialog />}
+                    </div>
+                    <Input id="password" type="password" value={password} placeholder="Minim 6 caractere" onChange={(e) => setPassword(e.target.value)} required className="h-12 bg-white/5 border-white/10 placeholder:text-slate-500" />
                 </div>
 
                 {isSignUp && (
