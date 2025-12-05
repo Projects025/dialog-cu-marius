@@ -407,9 +407,12 @@ const EndConversationModal = () => {
                         +40 745 288 882
                     </a>
                 </div>
+                 <div className="mt-6 border-t border-border/50 pt-6 text-xs text-foreground/60 italic text-left">
+                    <p>Acest instrument are scop exclusiv informativ și oferă estimări orientative bazate pe datele introduse. Nu reprezintă consultanță financiară și nu recomandă produse de asigurare. Pentru soluții financiare personalizate, este necesară o discuție cu un consultant autorizat, iar eu sunt disponibil dacă dorești.</p>
+                </div>
                 <Button 
                     variant="outline" 
-                    className="w-full mt-6"
+                    className="w-full mt-8"
                     onClick={() => window.location.reload()}
                 >
                     Înapoi la început
@@ -573,3 +576,5 @@ const renderMessageContent = (content: any) => {
 export default ChatView;
 
   
+
+    
