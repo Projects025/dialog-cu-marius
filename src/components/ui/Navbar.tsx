@@ -12,7 +12,7 @@ const Navbar = () => {
   return (
     <header className="fixed top-0 left-0 w-full z-50">
         <nav className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center bg-slate-950/50 backdrop-blur-xl border-b border-b-white/10 rounded-b-2xl m-2 mt-0">
-            <Link href="/" className="font-bold text-xl tracking-tight text-white">
+            <Link href="/" className="font-bold text-2xl tracking-tight text-white">
                 PoliSafe<span className="text-amber-500">;</span>
             </Link>
             <div className="flex gap-4 items-center">
