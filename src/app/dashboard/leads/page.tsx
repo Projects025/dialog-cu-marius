@@ -351,9 +351,11 @@ export default function LeadsPage() {
                             filteredGroupedLeads.map((group) => (
                             <TableRow key={group.id} className="hover:bg-muted/30">
                                 <TableCell className="text-xs">{group.latestLead.timestamp && isValid(group.latestLead.timestamp.toDate ? group.latestLead.timestamp.toDate() : new Date(group.latestLead.timestamp)) ? format(group.latestLead.timestamp.toDate ? group.latestLead.timestamp.toDate() : new Date(group.latestLead.timestamp), 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                                <TableCell className="font-medium flex items-center gap-2">
-                                  {group.latestLead.contact?.name || "N/A"}
-                                  {group.count > 1 && <Badge variant="secondary" className="text-xs">{group.count} Răsp.</Badge>}
+                                <TableCell className="font-medium">
+                                  <div className="flex items-center gap-2">
+                                    {group.latestLead.contact?.name || "N/A"}
+                                    {group.count > 1 && <Badge variant="secondary" className="text-xs">{group.count} Răsp.</Badge>}
+                                  </div>
                                 </TableCell>
                                 <TableCell><div className="flex flex-col"><span className="text-xs">{group.latestLead.contact?.email || ""}</span><span className="text-xs text-muted-foreground">{group.latestLead.contact?.phone || ""}</span></div></TableCell>
                                 <TableCell><Badge variant={group.latestLead.source === 'Manual' ? 'secondary' : 'outline'} className="text-xs">{group.latestLead.source || 'N/A'}</Badge></TableCell>

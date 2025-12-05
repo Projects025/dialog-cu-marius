@@ -33,10 +33,10 @@ const LeadCard = ({ lead, count, onStatusChange, onCardClick }: { lead: any; cou
                         </AvatarFallback>
                     </Avatar>
                     <div className="flex-grow">
-                         <p className="font-bold text-base leading-tight flex items-center gap-2">
+                         <div className="font-bold text-base leading-tight flex items-center gap-2">
                            {lead.contact?.name || "N/A"}
                            {count > 1 && <Badge variant="secondary" className="text-xs">{count} Răsp.</Badge>}
-                         </p>
+                         </div>
                          <p className="text-xs text-muted-foreground">
                             {lead.timestamp && isValid(lead.timestamp.toDate ? lead.timestamp.toDate() : new Date(lead.timestamp)) ? format(lead.timestamp.toDate ? lead.timestamp.toDate() : new Date(lead.timestamp), 'dd/MM/yyyy') : 'N/A'}
                          </p>
@@ -86,5 +86,3 @@ const LeadCard = ({ lead, count, onStatusChange, onCardClick }: { lead: any; cou
 }
 
 export default LeadCard;
-
-    
