@@ -23,10 +23,11 @@ import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/e
 import { Badge } from "@/components/ui/badge";
 import { FilePlus2, User as UserIcon, Search, Calendar as CalendarIcon, X, History, Trash2 } from "lucide-react";
 import LeadCard from "@/components/dashboard/LeadCard";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import ExportButtons from "@/components/dashboard/ExportButtons";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // --- Tipuri noi pentru gruparea lead-urilor ---
 interface Lead {
@@ -127,6 +128,7 @@ export default function LeadsPage() {
   const [allLeads, setAllLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const isMobile = useIsMobile();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newName, setNewName] = useState("");
@@ -380,47 +382,81 @@ export default function LeadsPage() {
       </div>
 
       <Dialog open={!!selectedGroup} onOpenChange={(isOpen) => !isOpen && handleCloseDetails()}>
-            <DialogContent className="max-w-4xl no-print p-0">
-                 <DialogHeader className="p-6 pb-4 border-b">
+            <DialogContent className="max-w-4xl w-full no-print p-0">
+                 <DialogHeader className="p-4 sm:p-6 pb-4 border-b">
                     <div className="flex items-center gap-4">
-                        <Avatar className="h-12 w-12"><AvatarFallback className="bg-primary/20 text-primary font-bold"><UserIcon /></AvatarFallback></Avatar>
+                        <Avatar className="h-12 w-12 hidden sm:flex"><AvatarFallback className="bg-primary/20 text-primary font-bold"><UserIcon /></AvatarFallback></Avatar>
                         <div>
                              <DialogTitle className="text-xl mb-1">{selectedGroup?.latestLead.contact?.name || 'Detalii Client'}</DialogTitle>
-                             <div className="flex items-center gap-2">
+                             <div className="flex items-center gap-2 flex-wrap">
                                 <Badge variant={selectedHistoryEntry?.source === 'Manual' ? 'secondary' : 'outline'}>{selectedHistoryEntry?.source || 'N/A'}</Badge>
                                 <Badge variant={getStatusBadgeVariant(selectedHistoryEntry?.status)}>{selectedHistoryEntry?.status || 'Nou'}</Badge>
                              </div>
                         </div>
                     </div>
                 </DialogHeader>
-                <div className={cn("grid", selectedGroup && selectedGroup.count > 1 ? "grid-cols-1 md:grid-cols-[200px_1fr]" : "grid-cols-1")}>
+                
+                {/* Responsive History/Details layout */}
+                <div className={cn(
+                    "grid", 
+                    (selectedGroup && selectedGroup.count > 1 && !isMobile) ? "grid-cols-1 md:grid-cols-[200px_1fr]" : "grid-cols-1"
+                )}>
+                  
+                  {/* History Section */}
                   {selectedGroup && selectedGroup.count > 1 && (
-                    <div className="border-r">
-                      <h3 className="text-sm font-semibold p-4 border-b">Istoric Completări</h3>
-                      <ScrollArea className="h-[60vh]">
-                        <ul>
-                          {selectedGroup.history.map(entry => (
-                            <li key={entry.id}>
-                              <button 
-                                onClick={() => setSelectedHistoryEntry(entry)}
-                                className={cn(
-                                  "w-full text-left p-4 text-sm hover:bg-muted/50 transition-colors",
-                                  selectedHistoryEntry?.id === entry.id && "bg-muted font-semibold"
-                                )}
-                              >
-                                {entry.timestamp && isValid(entry.timestamp.toDate ? entry.timestamp.toDate() : new Date(entry.timestamp)) 
-                                    ? format(entry.timestamp.toDate ? entry.timestamp.toDate() : new Date(entry.timestamp), 'dd MMM yyyy, HH:mm') 
-                                    : 'Dată invalidă'}
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      </ScrollArea>
-                    </div>
+                     isMobile ? (
+                        // Mobile: Horizontal Scroll
+                        <div className="p-4 border-b">
+                            <h3 className="text-sm font-semibold mb-2">Istoric Completări</h3>
+                            <ScrollArea className="w-full whitespace-nowrap">
+                                <div className="flex gap-2 pb-2">
+                                  {selectedGroup.history.map(entry => (
+                                    <Button 
+                                      key={entry.id}
+                                      variant={selectedHistoryEntry?.id === entry.id ? 'default' : 'outline'}
+                                      size="sm"
+                                      onClick={() => setSelectedHistoryEntry(entry)}
+                                      className="h-auto py-1.5 px-3"
+                                    >
+                                        {entry.timestamp && isValid(entry.timestamp.toDate ? entry.timestamp.toDate() : new Date(entry.timestamp)) 
+                                            ? format(entry.timestamp.toDate ? entry.timestamp.toDate() : new Date(entry.timestamp), 'dd MMM, HH:mm') 
+                                            : 'Dată invalidă'}
+                                    </Button>
+                                  ))}
+                                </div>
+                                <ScrollBar orientation="horizontal" />
+                            </ScrollArea>
+                        </div>
+                     ) : (
+                        // Desktop: Vertical List
+                        <div className="border-r">
+                          <h3 className="text-sm font-semibold p-4 border-b">Istoric Completări</h3>
+                          <ScrollArea className="h-[calc(80vh-150px)]">
+                            <ul>
+                              {selectedGroup.history.map(entry => (
+                                <li key={entry.id}>
+                                  <button 
+                                    onClick={() => setSelectedHistoryEntry(entry)}
+                                    className={cn(
+                                      "w-full text-left p-4 text-sm hover:bg-muted/50 transition-colors",
+                                      selectedHistoryEntry?.id === entry.id && "bg-muted font-semibold"
+                                    )}
+                                  >
+                                    {entry.timestamp && isValid(entry.timestamp.toDate ? entry.timestamp.toDate() : new Date(entry.timestamp)) 
+                                        ? format(entry.timestamp.toDate ? entry.timestamp.toDate() : new Date(entry.timestamp), 'dd MMM yyyy, HH:mm') 
+                                        : 'Dată invalidă'}
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          </ScrollArea>
+                        </div>
+                     )
                   )}
 
-                  <ScrollArea className="max-h-[60vh] md:max-h-auto">
-                    <div className="p-6 space-y-4">
+                  {/* Details Section */}
+                  <ScrollArea className={cn(isMobile ? "h-[calc(80vh-250px)]" : "h-[calc(80vh-150px)]")}>
+                    <div className="p-4 sm:p-6 space-y-4">
                         <div className="p-4 rounded-lg bg-muted/50">
                              <h3 className="text-sm font-semibold mb-2 text-foreground">Informații Contact</h3>
                              <dl className="divide-y divide-muted-foreground/20">
@@ -441,9 +477,9 @@ export default function LeadsPage() {
                             </dl>
                         </div>
                     </div>
-                </ScrollArea>
+                  </ScrollArea>
               </div>
-              <DialogFooter className="p-6 bg-muted/50 border-t"><Button variant="outline" onClick={handleCloseDetails}>Închide</Button></DialogFooter>
+              <DialogFooter className="p-4 sm:p-6 bg-muted/50 border-t"><Button variant="outline" onClick={handleCloseDetails}>Închide</Button></DialogFooter>
             </DialogContent>
         </Dialog>
     </div>
