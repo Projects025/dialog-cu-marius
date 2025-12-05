@@ -256,24 +256,38 @@ export default function FormsPage() {
         const masterData = {
           title: "Analiză Completă (Master)",
           description: "Versiunea finală cu textele complete pentru Deces, Pensie, Studii și Sănătate.",
-          startStepId: "secventa_intro",
+          startStepId: "intro_1",
           ownerId: null, 
           isTemplate: true,
           createdAt: new Date(),
           flow: {
-            secventa_intro: {
+            intro_1: {
               message: [
                 "Totul e bine… până într-o zi.",
                 "Viața are 4 momente care pot schimba cursul unei familii, patru momente care îți pot schimba definitiv stabilitatea financiară.",
-                "Două vin încet, le vezi de departe.\nDouă lovesc pe neașteptate.",
-                "Previzibile:\n\n1. Pensionarea – veniturile scad exact când nevoile cresc.\n2. Viitorul copiilor – studii, start în viață, cheltuieli complexe.",
-                "Imprevizibile:\n\n1. Decesul – lasă în urmă gol emoțional și vulnerabilitate financiară.\n2. Bolile grave – într-o zi ești bine, în următoarea totul se schimbă.",
-                "Toate patru au un impact emoțional dramatic și un impact financiar sever.\nAdevărul?",
-                "Pot fi gestionate dacă știi din timp cât de expus ești și ce impact ar avea asupra familiei tale."
+                "Două vin încet, le vezi de departe.\nDouă lovesc pe neașteptate."
               ],
               isProgressStep: true,
               actionType: "buttons", 
               options: [{label: "Continuă"}], 
+              nextStep: "intro_2"
+            },
+            intro_2: {
+              message: [
+                "Previzibile:\n\n1. Pensionarea – veniturile scad exact când nevoile cresc.\n2. Viitorul copiilor – studii, start în viață, cheltuieli complexe.",
+                "Imprevizibile:\n\n1. Decesul – lasă în urmă gol emoțional și vulnerabilitate financiară.\n2. Bolile grave – într-o zi ești bine, în următoarea totul se schimbă.",
+                "Toate patru au un impact emoțional dramatic și un impact financiar sever.\nAdevărul?"
+              ],
+              isProgressStep: true,
+              actionType: "buttons",
+              options: [{label: "Continuă"}],
+              nextStep: "intro_3"
+            },
+            intro_3: {
+              message: "Pot fi gestionate dacă știi din timp cât de expus ești și ce impact ar avea asupra familiei tale.",
+              isProgressStep: true,
+              actionType: "buttons",
+              options: [{label: "Continuă"}],
               nextStep: "alege_subiect"
             },
             alege_subiect: {
