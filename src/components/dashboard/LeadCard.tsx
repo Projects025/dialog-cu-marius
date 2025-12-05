@@ -8,7 +8,7 @@ import { Phone, Mail, User } from "lucide-react";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { format, isValid } from "date-fns";
 
-const LeadCard = ({ lead, onStatusChange, onCardClick }: { lead: any; onStatusChange: (leadId: string, newStatus: string) => void; onCardClick: () => void; }) => {
+const LeadCard = ({ lead, count, onStatusChange, onCardClick }: { lead: any; count: number, onStatusChange: (leadId: string, newStatus: string) => void; onCardClick: () => void; }) => {
     
     const getStatusBadgeVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
         switch (status) {
@@ -26,19 +26,22 @@ const LeadCard = ({ lead, onStatusChange, onCardClick }: { lead: any; onStatusCh
     return (
         <Card onClick={onCardClick} className="cursor-pointer flex flex-col transition-all bg-muted/40 hover:border-primary/50">
              <CardContent className="p-4 flex-grow">
-                <div className="flex items-center gap-3">
+                <div className="flex items-start gap-3">
                     <Avatar className="h-10 w-10">
                         <AvatarFallback className="bg-muted text-foreground/80 font-bold">
                            {lead.contact?.name?.charAt(0).toUpperCase() || <User size={20} />}
                         </AvatarFallback>
                     </Avatar>
                     <div className="flex-grow">
-                         <p className="font-bold text-base leading-tight">{lead.contact?.name || "N/A"}</p>
+                         <p className="font-bold text-base leading-tight flex items-center gap-2">
+                           {lead.contact?.name || "N/A"}
+                           {count > 1 && <Badge variant="secondary" className="text-xs">{count} Răsp.</Badge>}
+                         </p>
                          <p className="text-xs text-muted-foreground">
                             {lead.timestamp && isValid(lead.timestamp.toDate ? lead.timestamp.toDate() : new Date(lead.timestamp)) ? format(lead.timestamp.toDate ? lead.timestamp.toDate() : new Date(lead.timestamp), 'dd/MM/yyyy') : 'N/A'}
                          </p>
                     </div>
-                    <Badge variant={lead.source === 'Manual' ? 'secondary' : 'outline'} className="text-xs self-start">{lead.source || 'N/A'}</Badge>
+                    <Badge variant={lead.source === 'Manual' ? 'secondary' : 'outline'} className="text-xs self-start flex-shrink-0">{lead.source || 'N/A'}</Badge>
                 </div>
                 <div className="mt-4 space-y-2.5 text-sm pl-2">
                     {lead.contact?.phone && (
@@ -83,3 +86,5 @@ const LeadCard = ({ lead, onStatusChange, onCardClick }: { lead: any; onStatusCh
 }
 
 export default LeadCard;
+
+    

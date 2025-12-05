@@ -3,17 +3,17 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { onAuthStateChanged, type User } from "firebase/auth";
-import { collection, query, where, getDocs, orderBy, doc, updateDoc, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, query, where, getDocs, orderBy, doc, updateDoc, addDoc, serverTimestamp, deleteDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { format, isValid, parseISO } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 
 import { auth, db } from "@/lib/firebaseConfig";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -21,11 +21,66 @@ import { Calendar } from "@/components/ui/calendar";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/errors";
 import { Badge } from "@/components/ui/badge";
-import { FilePlus2, User as UserIcon, Search, Calendar as CalendarIcon, X } from "lucide-react";
+import { FilePlus2, User as UserIcon, Search, Calendar as CalendarIcon, X, History, Trash2 } from "lucide-react";
 import LeadCard from "@/components/dashboard/LeadCard";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ExportButtons from "@/components/dashboard/ExportButtons";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
+
+// --- Tipuri noi pentru gruparea lead-urilor ---
+interface Lead {
+  id: string;
+  contact?: { name?: string; email?: string; phone?: string };
+  timestamp: any;
+  status?: string;
+  source?: string;
+  [key: string]: any;
+}
+
+interface GroupedLead {
+  id: string; // Folosim email-ul ca ID unic pentru grup
+  latestLead: Lead;
+  history: Lead[];
+  count: number;
+}
+
+const groupLeadsByEmail = (leads: Lead[]): GroupedLead[] => {
+    if (!leads || leads.length === 0) return [];
+
+    const grouped = new Map<string, Lead[]>();
+
+    leads.forEach(lead => {
+        const email = lead.contact?.email?.toLowerCase() || `_manual_${lead.id}`;
+        if (!grouped.has(email)) {
+            grouped.set(email, []);
+        }
+        grouped.get(email)!.push(lead);
+    });
+
+    const result: GroupedLead[] = [];
+    grouped.forEach((history, email) => {
+        const sortedHistory = [...history].sort((a, b) => {
+            const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(0);
+            const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(0);
+            return dateB.getTime() - dateA.getTime();
+        });
+
+        result.push({
+            id: email,
+            latestLead: sortedHistory[0],
+            history: sortedHistory,
+            count: sortedHistory.length,
+        });
+    });
+
+    return result.sort((a, b) => {
+        const dateA = a.latestLead.timestamp?.toDate ? a.latestLead.timestamp.toDate() : new Date(0);
+        const dateB = b.latestLead.timestamp?.toDate ? b.latestLead.timestamp.toDate() : new Date(0);
+        return dateB.getTime() - dateA.getTime();
+    });
+};
+
 
 const LeadDetailItem = ({ label, value }: { label: string, value: any }) => {
     if (value === undefined || value === null || value === '' || (Array.isArray(value) && value.length === 0)) {
@@ -35,13 +90,10 @@ const LeadDetailItem = ({ label, value }: { label: string, value: any }) => {
     let displayValue;
     let dateToFormat: Date | null = null;
     
-    // Check for Firestore Timestamp
     if (value && typeof value.toDate === 'function') {
         dateToFormat = value.toDate();
-    // Check for native JavaScript Date
     } else if (value instanceof Date) {
         dateToFormat = value;
-    // Check for a valid date string
     } else if (typeof value === 'string') {
         const parsedDate = parseISO(value);
         if (isValid(parsedDate)) {
@@ -72,7 +124,7 @@ const LeadDetailItem = ({ label, value }: { label: string, value: any }) => {
 
 export default function LeadsPage() {
   const [user, setUser] = useState<User | null>(null);
-  const [leads, setLeads] = useState<any[]>([]);
+  const [allLeads, setAllLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -82,9 +134,12 @@ export default function LeadsPage() {
   const [newPhone, setNewPhone] = useState("");
   const [newStatus, setNewStatus] = useState("Nou");
   const [isSaving, setIsSaving] = useState(false);
-  const [selectedLead, setSelectedLead] = useState<any | null>(null);
+  
+  // Stare pentru detalii client
+  const [selectedGroup, setSelectedGroup] = useState<GroupedLead | null>(null);
+  const [selectedHistoryEntry, setSelectedHistoryEntry] = useState<Lead | null>(null);
 
-  // Filters State
+  // Filtre
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sourceFilter, setSourceFilter] = useState("all");
@@ -111,15 +166,8 @@ export default function LeadsPage() {
             orderBy("timestamp", "desc")
           );
           const querySnapshot = await getDocs(q);
-          const leadsData = querySnapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-              id: doc.id,
-              ...data,
-              timestamp: data.timestamp // Keep as Firestore Timestamp or null
-            }
-          });
-          setLeads(leadsData);
+          const leadsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Lead[];
+          setAllLeads(leadsData);
         } catch (error) {
           console.error("Error fetching leads:", error);
         } finally {
@@ -132,14 +180,16 @@ export default function LeadsPage() {
     }
   }, [user]);
 
-   const filteredLeads = useMemo(() => {
-    return leads.filter(lead => {
+  const groupedLeads = useMemo(() => groupLeadsByEmail(allLeads), [allLeads]);
+  
+  const filteredGroupedLeads = useMemo(() => {
+    return groupedLeads.filter(group => {
+        const lead = group.latestLead;
         const nameMatch = searchTerm ? lead.contact?.name?.toLowerCase().includes(searchTerm.toLowerCase()) : true;
         
         let statusMatch = true;
         if (statusFilter !== 'all') {
             if (statusFilter === 'Nou') {
-                // Include leads with status 'Nou' or with no status field at all
                 statusMatch = lead.status === 'Nou' || !lead.status;
             } else {
                 statusMatch = lead.status === statusFilter;
@@ -167,13 +217,22 @@ export default function LeadsPage() {
 
         return nameMatch && statusMatch && sourceMatch && dateMatch;
     });
-}, [leads, searchTerm, statusFilter, sourceFilter, dateRange]);
+  }, [groupedLeads, searchTerm, statusFilter, sourceFilter, dateRange]);
 
+  const handleOpenDetails = (group: GroupedLead) => {
+    setSelectedGroup(group);
+    setSelectedHistoryEntry(group.latestLead); // Afiseaza cel mai recent la deschidere
+  };
+
+  const handleCloseDetails = () => {
+    setSelectedGroup(null);
+    setSelectedHistoryEntry(null);
+  }
 
   const handleStatusChange = (leadId: string, newStatus: string) => {
     const leadRef = doc(db, "leads", leadId);
     updateDoc(leadRef, { status: newStatus }).then(() => {
-      setLeads(prevLeads =>
+      setAllLeads(prevLeads =>
         prevLeads.map(lead =>
           lead.id === leadId ? { ...lead, status: newStatus } : lead
         )
@@ -194,8 +253,7 @@ export default function LeadsPage() {
     };
     try {
         const docRef = await addDoc(collection(db, 'leads'), newClientData);
-        // Add with JS Date object for immediate optimistic update
-        setLeads(prev => [{ id: docRef.id, ...newClientData, timestamp: new Date() }, ...prev]);
+        setAllLeads(prev => [{ id: docRef.id, ...newClientData, timestamp: new Date() } as Lead, ...prev]);
         setIsModalOpen(false); setNewName(''); setNewEmail(''); setNewPhone(''); setNewStatus('Nou');
     } catch (serverError: any) {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
@@ -214,7 +272,7 @@ export default function LeadsPage() {
       setDateRange(undefined);
   }
 
-  const getStatusBadgeVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
+  const getStatusBadgeVariant = (status?: string): "default" | "secondary" | "destructive" | "outline" => {
     switch (status) {
         case 'Nou': return 'default';
         case 'Convertit': return 'secondary';
@@ -228,7 +286,7 @@ export default function LeadsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <h1 className="text-xl font-bold md:text-2xl">Clienții Tăi</h1>
            <div className="flex items-center gap-2">
-            <ExportButtons leads={filteredLeads} />
+            <ExportButtons leads={filteredGroupedLeads.flatMap(g => g.history)} />
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <DialogTrigger asChild>
                     <Button size="sm" className="w-full sm:w-auto"><FilePlus2 className="mr-2 h-4 w-4" /> Client Nou</Button>
@@ -271,14 +329,14 @@ export default function LeadsPage() {
           </CardContent>
           <CardContent className="p-4 pt-0 border-t">
             <div className="flex justify-between items-center text-sm text-muted-foreground">
-              <span>Afișare <span className="font-bold text-foreground">{filteredLeads.length}</span> din <span className="font-bold text-foreground">{leads.length}</span> clienți.</span>
+              <span>Afișare <span className="font-bold text-foreground">{filteredGroupedLeads.length}</span> din <span className="font-bold text-foreground">{groupedLeads.length}</span> clienți unici.</span>
             </div>
           </CardContent>
       </Card>
 
        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden no-print">
-          {loading ? <p className="text-center text-sm py-4 col-span-full">Se încarcă clienții...</p> : filteredLeads.length > 0 ? (
-              filteredLeads.map(lead => <LeadCard key={lead.id} lead={lead} onStatusChange={handleStatusChange} onCardClick={() => setSelectedLead(lead)} />)
+          {loading ? <p className="text-center text-sm py-4 col-span-full">Se încarcă clienții...</p> : filteredGroupedLeads.length > 0 ? (
+              filteredGroupedLeads.map(group => <LeadCard key={group.id} lead={group.latestLead} count={group.count} onStatusChange={handleStatusChange} onCardClick={() => handleOpenDetails(group)} />)
           ) : <div className="text-center text-sm py-4 text-muted-foreground col-span-full">Niciun client găsit. Încearcă alte filtre.</div> }
       </div>
       
@@ -289,18 +347,21 @@ export default function LeadsPage() {
                     <Table>
                         <TableHeader><TableRow><TableHead>Dată</TableHead><TableHead>Nume</TableHead><TableHead>Contact</TableHead><TableHead>Sursă</TableHead><TableHead>Status</TableHead><TableHead className="no-print text-right">Acțiuni</TableHead></TableRow></TableHeader>
                         <TableBody>
-                        {loading ? <TableRow><TableCell colSpan={6} className="text-center h-24">Se încarcă...</TableCell></TableRow> : filteredLeads.length > 0 ? (
-                            filteredLeads.map((lead) => (
-                            <TableRow key={lead.id} className="hover:bg-muted/30">
-                                <TableCell className="text-xs">{lead.timestamp && isValid(lead.timestamp.toDate ? lead.timestamp.toDate() : new Date(lead.timestamp)) ? format(lead.timestamp.toDate ? lead.timestamp.toDate() : new Date(lead.timestamp), 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                                <TableCell className="font-medium">{lead.contact?.name || "N/A"}</TableCell>
-                                <TableCell><div className="flex flex-col"><span className="text-xs">{lead.contact?.email || ""}</span><span className="text-xs text-muted-foreground">{lead.contact?.phone || ""}</span></div></TableCell>
-                                <TableCell><Badge variant={lead.source === 'Manual' ? 'secondary' : 'outline'} className="text-xs">{lead.source || 'N/A'}</Badge></TableCell>
-                                <TableCell><Badge variant={getStatusBadgeVariant(lead.status || 'Nou')} className="text-xs">{lead.status || "Nou"}</Badge></TableCell>
+                        {loading ? <TableRow><TableCell colSpan={6} className="text-center h-24">Se încarcă...</TableCell></TableRow> : filteredGroupedLeads.length > 0 ? (
+                            filteredGroupedLeads.map((group) => (
+                            <TableRow key={group.id} className="hover:bg-muted/30">
+                                <TableCell className="text-xs">{group.latestLead.timestamp && isValid(group.latestLead.timestamp.toDate ? group.latestLead.timestamp.toDate() : new Date(group.latestLead.timestamp)) ? format(group.latestLead.timestamp.toDate ? group.latestLead.timestamp.toDate() : new Date(group.latestLead.timestamp), 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                                <TableCell className="font-medium flex items-center gap-2">
+                                  {group.latestLead.contact?.name || "N/A"}
+                                  {group.count > 1 && <Badge variant="secondary" className="text-xs">{group.count} Răsp.</Badge>}
+                                </TableCell>
+                                <TableCell><div className="flex flex-col"><span className="text-xs">{group.latestLead.contact?.email || ""}</span><span className="text-xs text-muted-foreground">{group.latestLead.contact?.phone || ""}</span></div></TableCell>
+                                <TableCell><Badge variant={group.latestLead.source === 'Manual' ? 'secondary' : 'outline'} className="text-xs">{group.latestLead.source || 'N/A'}</Badge></TableCell>
+                                <TableCell><Badge variant={getStatusBadgeVariant(group.latestLead.status)} className="text-xs">{group.latestLead.status || "Nou"}</Badge></TableCell>
                                 <TableCell className="text-right no-print">
-                                    <Button variant="default" size="sm" onClick={() => setSelectedLead(lead)}>Detalii</Button>
+                                    <Button variant="default" size="sm" onClick={() => handleOpenDetails(group)}>Detalii</Button>
                                     <div className="inline-block" onClick={(e) => e.stopPropagation()}>
-                                    <Select value={lead.status || "Nou"} onValueChange={(newStatus) => handleStatusChange(lead.id, newStatus)}>
+                                    <Select value={group.latestLead.status || "Nou"} onValueChange={(newStatus) => handleStatusChange(group.latestLead.id, newStatus)}>
                                       <SelectTrigger className="w-32 h-8 text-xs inline-flex ml-2"><SelectValue /></SelectTrigger>
                                       <SelectContent><SelectItem value="Nou">Nou</SelectItem><SelectItem value="De contactat">De contactat</SelectItem><SelectItem value="Contactat">Contactat</SelectItem><SelectItem value="Ofertă trimisă">Ofertă trimisă</SelectItem><SelectItem value="Convertit">Convertit</SelectItem><SelectItem value="Inactiv">Inactiv</SelectItem></SelectContent>
                                     </Select>
@@ -316,46 +377,75 @@ export default function LeadsPage() {
         </Card>
       </div>
 
-      <Dialog open={!!selectedLead} onOpenChange={(isOpen) => !isOpen && setSelectedLead(null)}>
-            <DialogContent className="sm:max-w-md no-print p-0">
-                 <DialogHeader className="p-6 pb-4">
+      <Dialog open={!!selectedGroup} onOpenChange={(isOpen) => !isOpen && handleCloseDetails()}>
+            <DialogContent className="max-w-4xl no-print p-0">
+                 <DialogHeader className="p-6 pb-4 border-b">
                     <div className="flex items-center gap-4">
                         <Avatar className="h-12 w-12"><AvatarFallback className="bg-primary/20 text-primary font-bold"><UserIcon /></AvatarFallback></Avatar>
                         <div>
-                             <DialogTitle className="text-xl mb-1">{selectedLead?.contact?.name || 'Detalii Client'}</DialogTitle>
+                             <DialogTitle className="text-xl mb-1">{selectedGroup?.latestLead.contact?.name || 'Detalii Client'}</DialogTitle>
                              <div className="flex items-center gap-2">
-                                <Badge variant={selectedLead?.source === 'Manual' ? 'secondary' : 'outline'}>{selectedLead?.source || 'N/A'}</Badge>
-                                <Badge variant={getStatusBadgeVariant(selectedLead?.status || 'Nou')}>{selectedLead?.status || 'Nou'}</Badge>
+                                <Badge variant={selectedHistoryEntry?.source === 'Manual' ? 'secondary' : 'outline'}>{selectedHistoryEntry?.source || 'N/A'}</Badge>
+                                <Badge variant={getStatusBadgeVariant(selectedHistoryEntry?.status)}>{selectedHistoryEntry?.status || 'Nou'}</Badge>
                              </div>
                         </div>
                     </div>
                 </DialogHeader>
-                <ScrollArea className="max-h-[60vh] px-6">
-                    <div className="space-y-4">
+                <div className={cn("grid", selectedGroup && selectedGroup.count > 1 ? "grid-cols-1 md:grid-cols-[200px_1fr]" : "grid-cols-1")}>
+                  {selectedGroup && selectedGroup.count > 1 && (
+                    <div className="border-r">
+                      <h3 className="text-sm font-semibold p-4 border-b">Istoric Completări</h3>
+                      <ScrollArea className="h-[60vh]">
+                        <ul>
+                          {selectedGroup.history.map(entry => (
+                            <li key={entry.id}>
+                              <button 
+                                onClick={() => setSelectedHistoryEntry(entry)}
+                                className={cn(
+                                  "w-full text-left p-4 text-sm hover:bg-muted/50 transition-colors",
+                                  selectedHistoryEntry?.id === entry.id && "bg-muted font-semibold"
+                                )}
+                              >
+                                {entry.timestamp && isValid(entry.timestamp.toDate ? entry.timestamp.toDate() : new Date(entry.timestamp)) 
+                                    ? format(entry.timestamp.toDate ? entry.timestamp.toDate() : new Date(entry.timestamp), 'dd MMM yyyy, HH:mm') 
+                                    : 'Dată invalidă'}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </ScrollArea>
+                    </div>
+                  )}
+
+                  <ScrollArea className="max-h-[60vh] md:max-h-auto">
+                    <div className="p-6 space-y-4">
                         <div className="p-4 rounded-lg bg-muted/50">
                              <h3 className="text-sm font-semibold mb-2 text-foreground">Informații Contact</h3>
                              <dl className="divide-y divide-muted-foreground/20">
-                                <LeadDetailItem label="Email" value={selectedLead?.contact?.email} />
-                                <LeadDetailItem label="Telefon" value={selectedLead?.contact?.phone} />
-                                <LeadDetailItem label="Data creare" value={selectedLead?.timestamp} />
+                                <LeadDetailItem label="Email" value={selectedHistoryEntry?.contact?.email} />
+                                <LeadDetailItem label="Telefon" value={selectedHistoryEntry?.contact?.phone} />
+                                <LeadDetailItem label="Data creare" value={selectedHistoryEntry?.timestamp} />
                              </dl>
                         </div>
                         <div className="p-4 rounded-lg bg-muted/50">
                             <h3 className="text-sm font-semibold mb-2 text-foreground">Detalii Analiză Financiară</h3>
                             <dl className="divide-y divide-muted-foreground/20">
-                                {selectedLead && Object.entries(selectedLead).map(([key, value]) => {
+                                {selectedHistoryEntry && Object.entries(selectedHistoryEntry).map(([key, value]) => {
                                     if (['id', 'agentId', 'timestamp', 'status', 'source', 'contact'].includes(key)) return null;
                                     const displayKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                                     return <LeadDetailItem key={key} label={displayKey} value={value} />;
                                 })}
-                                {Object.keys(selectedLead || {}).length <= 6 && <p className="text-sm text-muted-foreground py-4 text-center">Acest client a fost adăugat manual, fără analiză.</p>}
+                                {selectedHistoryEntry && Object.keys(selectedHistoryEntry).length <= 6 && <p className="text-sm text-muted-foreground py-4 text-center">Acest client a fost adăugat manual, fără analiză.</p>}
                             </dl>
                         </div>
                     </div>
                 </ScrollArea>
-                <DialogFooter className="p-6 bg-muted/50 border-t"><Button variant="outline" onClick={() => setSelectedLead(null)}>Închide</Button></DialogFooter>
+              </div>
+              <DialogFooter className="p-6 bg-muted/50 border-t"><Button variant="outline" onClick={handleCloseDetails}>Închide</Button></DialogFooter>
             </DialogContent>
         </Dialog>
     </div>
   );
 }
+
+    
