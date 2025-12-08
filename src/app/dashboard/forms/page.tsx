@@ -264,7 +264,7 @@ export default function FormsPage() {
             intro_1: {
               message: [
                 "Totul e bine… până într-o zi.",
-                "Viața are 4 momente care pot schimba cursul unei familii, patru momente care îți pot schimba definitiv stabilitatea financiară.",
+                "Viața are patru momente care pot schimba cursul unei familii, patru momente care îți pot schimba definitiv stabilitatea financiară.",
                 "Două vin încet, le vezi de departe.\nDouă lovesc pe neașteptate."
               ],
               isProgressStep: true,
@@ -275,8 +275,7 @@ export default function FormsPage() {
             intro_2: {
               message: [
                 "Previzibile:\n\n1. Pensionarea – veniturile scad exact când nevoile cresc.\n2. Viitorul copiilor – studii, start în viață, cheltuieli complexe.",
-                "Imprevizibile:\n\n1. Decesul – lasă în urmă gol emoțional și vulnerabilitate financiară.\n2. Bolile grave – într-o zi ești bine, în următoarea totul se schimbă.",
-                "Toate patru au un impact emoțional dramatic și un impact financiar sever.\nAdevărul?"
+                "Imprevizibile:\n\n1. Decesul – lasă în urmă gol emoțional și vulnerabilitate financiară.\n2. Bolile grave – într-o zi ești bine, în următoarea totul se schimbă."
               ],
               isProgressStep: true,
               actionType: "buttons",
@@ -284,7 +283,7 @@ export default function FormsPage() {
               nextStep: "intro_3"
             },
             intro_3: {
-              message: "Pot fi gestionate dacă știi din timp cât de expus ești și ce impact ar avea asupra familiei tale.",
+              message: "Toate patru au un impact emoțional dramatic și un impact financiar sever.\nAdevărul?\n\nPot fi gestionate dacă știi din timp cât de expus ești și ce impact ar avea asupra familiei tale.",
               isProgressStep: true,
               actionType: "buttons",
               options: [{label: "Continuă"}],
@@ -924,5 +923,7 @@ export default function FormsPage() {
     </div>
   );
 }
+
+    
 
     
