@@ -115,7 +115,7 @@ const SaaSLandingView = () => {
   const plans = [
     {
       name: "Basic",
-      price: { monthly: 75, yearly: 750 },
+      price: { monthly: 75, yearly: 675 },
       description: "Ideal pentru consultanții la început de drum care doresc să facă primii pași în digitalizare.",
       features: [
         "CRM pentru managementul clienților",
@@ -410,3 +410,5 @@ const SaaSLandingView = () => {
 }; 
 
 export default SaaSLandingView;
+
+    

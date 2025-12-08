@@ -26,9 +26,9 @@ const plans = [
     name: "Basic",
     priceIds: {
         monthly: 'price_1SZefIPb5IYvItKJhsm8xybf',
-        yearly: 'price_1SZefIPb5IYvItKJhsm8xybf'
+        yearly: 'price_1SaDqnPb5IYvItKJG43oWFMI'
     },
-    price: { monthly: 75, yearly: 750 },
+    price: { monthly: 75, yearly: 675 },
     description: "Ideal pentru început.",
     isPopular: false,
   },
@@ -280,6 +280,15 @@ function LoginContent() {
       window.history.pushState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl);
   }
 
+  useEffect(() => {
+    if (isSignUp) {
+      const popularPlan = plans.find(p => p.isPopular);
+      if(popularPlan) {
+        setSelectedPlanId(popularPlan.priceIds[billingCycle]);
+      }
+    }
+  }, [billingCycle, isSignUp]);
+
   return (
     <div className="flex flex-col min-h-screen bg-slate-950 text-white relative overflow-hidden">
         <div className="absolute inset-0 w-full h-full pointer-events-none">
@@ -394,3 +403,5 @@ export default function LoginPage() {
         </Suspense>
     );
 }
+
+    

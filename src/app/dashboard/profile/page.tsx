@@ -29,11 +29,11 @@ const productPlans = [
         description: 'Ideal pentru consultanții la început de drum.',
         priceIds: {
             monthly: 'price_1SZefIPb5IYvItKJhsm8xybf',
-            yearly: 'price_1SZefIPb5IYvItKJhsm8xybf'
+            yearly: 'price_1SaDqnPb5IYvItKJG43oWFMI'
         },
         price: {
             monthly: 75,
-            yearly: 75 * 10 // Simulam un pret anual cu discount
+            yearly: 675
         },
         features: [
             "CRM pentru managementul clienților",
@@ -510,3 +510,5 @@ export default function ProfilePage() {
         </div>
     );
 }
+
+    
