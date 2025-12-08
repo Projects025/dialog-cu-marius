@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Send, Circle, CheckCircle2, Loader2 } from "lucide-react";
+import { Send, Circle, CheckCircle2, Loader2, Mail, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "../ui/checkbox";
 import { Label } from "../ui/label";
@@ -37,6 +37,7 @@ interface ChatViewProps {
   isTyping: boolean;
   isLoading: boolean;
   errorMessage: string | null;
+  agentContact: { contactPhone?: string, contactEmail?: string } | null;
 }
 
 const UserInput = ({ options, onResponse }: { options: any, onResponse: (value: string | number) => void }) => {
@@ -391,22 +392,36 @@ const ContactForm = ({ options, onResponse }: { options: any, onResponse: (data:
     )
 }
 
-const EndConversationModal = () => {
+const EndConversationModal = ({ agentContact }: { agentContact: { contactPhone?: string, contactEmail?: string } | null }) => {
     return (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center animate-in fade-in-50">
-            <div className="bg-background rounded-2xl shadow-xl p-8 text-center w-full max-w-sm mx-4 animate-in fade-in-0 zoom-in-95">
-                <h2 className="text-4xl font-bold text-primary">Mulțumesc!</h2>
-                <p className="text-lg text-foreground/80 mt-2">O zi frumoasă îți doresc.</p>
+            <div className="bg-background rounded-2xl shadow-xl p-6 sm:p-8 text-center w-full max-w-sm mx-4 animate-in fade-in-0 zoom-in-95">
+                <h2 className="text-3xl sm:text-4xl font-bold text-primary">Mulțumesc!</h2>
+                <p className="text-base sm:text-lg text-foreground/80 mt-2">O zi frumoasă îți doresc.</p>
                 
-                <div className="mt-6 border-t border-border/50 pt-6 text-sm text-foreground/70">
-                    <p>Dacă vrei să mă contactezi tu mai repede, te rog fă-o aici:</p>
-                    <a 
-                        href="tel:+40745288882" 
-                        className="text-amber-500 font-semibold text-xl mt-2 block hover:scale-105 transition-transform"
-                    >
-                        +40 745 288 882
-                    </a>
-                </div>
+                {(agentContact?.contactPhone || agentContact?.contactEmail) && (
+                    <div className="mt-6 border-t border-border/50 pt-6 text-sm text-foreground/70">
+                        <p>Dacă vrei să mă contactezi tu mai repede, o poți face aici:</p>
+                        {agentContact.contactPhone && (
+                            <a 
+                                href={`tel:${agentContact.contactPhone}`}
+                                className="text-amber-500 font-semibold text-xl mt-2 block hover:scale-105 transition-transform"
+                            >
+                                <Phone className="inline-block mr-2 h-5 w-5" />
+                                {agentContact.contactPhone}
+                            </a>
+                        )}
+                         {agentContact.contactEmail && (
+                            <a 
+                                href={`mailto:${agentContact.contactEmail}`}
+                                className="text-amber-500 font-semibold text-lg mt-1 block hover:scale-105 transition-transform"
+                            >
+                               <Mail className="inline-block mr-2 h-4 w-4" />
+                               {agentContact.contactEmail}
+                            </a>
+                        )}
+                    </div>
+                )}
                  <div className="mt-6 border-t border-border/50 pt-6 text-xs text-foreground/60 italic text-left">
                     <p>Acest instrument are scop exclusiv informativ și oferă estimări orientative bazate pe datele introduse. Nu reprezintă consultanță financiară și nu recomandă produse de asigurare. Pentru soluții financiare personalizate, este necesară o discuție cu un consultant autorizat, iar eu sunt disponibil dacă dorești.</p>
                 </div>
@@ -422,7 +437,7 @@ const EndConversationModal = () => {
     );
 };
 
-const ChatView = ({ conversation, userAction, onResponse, progress, isConversationDone, isTyping, isLoading, errorMessage }: ChatViewProps) => {
+const ChatView = ({ conversation, userAction, onResponse, progress, isConversationDone, isTyping, isLoading, errorMessage, agentContact }: ChatViewProps) => {
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
   const actionsContainerRef = useRef<HTMLDivElement>(null);
   const spacerRef = useRef<HTMLDivElement>(null);
@@ -568,13 +583,11 @@ const renderMessageContent = (content: any) => {
             </div>
         </div>
         
-        {isConversationDone && <EndConversationModal />}
+        {isConversationDone && <EndConversationModal agentContact={agentContact} />}
     </div>
   );
 };
 
 export default ChatView;
-
-  
 
     

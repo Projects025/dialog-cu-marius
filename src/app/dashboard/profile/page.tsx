@@ -16,6 +16,7 @@ import { Loader2, LogOut, ExternalLink, CheckCircle2, XCircle, Check } from 'luc
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 // Lista statică de produse cu ID-urile de preț reale din Stripe.
 const productPlans = [
@@ -68,10 +69,12 @@ export default function ProfilePage() {
     const [user, setUser] = useState<User | null>(null);
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
+    const [contactPhone, setContactPhone] = useState('');
+    const [contactEmail, setContactEmail] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(true);
-    const [isSavingName, setIsSavingName] = useState(false);
+    const [isSavingProfile, setIsSavingProfile] = useState(false);
     const [isSavingPassword, setIsSavingPassword] = useState(false);
     
     // Subscription state
@@ -92,7 +95,10 @@ export default function ProfilePage() {
                 const agentRef = doc(db, 'agents', currentUser.uid);
                 const agentDoc = await getDoc(agentRef);
                 if (agentDoc.exists()) {
-                    setName(agentDoc.data().name || currentUser.displayName || '');
+                    const data = agentDoc.data();
+                    setName(data.name || currentUser.displayName || '');
+                    setContactPhone(data.contactPhone || '');
+                    setContactEmail(data.contactEmail || '');
                 } else {
                     setName(currentUser.displayName || '');
                 }
@@ -131,22 +137,26 @@ export default function ProfilePage() {
         return () => unsubscribeSub();
     }, [user, toast]);
 
-    const handleSaveChanges = async () => {
+    const handleSaveProfile = async () => {
         if (!user || !name.trim()) {
             toast({ variant: 'destructive', title: 'Numele nu poate fi gol.' });
             return;
         }
-        setIsSavingName(true);
+        setIsSavingProfile(true);
         try {
             await updateProfile(user, { displayName: name });
             const agentRef = doc(db, 'agents', user.uid);
-            await updateDoc(agentRef, { name: name });
-            toast({ title: 'Succes!', description: 'Numele a fost actualizat.' });
+            await setDoc(agentRef, { 
+                name: name,
+                contactPhone: contactPhone,
+                contactEmail: contactEmail
+            }, { merge: true });
+            toast({ title: 'Succes!', description: 'Profilul a fost actualizat.' });
         } catch (error: any) {
             console.error('Error updating profile:', error);
             toast({ variant: 'destructive', title: 'Eroare', description: 'Nu s-a putut actualiza profilul.' });
         } finally {
-            setIsSavingName(false);
+            setIsSavingProfile(false);
         }
     };
 
@@ -277,22 +287,34 @@ export default function ProfilePage() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Setări Cont</CardTitle>
-                        <CardDescription>Aceste informații sunt vizibile doar pentru tine.</CardDescription>
+                        <CardDescription>Aceste informații sunt vizibile doar pentru tine și la finalul formularelor.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="name">Nume Prenume</Label>
-                            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="name">Nume Afișat</Label>
+                                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+                            </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="email">Adresă de Email (Login)</Label>
+                                <Input id="email" type="email" value={email} disabled />
+                            </div>
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="email">Adresă de Email</Label>
-                            <Input id="email" type="email" value={email} disabled />
+                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="contactPhone">Telefon de Contact</Label>
+                                <Input id="contactPhone" placeholder="Ex: 07xx xxx xxx" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="contactEmail">Email de Contact</Label>
+                                <Input id="contactEmail" type="email" placeholder="contact@domeniu.ro" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} />
+                            </div>
                         </div>
                     </CardContent>
                     <CardFooter className="flex flex-col sm:flex-row items-stretch sm:items-center sm:justify-between gap-3">
-                         <Button onClick={handleSaveChanges} disabled={isSavingName}>
-                            {isSavingName && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Salvează Numele
+                         <Button onClick={handleSaveProfile} disabled={isSavingProfile}>
+                            {isSavingProfile && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Salvează Profilul
                         </Button>
                          <Dialog>
                             <DialogTrigger asChild>
@@ -436,3 +458,5 @@ export default function ProfilePage() {
         </div>
     );
 }
+
+    

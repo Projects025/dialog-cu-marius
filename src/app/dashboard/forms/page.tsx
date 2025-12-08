@@ -25,9 +25,12 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Edit, Trash2, Copy, AlertTriangle, FilePlus2, Lock } from "lucide-react";
+import { Edit, Trash2, Copy, AlertTriangle, FilePlus2, Lock, Info, UserCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import Link from 'next/link';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+
 
 interface FormTemplate {
   id: string;
@@ -810,6 +813,14 @@ export default function FormsPage() {
                   Copiază Link
               </Button>
           </CardContent>
+           <CardFooter className="p-4 pt-0">
+                <Alert variant="default" className="border-primary/30 bg-primary/5 text-primary-foreground">
+                    <Info className="h-4 w-4 !text-primary" />
+                    <AlertDescription className="text-xs text-muted-foreground">
+                        Datele de contact (telefon/email) afișate la finalul formularului se pot modifica din pagina <Link href="/dashboard/profile" className="font-bold text-primary hover:underline">Profil & Abonament</Link>.
+                    </AlertDescription>
+                </Alert>
+            </CardFooter>
       </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -923,7 +934,5 @@ export default function FormsPage() {
     </div>
   );
 }
-
-    
 
     

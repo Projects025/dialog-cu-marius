@@ -269,6 +269,8 @@ export default function ChatAppClient() {
     const agentIdRef = useRef<string | null>(null);
     const hasTrackedStartRef = useRef(false);
     const [hasCheckedParams, setHasCheckedParams] = useState(false);
+    
+    const [agentData, setAgentData] = useState<{contactPhone?: string, contactEmail?: string} | null>(null);
 
     useEffect(() => {
         agentIdRef.current = searchParams.get('agentId');
@@ -451,6 +453,10 @@ export default function ChatAppClient() {
             if (!agentDoc.exists()) throw new Error("Agentul nu a fost găsit.");
             
             const agentData = agentDoc.data();
+            setAgentData({ 
+                contactPhone: agentData.contactPhone, 
+                contactEmail: agentData.contactEmail 
+            });
 
             // Admin bypass
             const isAdmin = agentData.email === 'alinmflavius@gmail.com';
@@ -572,6 +578,7 @@ export default function ChatAppClient() {
                                 isTyping={isTyping}
                                 isLoading={false}
                                 errorMessage={null}
+                                agentContact={agentData}
                             />
                         )}
 
