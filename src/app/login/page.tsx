@@ -12,34 +12,48 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import Navbar from "@/components/ui/Navbar";
 import Footer from "@/components/ui/Footer";
-import { Check, Loader2, Mail, AlertTriangle } from "lucide-react";
+import { Check, Loader2, Mail, AlertTriangle, BadgePercent } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 
 
 const plans = [
   {
     name: "Basic",
-    priceId: 'price_1SZefIPb5IYvItKJhsm8xybf',
-    price: 75,
+    priceIds: {
+        monthly: 'price_1SZefIPb5IYvItKJhsm8xybf',
+        yearly: 'price_1SZefIPb5IYvItKJhsm8xybf'
+    },
+    price: { monthly: 75, yearly: 750 },
     description: "Ideal pentru început.",
+    isPopular: false,
   },
   {
     name: "Pro",
-    priceId: 'price_1Sa05gPb5IYvItKJyVlgBvxZ',
-    price: 100,
+    priceIds: {
+        monthly: 'price_1Sa05gPb5IYvItKJyVlgBvxZ',
+        yearly: 'price_1SaDqSPb5IYvItKJwjyS704m'
+    },
+    price: { monthly: 100, yearly: 900 },
     description: "Cel mai popular.",
     isPopular: true
   },
   {
     name: "Team",
-    priceId: 'price_1Sa06TPb5IYvItKJbzhZuc7R',
-    price: 125,
+    priceIds: {
+        monthly: 'price_1Sa06TPb5IYvItKJbzhZuc7R',
+        yearly: 'price_1SaDpcPb5IYvItKJxtYMyMOp'
+    },
+    price: { monthly: 125, yearly: 1125 },
     description: "Pentru echipe.",
+    isPopular: false,
   }
 ];
+
 
 function ResetPasswordDialog() {
   const [email, setEmail] = useState('');
@@ -163,7 +177,9 @@ function LoginContent() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(plans.find(p => p.isPopular)?.priceId || null);
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(plans.find(p => p.isPopular)?.priceIds.monthly || null);
+  
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -222,9 +238,9 @@ function LoginContent() {
             createdAt: new Date()
         });
 
-        if (selectedPlan) {
+        if (selectedPlanId) {
             // Plan selectat - mergem la checkout
-            await handleCheckout(user.uid, selectedPlan);
+            await handleCheckout(user.uid, selectedPlanId);
         } else {
             // Niciun plan selectat - mergem direct în dashboard
             router.push("/dashboard");
@@ -304,23 +320,45 @@ function LoginContent() {
                 {isSignUp && (
                     <div className="space-y-4 pt-4">
                         <Label className="text-center block text-slate-300">Alege un abonament (opțional)</Label>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            {plans.map(plan => (
-                                <div key={plan.priceId} onClick={() => setSelectedPlan(plan.priceId)} className={cn(
-                                    "relative p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 text-center",
-                                    selectedPlan === plan.priceId ? "border-amber-500 bg-amber-500/10" : "border-white/20 hover:border-amber-500/50"
-                                )}>
-                                    {plan.isPopular && <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-500 text-slate-900 text-xs px-2 py-0.5 rounded-full font-bold">POPULAR</div>}
-                                    <h4 className="font-bold">{plan.name}</h4>
-                                    <p className="text-xl font-bold">{plan.price} <span className="text-xs text-slate-400">RON/lună</span></p>
-                                    <p className="text-xs text-slate-400 mt-1">{plan.description}</p>
-                                    {selectedPlan === plan.priceId && <div className="absolute top-2 right-2 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center"><Check className="w-3 h-3 text-slate-900"/></div>}
-                                </div>
-                            ))}
+                        
+                        <div className="flex items-center justify-center gap-4">
+                            <Label htmlFor="billing-cycle" className={cn("font-semibold", billingCycle === 'monthly' ? 'text-primary' : 'text-muted-foreground')}>
+                                Plată Lunară
+                            </Label>
+                            <Switch 
+                                id="billing-cycle"
+                                checked={billingCycle === 'yearly'}
+                                onCheckedChange={(checked) => setBillingCycle(checked ? 'yearly' : 'monthly')}
+                            />
+                             <Label htmlFor="billing-cycle" className={cn("font-semibold", billingCycle === 'yearly' ? 'text-primary' : 'text-muted-foreground')}>
+                                Plată Anuală
+                            </Label>
+                             <Badge variant="secondary" className="gap-1.5 bg-green-800/50 text-green-300 border-green-500/30">
+                                <BadgePercent className="h-4 w-4" />
+                                Economisești!
+                            </Badge>
                         </div>
-                         <div onClick={() => setSelectedPlan(null)} className={cn(
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            {plans.map(plan => {
+                                const currentPriceId = plan.priceIds[billingCycle];
+                                return (
+                                    <div key={currentPriceId} onClick={() => setSelectedPlanId(currentPriceId)} className={cn(
+                                        "relative p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 text-center",
+                                        selectedPlanId === currentPriceId ? "border-amber-500 bg-amber-500/10" : "border-white/20 hover:border-amber-500/50"
+                                    )}>
+                                        {plan.isPopular && <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-500 text-slate-900 text-xs px-2 py-0.5 rounded-full font-bold">POPULAR</div>}
+                                        <h4 className="font-bold">{plan.name}</h4>
+                                        <p className="text-xl font-bold">{plan.price[billingCycle]} <span className="text-xs text-slate-400">RON/{billingCycle === 'monthly' ? 'lună' : 'an'}</span></p>
+                                        <p className="text-xs text-slate-400 mt-1">{plan.description}</p>
+                                        {selectedPlanId === currentPriceId && <div className="absolute top-2 right-2 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center"><Check className="w-3 h-3 text-slate-900"/></div>}
+                                    </div>
+                                )
+                            })}
+                        </div>
+                         <div onClick={() => setSelectedPlanId(null)} className={cn(
                             "p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 text-center",
-                            selectedPlan === null ? "border-amber-500 bg-amber-500/10" : "border-white/20 hover:border-amber-500/50"
+                            selectedPlanId === null ? "border-amber-500 bg-amber-500/10" : "border-white/20 hover:border-amber-500/50"
                          )}>
                             <h4 className="font-semibold text-sm">Voi decide mai târziu</h4>
                             <p className="text-xs text-slate-400">Începe fără abonament și explorează platforma.</p>
@@ -332,7 +370,7 @@ function LoginContent() {
                 <p className="text-sm text-center text-red-400">{error}</p>
                 )}
                 <Button type="submit" className="w-full h-12 font-semibold bg-amber-500 text-slate-900 hover:bg-amber-400 transition-colors" disabled={loading}>
-                  {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Se procesează...</> : (isSignUp ? (selectedPlan ? "Creează Cont și Plătește" : "Creează Cont Gratuit") : "Intră în cont")}
+                  {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Se procesează...</> : (isSignUp ? (selectedPlanId ? "Creează Cont și Plătește" : "Creează Cont Gratuit") : "Intră în cont")}
                 </Button>
             </form>
             <div className="mt-6 text-center text-sm">

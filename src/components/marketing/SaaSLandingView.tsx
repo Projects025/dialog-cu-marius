@@ -4,8 +4,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/ui/Navbar';
 import Footer from '@/components/ui/Footer';
-import { Check } from 'lucide-react';
+import { Check, BadgePercent } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Label } from '../ui/label';
+import { Switch } from '../ui/switch';
+import { Badge } from '../ui/badge';
 
 // Componenta pentru efectul de spotlight
 const Spotlight = () => {
@@ -135,10 +138,10 @@ const SaaSLandingView = () => {
     },
     {
       name: "Team",
-      price: { monthly: 125, yearly: 1000 },
+      price: { monthly: 125, yearly: 1125 },
       description: "Pentru liderii de echipă (minim 10 conturi) care vor să-și standardizeze procesul și să monitorizeze performanța.",
       features: [
-        "Toate beneficiile 'Team'",
+        "Toate beneficiile 'Pro'",
         "Formulare nelimitate",
         "Cont de administrator de echipă",
         "Rapoarte de performanță lunare",
@@ -161,6 +164,7 @@ const SaaSLandingView = () => {
   ];
 
   const [chatRef, isChatInView] = useInView({ threshold: 0.5 });
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
 
   const features = [
@@ -301,52 +305,75 @@ const SaaSLandingView = () => {
         {/* Pricing Section */}
         <section id="pricing" className="py-16 sm:py-20 px-4">
           <div className="max-w-7xl mx-auto text-center">
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-12">Alege planul potrivit pentru tine</h2>
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">Alege planul potrivit pentru tine</h2>
             
+            <div className="flex items-center justify-center gap-4 mb-12">
+                <Label htmlFor="billing-cycle-landing" className={cn("font-semibold", billingCycle === 'monthly' ? 'text-primary' : 'text-muted-foreground')}>
+                    Plată Lunară
+                </Label>
+                <Switch 
+                    id="billing-cycle-landing"
+                    checked={billingCycle === 'yearly'}
+                    onCheckedChange={(checked) => setBillingCycle(checked ? 'yearly' : 'monthly')}
+                />
+                 <Label htmlFor="billing-cycle-landing" className={cn("font-semibold", billingCycle === 'yearly' ? 'text-primary' : 'text-muted-foreground')}>
+                    Plată Anuală
+                </Label>
+                 <Badge variant="secondary" className="gap-1.5 bg-green-800/50 text-green-300 border-green-500/30">
+                    <BadgePercent className="h-4 w-4" />
+                    Economisești 2 luni!
+                </Badge>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {plans.map((plan, i) => (
-                <div key={i} className={cn(
-                  "p-6 sm:p-8 rounded-2xl bg-slate-900/40 border border-white/10 backdrop-blur-xl text-left flex flex-col transition-all duration-300",
-                   plan.isPopular ? "border-amber-500/50 shadow-2xl shadow-amber-500/10" : "hover:border-white/20"
-                )}>
-                  <h3 className={cn("text-2xl font-semibold mb-2", plan.isPopular ? "text-amber-400" : "text-white")}>{plan.name}</h3>
-                  <div className="flex items-baseline gap-2 mb-4">
-                     {plan.price.monthly !== null ? (
-                        <>
-                         <span className="text-4xl sm:text-5xl font-bold tracking-tight">
-                            {plan.price.monthly}
-                          </span>
-                          <span className="text-slate-400 text-sm">RON / lună</span>
-                        </>
-                     ) : (
-                        <span className="text-3xl font-bold tracking-tight">Personalizat</span>
-                     )}
-                  </div>
-                  <p className="text-sm text-slate-400 min-h-[60px]">{plan.description}</p>
-                  <ul className="space-y-3 mt-8 text-sm flex-grow">
-                    {plan.features.map(feat => (
-                      <li key={feat} className="flex items-start gap-3">
-                        <Check className="w-4 h-4 text-amber-400 mt-1 flex-shrink-0" />
-                        <span className="text-slate-300">{feat}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  {plan.name === "Enterprise" ? (
-                     <a href="#contact" className="mt-8 block w-full text-center px-6 py-3 bg-white/10 text-white font-bold rounded-full hover:bg-white/20 transition-colors">
-                        Contactează-ne
-                      </a>
-                  ) : (
-                     <Link href="/login?mode=signup" className={cn(
-                       "mt-8 block w-full text-center px-6 py-3 font-bold rounded-full transition-colors",
-                       plan.isPopular 
-                        ? "bg-amber-500 text-slate-950 hover:bg-amber-400"
-                        : "bg-white/10 text-white hover:bg-white/20"
-                     )}>
-                        Alege Planul
-                      </Link>
-                  )}
-                </div>
-              ))}
+              {plans.map((plan, i) => {
+                const price = plan.price[billingCycle];
+                const interval = billingCycle === 'monthly' ? 'lună' : 'an';
+                
+                return (
+                    <div key={i} className={cn(
+                      "p-6 sm:p-8 rounded-2xl bg-slate-900/40 border border-white/10 backdrop-blur-xl text-left flex flex-col transition-all duration-300",
+                       plan.isPopular ? "border-amber-500/50 shadow-2xl shadow-amber-500/10" : "hover:border-white/20"
+                    )}>
+                      <h3 className={cn("text-2xl font-semibold mb-2", plan.isPopular ? "text-amber-400" : "text-white")}>{plan.name}</h3>
+                      <div className="flex items-baseline gap-2 mb-4">
+                         {price !== null ? (
+                            <>
+                             <span className="text-4xl sm:text-5xl font-bold tracking-tight">
+                                {price}
+                              </span>
+                              <span className="text-slate-400 text-sm">RON / {interval}</span>
+                            </>
+                         ) : (
+                            <span className="text-3xl font-bold tracking-tight">Personalizat</span>
+                         )}
+                      </div>
+                      <p className="text-sm text-slate-400 min-h-[60px]">{plan.description}</p>
+                      <ul className="space-y-3 mt-8 text-sm flex-grow">
+                        {plan.features.map(feat => (
+                          <li key={feat} className="flex items-start gap-3">
+                            <Check className="w-4 h-4 text-amber-400 mt-1 flex-shrink-0" />
+                            <span className="text-slate-300">{feat}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      {plan.name === "Enterprise" ? (
+                         <a href="#contact" className="mt-8 block w-full text-center px-6 py-3 bg-white/10 text-white font-bold rounded-full hover:bg-white/20 transition-colors">
+                            Contactează-ne
+                          </a>
+                      ) : (
+                         <Link href="/login?mode=signup" className={cn(
+                           "mt-8 block w-full text-center px-6 py-3 font-bold rounded-full transition-colors",
+                           plan.isPopular 
+                            ? "bg-amber-500 text-slate-950 hover:bg-amber-400"
+                            : "bg-white/10 text-white hover:bg-white/20"
+                         )}>
+                            Alege Planul
+                          </Link>
+                      )}
+                    </div>
+                )
+            })}
             </div>
           </div>
         </section>
