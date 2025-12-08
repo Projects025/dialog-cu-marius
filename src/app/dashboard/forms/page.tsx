@@ -166,25 +166,41 @@ export default function FormsPage() {
     });
   };
 
-  const handleSetActiveForm = (formId: string) => {
-    setConfirmTitle("Activare Formular");
-    setConfirmDescription("Vrei să activezi acest formular pe link-ul tău?");
-    setConfirmButtonText("Setează Activ");
-    setConfirmButtonVariant("default");
-    
-    setConfirmAction(() => () => {
-      if (!auth.currentUser) return;
-      updateDoc(doc(db, "agents", auth.currentUser.uid), { activeFormId: formId })
-        .then(() => {
-            setActiveFormId(formId);
-            toast({ title: "Succes", description: "Formular activat." });
-            setConfirmModalOpen(false);
-        })
-        .catch(e => toast({ variant: "destructive", title: "Eroare", description: e.message }));
-    });
-    
-    setConfirmModalOpen(true);
-  };
+    const handleSetActiveForm = (formId: string) => {
+        setConfirmTitle("Activare Formular");
+        setConfirmDescription("Acest formular va deveni public pe link-ul tău. Ești sigur?");
+        setConfirmButtonText("Setează Activ");
+        setConfirmButtonVariant("default");
+
+        setConfirmAction(() => async () => {
+            if (!auth.currentUser) return;
+            const agentRef = doc(db, "agents", auth.currentUser.uid);
+            try {
+                const agentDoc = await getDoc(agentRef);
+                if (!agentDoc.exists() || !agentDoc.data()?.contactPhone) {
+                     toast({
+                        variant: "destructive",
+                        title: "Acțiune blocată",
+                        description: "Adaugă un număr de telefon în pagina de Profil înainte de a activa un formular.",
+                    });
+                    setConfirmModalOpen(false);
+                    router.push('/dashboard/profile');
+                    return;
+                }
+
+                await updateDoc(agentRef, { activeFormId: formId });
+                setActiveFormId(formId);
+                toast({ title: "Succes", description: "Formularul a fost activat." });
+
+            } catch (e: any) {
+                toast({ variant: "destructive", title: "Eroare la activare", description: e.message });
+            } finally {
+                setConfirmModalOpen(false);
+            }
+        });
+        
+        setConfirmModalOpen(true);
+    };
 
   const confirmDelete = async () => {
     if (!formToDelete || !user) return;
@@ -270,7 +286,6 @@ export default function FormsPage() {
                 "Viața are patru momente care pot schimba cursul unei familii, patru momente care îți pot schimba definitiv stabilitatea financiară.",
                 "Două vin încet, le vezi de departe.\nDouă lovesc pe neașteptate."
               ],
-              isProgressStep: true,
               actionType: "buttons", 
               options: [{label: "Continuă"}], 
               nextStep: "intro_2"
@@ -280,14 +295,15 @@ export default function FormsPage() {
                 "Previzibile:\n\n1. Pensionarea – veniturile scad exact când nevoile cresc.\n2. Viitorul copiilor – studii, start în viață, cheltuieli complexe.",
                 "Imprevizibile:\n\n1. Decesul – lasă în urmă gol emoțional și vulnerabilitate financiară.\n2. Bolile grave – într-o zi ești bine, în următoarea totul se schimbă."
               ],
-              isProgressStep: true,
               actionType: "buttons",
               options: [{label: "Continuă"}],
               nextStep: "intro_3"
             },
             intro_3: {
-              message: "Toate patru au un impact emoțional dramatic și un impact financiar sever.\nAdevărul?\n\nPot fi gestionate dacă știi din timp cât de expus ești și ce impact ar avea asupra familiei tale.",
-              isProgressStep: true,
+              message: [
+                "Toate patru au un impact emoțional dramatic și un impact financiar sever.\nAdevărul?",
+                "Pot fi gestionate dacă știi din timp cât de expus ești și ce impact ar avea asupra familiei tale."
+              ],
               actionType: "buttons",
               options: [{label: "Continuă"}],
               nextStep: "alege_subiect"
@@ -934,5 +950,3 @@ export default function FormsPage() {
     </div>
   );
 }
-
-    

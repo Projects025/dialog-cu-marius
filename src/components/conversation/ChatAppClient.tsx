@@ -474,6 +474,11 @@ export default function ChatAppClient() {
 
             const activeFormId = agentData.activeFormId;
             if (!activeFormId) throw new Error("Acest agent nu are un formular activ configurat.");
+            
+            // Safety check for contact phone
+             if (!agentData.contactPhone) {
+                throw new Error("Formularul este momentan inactiv. Te rugăm să revii mai târziu.");
+            }
 
             if (!hasTrackedStartRef.current) {
                 await trackConversationStart(agentId, activeFormId);
@@ -595,5 +600,3 @@ export default function ChatAppClient() {
         </div>
     );
 }
-
-    
