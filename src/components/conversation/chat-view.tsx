@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Send, Circle, CheckCircle2, Loader2, Mail, Phone } from "lucide-react";
+import { Send, Circle, CheckCircle2, Loader2, Mail, Phone, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "../ui/checkbox";
 import { Label } from "../ui/label";
@@ -395,35 +395,42 @@ const ContactForm = ({ options, onResponse }: { options: any, onResponse: (data:
 const EndConversationModal = ({ agentContact }: { agentContact: { contactPhone?: string, contactEmail?: string } | null }) => {
     return (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center animate-in fade-in-50">
-            <div className="bg-background rounded-2xl shadow-xl p-6 sm:p-8 text-center w-full max-w-sm mx-4 animate-in fade-in-0 zoom-in-95">
+            <div className="bg-background rounded-2xl shadow-xl p-6 sm:p-8 text-center w-full max-w-md mx-4 animate-in fade-in-0 zoom-in-95">
                 <h2 className="text-3xl sm:text-4xl font-bold text-primary">Mulțumesc!</h2>
-                <p className="text-base sm:text-lg text-foreground/80 mt-2">O zi frumoasă îți doresc.</p>
+                <p className="text-base sm:text-lg text-foreground/80 mt-2 mb-6">O zi frumoasă îți doresc.</p>
                 
                 {(agentContact?.contactPhone || agentContact?.contactEmail) && (
-                    <div className="mt-6 border-t border-border/50 pt-6 text-sm text-foreground/70">
-                        <p>Dacă vrei să mă contactezi tu mai repede, o poți face aici:</p>
-                        {agentContact.contactPhone && (
-                            <a 
-                                href={`tel:${agentContact.contactPhone}`}
-                                className="text-amber-500 font-semibold text-xl mt-2 block hover:scale-105 transition-transform"
-                            >
-                                <Phone className="inline-block mr-2 h-5 w-5" />
-                                {agentContact.contactPhone}
-                            </a>
-                        )}
-                         {agentContact.contactEmail && (
-                            <a 
-                                href={`mailto:${agentContact.contactEmail}`}
-                                className="text-amber-500 font-semibold text-lg mt-1 block hover:scale-105 transition-transform"
-                            >
-                               <Mail className="inline-block mr-2 h-4 w-4" />
-                               {agentContact.contactEmail}
-                            </a>
-                        )}
+                    <div className="space-y-4 border-t border-border/50 pt-6">
+                        <p className="text-sm text-foreground/70">Dacă vrei să mă contactezi tu mai repede, o poți face aici:</p>
+                        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-6">
+                           {agentContact.contactPhone && (
+                                <a 
+                                    href={`tel:${agentContact.contactPhone}`}
+                                    className="flex items-center gap-2 text-amber-500 font-semibold text-lg hover:text-amber-400 transition-colors"
+                                >
+                                    <Phone className="h-5 w-5" />
+                                    {agentContact.contactPhone}
+                                </a>
+                            )}
+                             {agentContact.contactEmail && (
+                                <a 
+                                    href={`mailto:${agentContact.contactEmail}`}
+                                    className="flex items-center gap-2 text-amber-500 font-semibold text-lg hover:text-amber-400 transition-colors"
+                                >
+                                   <Mail className="h-5 w-5" />
+                                   {agentContact.contactEmail}
+                                </a>
+                            )}
+                        </div>
                     </div>
                 )}
-                 <div className="mt-6 border-t border-border/50 pt-6 text-xs text-foreground/60 italic text-left">
-                    <p>Acest instrument are scop exclusiv informativ și oferă estimări orientative bazate pe datele introduse. Nu reprezintă consultanță financiară și nu recomandă produse de asigurare. Pentru soluții financiare personalizate, este necesară o discuție cu un consultant autorizat, iar eu sunt disponibil dacă dorești.</p>
+                 <div className="mt-8 p-4 rounded-lg bg-muted/50 border border-border/50 text-left">
+                    <div className="flex items-start gap-3">
+                        <Info className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                        <p className="text-xs text-muted-foreground italic">
+                            Acest instrument are scop exclusiv informativ și oferă estimări orientative bazate pe datele introduse. Nu reprezintă consultanță financiară și nu recomandă produse de asigurare. Pentru soluții financiare personalizate, este necesară o discuție cu un consultant autorizat, iar eu sunt disponibil dacă dorești.
+                        </p>
+                    </div>
                 </div>
                 <Button 
                     variant="outline" 
@@ -589,5 +596,3 @@ const renderMessageContent = (content: any) => {
 };
 
 export default ChatView;
-
-    
