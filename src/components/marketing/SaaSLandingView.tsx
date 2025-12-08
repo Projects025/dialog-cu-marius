@@ -217,7 +217,7 @@ const SaaSLandingView = () => {
                ✨ Platforma pentru intermediari in asigurări
             </div>
             
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-tight text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-400 drop-shadow-[0_2px_8px_rgba(245,158,11,0.2)]">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight leading-tight text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-400 drop-shadow-[0_2px_8px_rgba(245,158,11,0.2)]">
               Digitalizează-ți <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-200 to-slate-500">
                 Viața și Sănătatea
@@ -383,5 +383,3 @@ const SaaSLandingView = () => {
 }; 
 
 export default SaaSLandingView;
-
-    
