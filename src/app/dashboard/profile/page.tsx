@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -12,21 +13,28 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, LogOut, ExternalLink, CheckCircle2, XCircle, Check } from 'lucide-react';
+import { Loader2, LogOut, ExternalLink, CheckCircle2, XCircle, Check, BadgePercent } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { Switch } from '@/components/ui/switch';
 
-// Lista statică de produse cu ID-urile de preț reale din Stripe.
+
+// Structura actualizată pentru a include prețuri lunare și anuale.
 const productPlans = [
     {
         id: 'prod_TWi5UrIFpY0u6R',
         name: 'Basic - PoliSafe',
         description: 'Ideal pentru consultanții la început de drum.',
-        priceId: 'price_1SZefIPb5IYvItKJhsm8xybf',
-        price: 75,
-        interval: 'lună',
+        priceIds: {
+            monthly: 'price_1SZefIPb5IYvItKJhsm8xybf',
+            yearly: 'price_1SZefIPb5IYvItKJhsm8xybf'
+        },
+        price: {
+            monthly: 75,
+            yearly: 75 * 10 // Simulam un pret anual cu discount
+        },
         features: [
             "CRM pentru managementul clienților",
             "Link personalizat",
@@ -39,9 +47,14 @@ const productPlans = [
         name: 'Pro - PoliSafe',
         description: 'Planul perfect pentru consultantul individual.',
         isPopular: true,
-        priceId: 'price_1Sa05gPb5IYvItKJyVlgBvxZ',
-        price: 100,
-        interval: 'lună',
+        priceIds: {
+            monthly: 'price_1Sa05gPb5IYvItKJyVlgBvxZ',
+            yearly: 'price_1SaDqSPb5IYvItKJwjyS704m'
+        },
+        price: {
+            monthly: 100,
+            yearly: 900
+        },
         features: [
             "Toate beneficiile 'Basic'",
             "Export & Print rapoarte clienți",
@@ -52,9 +65,14 @@ const productPlans = [
         id: 'prod_TX4ED5ZsoiCwFx',
         name: 'Team - PoliSafe',
         description: 'Pentru liderii de echipă care vor performanță.',
-        priceId: 'price_1Sa06TPb5IYvItKJbzhZuc7R',
-        price: 125,
-        interval: 'lună',
+        priceIds: {
+            monthly: 'price_1Sa06TPb5IYvItKJbzhZuc7R',
+            yearly: 'price_1SaDpcPb5IYvItKJxtYMyMOp'
+        },
+        price: {
+            monthly: 125,
+            yearly: 1125
+        },
         features: [
             "Toate beneficiile 'Pro'",
             "Formulare nelimitate",
@@ -82,6 +100,9 @@ export default function ProfilePage() {
     const [loadingSubscription, setLoadingSubscription] = useState(true);
     const [isProcessingCheckout, setIsProcessingCheckout] = useState<string | null>(null);
     const [isManagingSubscription, setIsManagingSubscription] = useState(false);
+    
+    // State for billing cycle toggle
+    const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
     const { toast } = useToast();
     const router = useRouter();
@@ -201,8 +222,15 @@ export default function ProfilePage() {
         }
     };
 
-    const handleCheckout = async (priceId: string) => {
+    const handleCheckout = async (plan: typeof productPlans[0]) => {
         if (!user) return;
+        
+        const priceId = plan.priceIds[billingCycle];
+        if (!priceId) {
+            toast({ variant: 'destructive', title: 'Eroare', description: 'Planul selectat nu este configurat corect.' });
+            return;
+        }
+
         setIsProcessingCheckout(priceId);
         toast({ title: 'Se pregătește sesiunea de plată...', description: 'Vei fi redirecționat către Stripe în câteva secunde.' });
 
@@ -401,47 +429,71 @@ export default function ProfilePage() {
                 <>
                 <Separator className="my-8"/>
                  <div>
-                    <h2 className="text-lg font-semibold mb-4">Alege un plan</h2>
+                    <h2 className="text-lg font-semibold mb-6">Alege un plan</h2>
+
+                    <div className="flex items-center justify-center gap-4 mb-8">
+                        <Label htmlFor="billing-cycle" className={cn("font-semibold", billingCycle === 'monthly' ? 'text-primary' : 'text-muted-foreground')}>
+                            Plată Lunară
+                        </Label>
+                        <Switch 
+                            id="billing-cycle"
+                            checked={billingCycle === 'yearly'}
+                            onCheckedChange={(checked) => setBillingCycle(checked ? 'yearly' : 'monthly')}
+                        />
+                         <Label htmlFor="billing-cycle" className={cn("font-semibold", billingCycle === 'yearly' ? 'text-primary' : 'text-muted-foreground')}>
+                            Plată Anuală
+                        </Label>
+                         <Badge variant="secondary" className="gap-1.5 bg-green-800/50 text-green-300 border-green-500/30">
+                            <BadgePercent className="h-4 w-4" />
+                            Economisești 2 luni!
+                        </Badge>
+                    </div>
+
                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {productPlans.map((plan) => (
-                            <Card key={plan.id} className={cn(
-                                "flex flex-col transition-all duration-300 relative",
-                                plan.isPopular ? "border-amber-500 shadow-amber-500/10 shadow-lg" : "hover:border-primary"
-                            )}>
-                                 {plan.isPopular && (
-                                    <Badge variant="secondary" className="absolute -top-3 left-1/2 -translate-x-1/2">Cel mai popular</Badge>
-                                 )}
-                                <CardHeader>
-                                    <CardTitle className={cn(plan.isPopular && "text-amber-400")}>{plan.name}</CardTitle>
-                                    <CardDescription>{plan.description}</CardDescription>
-                                </CardHeader>
-                                <CardContent className="flex-grow space-y-6">
-                                    <p className="text-4xl font-bold">
-                                        {plan.price}
-                                        <span className="text-sm font-normal text-muted-foreground"> RON / {plan.interval}</span>
-                                    </p>
-                                    <ul className="space-y-3 text-sm text-muted-foreground">
-                                        {plan.features.map((feature) => (
-                                            <li key={feature} className="flex items-start">
-                                                <Check className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                                                <span>{feature}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </CardContent>
-                                <CardFooter>
-                                    <Button 
-                                        className={cn("w-full", plan.isPopular ? "bg-amber-500 text-black hover:bg-amber-400" : "")}
-                                        variant={plan.isPopular ? "default" : "outline"}
-                                        onClick={() => handleCheckout(plan.priceId)}
-                                        disabled={!!isProcessingCheckout}
-                                    >
-                                        {isProcessingCheckout === plan.priceId ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
-                                        {isProcessingCheckout === plan.priceId ? 'Se procesează...' : 'Alege Planul'}
-                                    </Button>
-                                </CardFooter>
-                            </Card>
-                        ))}
+                        {productPlans.map((plan) => {
+                            const price = plan.price[billingCycle];
+                            const interval = billingCycle === 'monthly' ? 'lună' : 'an';
+                            
+                            return (
+                                <Card key={plan.id} className={cn(
+                                    "flex flex-col transition-all duration-300 relative",
+                                    plan.isPopular ? "border-amber-500 shadow-amber-500/10 shadow-lg" : "hover:border-primary"
+                                )}>
+                                     {plan.isPopular && (
+                                        <Badge variant="secondary" className="absolute -top-3 left-1/2 -translate-x-1/2">Cel mai popular</Badge>
+                                     )}
+                                    <CardHeader>
+                                        <CardTitle className={cn(plan.isPopular && "text-amber-400")}>{plan.name}</CardTitle>
+                                        <CardDescription>{plan.description}</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="flex-grow space-y-6">
+                                        <p className="text-4xl font-bold">
+                                            {price}
+                                            <span className="text-sm font-normal text-muted-foreground"> RON / {interval}</span>
+                                        </p>
+                                        <ul className="space-y-3 text-sm text-muted-foreground">
+                                            {plan.features.map((feature) => (
+                                                <li key={feature} className="flex items-start">
+                                                    <Check className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                                                    <span>{feature}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </CardContent>
+                                    <CardFooter>
+                                        <Button 
+                                            className={cn("w-full", plan.isPopular ? "bg-amber-500 text-black hover:bg-amber-400" : "")}
+                                            variant={plan.isPopular ? "default" : "outline"}
+                                            onClick={() => handleCheckout(plan)}
+                                            disabled={!!isProcessingCheckout}
+                                        >
+                                            {isProcessingCheckout === plan.priceIds[billingCycle] ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
+                                            {isProcessingCheckout === plan.priceIds[billingCycle] ? 'Se procesează...' : 'Alege Planul'}
+                                        </Button>
+                                    </CardFooter>
+                                </Card>
+                            )
+                        })}
                     </div>
                 </div>
                 </>
@@ -458,5 +510,3 @@ export default function ProfilePage() {
         </div>
     );
 }
-
-    
