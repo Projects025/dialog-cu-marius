@@ -1,4 +1,3 @@
-
 "use client";
 import React from 'react';
 import Link from 'next/link';
@@ -22,8 +21,8 @@ const Navbar = () => {
                     </Link>
                 ) : (
                     <>
-                        <Link href="/login" className="px-4 py-2 text-xs sm:text-sm font-medium text-slate-300 hover:text-white transition-colors">Autentificare</Link>
-                        <Link href="/login?mode=signup" className="px-4 py-2 text-xs sm:text-sm font-medium bg-white text-slate-950 rounded-full hover:bg-slate-200 transition-colors">Creează Cont</Link>
+                        <Link href="/login" className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-slate-300 hover:text-white transition-colors">Autentificare</Link>
+                        <Link href="/login?mode=signup" className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium bg-white text-slate-950 rounded-full hover:bg-slate-200 transition-colors text-center">Creează Cont</Link>
                     </>
                 )}
             </div>
