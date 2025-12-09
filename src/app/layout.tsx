@@ -15,6 +15,10 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: "PoliSafe",
   description: "Asistentul tău financiar inteligent",
+  icons: {
+    icon: '/favicon.png',
+    apple: '/favicon.png',
+  },
 };
 
 export default function RootLayout({
