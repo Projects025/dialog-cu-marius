@@ -16,8 +16,8 @@ export const metadata: Metadata = {
   title: "PoliSafe",
   description: "Asistentul tău financiar inteligent",
   icons: {
-    icon: '/favicon.png',
-    apple: '/favicon.png',
+    icon: '/icon.png',
+    apple: '/icon.png',
   },
 };
 
