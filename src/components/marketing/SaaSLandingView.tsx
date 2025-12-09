@@ -215,7 +215,7 @@ const SaaSLandingView = () => {
 
       <div className="relative z-10">
         {/* Hero Content */}
-        <main className="flex flex-col items-center justify-center min-h-screen px-4 text-center pt-20">
+        <main className="flex flex-col items-center justify-center min-h-screen px-4 text-center pt-32 sm:pt-20">
           <div className="animate-fade-in-up space-y-4 max-w-4xl">
             <div className="inline-flex items-center px-4 py-2 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-400 text-xs font-medium mb-4">
                ✨ Platforma pentru intermediari in asigurări
@@ -410,5 +410,3 @@ const SaaSLandingView = () => {
 }; 
 
 export default SaaSLandingView;
-
-    

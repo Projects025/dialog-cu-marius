@@ -11,19 +11,19 @@ const Navbar = () => {
 
   return (
     <header className="fixed top-0 left-0 w-full z-50">
-        <nav className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center bg-slate-950/50 backdrop-blur-xl border-b border-b-white/10 rounded-b-2xl m-2 mt-0">
+        <nav className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex justify-between items-center bg-slate-950/50 backdrop-blur-xl border-b border-b-white/10 rounded-b-2xl m-2 mt-0">
             <Link href="/" className="font-bold text-2xl tracking-tight text-white">
                 PoliSafe<span className="text-amber-500">;</span>
             </Link>
-            <div className="flex gap-4 items-center">
+            <div className="flex gap-2 sm:gap-4 items-center">
                 {isLoginPage ? (
-                    <Link href="/" className="px-5 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors">
+                    <Link href="/" className="px-4 py-2 text-xs sm:text-sm font-medium text-slate-300 hover:text-white transition-colors">
                         Înapoi la site
                     </Link>
                 ) : (
                     <>
-                        <Link href="/login" className="px-5 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors">Autentificare</Link>
-                        <Link href="/login?mode=signup" className="px-5 py-2 text-sm font-medium bg-white text-slate-950 rounded-full hover:bg-slate-200 transition-colors">Creează Cont</Link>
+                        <Link href="/login" className="px-4 py-2 text-xs sm:text-sm font-medium text-slate-300 hover:text-white transition-colors">Autentificare</Link>
+                        <Link href="/login?mode=signup" className="px-4 py-2 text-xs sm:text-sm font-medium bg-white text-slate-950 rounded-full hover:bg-slate-200 transition-colors">Creează Cont</Link>
                     </>
                 )}
             </div>
