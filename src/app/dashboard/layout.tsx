@@ -6,7 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { User, signOut, onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/lib/firebaseConfig";
-import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { LayoutDashboard, Users, FileText, Menu, X, UserCircle, ShieldCheck } from "lucide-react";
@@ -83,16 +83,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 setUser(currentUser);
                 setLoading(false);
                 
-                // Update lastActive timestamp on dashboard load
                 try {
                     const agentRef = doc(db, "agents", currentUser.uid);
-                    await updateDoc(agentRef, {
+                    await setDoc(agentRef, {
                         lastActive: serverTimestamp()
-                    });
+                    }, { merge: true });
                 } catch (error) {
                     console.warn("Could not update last active time:", error);
-                    // This can fail if the user is new and the doc hasn't been created yet, which is fine.
-                    // Or if rules are not set, but we don't want to block UI for this.
                 }
 
             } else {
