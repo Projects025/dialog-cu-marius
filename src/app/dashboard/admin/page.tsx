@@ -14,8 +14,6 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ShieldAlert, CheckCircle, XCircle } from "lucide-react";
 
-const ADMIN_EMAILS = ["alinmflavius@gmail.com"];
-
 interface Agent {
   id: string;
   name?: string;
@@ -36,13 +34,8 @@ export default function AdminPage() {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
         if (currentUser) {
             setUser(currentUser);
-            const userIsAdmin = ADMIN_EMAILS.includes(currentUser.email || "");
-            setIsAdmin(userIsAdmin);
-            if (userIsAdmin) {
-                fetchAgents();
-            } else {
-                setLoading(false);
-            }
+            // Verificarea rolului de admin se face acum prin încercarea de a prelua datele
+            checkAdminStatusAndFetchData(currentUser);
         } else {
             router.push('/login');
         }
@@ -50,33 +43,47 @@ export default function AdminPage() {
     return () => unsubscribe();
   }, [router]);
 
-  const fetchAgents = async () => {
-    try {
-        const q = query(collection(db, "agents"), orderBy("createdAt", "desc"));
-        const querySnapshot = await getDocs(q);
-        const agentsDataPromises = querySnapshot.docs.map(async (agentDoc) => {
-            const agentData = { id: agentDoc.id, ...agentDoc.data() } as Agent;
-            
-            // Verifică abonamentul pentru fiecare agent
-            const subsQuery = query(
-                collection(db, 'customers', agentDoc.id, 'subscriptions'), 
-                where('status', 'in', ['trialing', 'active'])
-            );
-            const subsSnap = await getDocs(subsQuery);
-            agentData.hasSubscription = !subsSnap.empty;
+  // Această funcție verifică implicit rolul de admin.
+  // Doar un admin are permisiunea (conform firestore.rules) să listeze întreaga colecție 'agents'.
+  const checkAdminStatusAndFetchData = async (currentUser: User) => {
+      try {
+          // 1. Încercăm să preluăm datele pe care doar un admin le poate accesa
+          const q = query(collection(db, "agents"), orderBy("createdAt", "desc"));
+          const querySnapshot = await getDocs(q);
+          
+          // 2. Dacă interogarea reușește, utilizatorul ESTE admin.
+          setIsAdmin(true);
 
-            return agentData;
-        });
-        
-        const agentsData = await Promise.all(agentsDataPromises);
-        setAllAgents(agentsData);
+          const agentsDataPromises = querySnapshot.docs.map(async (agentDoc) => {
+              const agentData = { id: agentDoc.id, ...agentDoc.data() } as Agent;
+              
+              const subsQuery = query(
+                  collection(db, 'customers', agentDoc.id, 'subscriptions'), 
+                  where('status', 'in', ['trialing', 'active'])
+              );
+              const subsSnap = await getDocs(subsQuery);
+              agentData.hasSubscription = !subsSnap.empty;
 
-    } catch (error) {
-        console.error("Error fetching agents:", error);
-    } finally {
-        setLoading(false);
-    }
+              return agentData;
+          });
+          
+          const agentsData = await Promise.all(agentsDataPromises);
+          setAllAgents(agentsData);
+
+      } catch (error: any) {
+          // 3. Dacă interogarea eșuează cu "permission-denied", utilizatorul NU este admin.
+          if (error.code === 'permission-denied') {
+              console.log("Acces refuzat. Utilizatorul nu este admin.");
+              setIsAdmin(false);
+          } else {
+              // Alte erori (ex: de rețea)
+              console.error("Error fetching agents:", error);
+          }
+      } finally {
+          setLoading(false);
+      }
   };
+
 
   if (loading) {
     return <div className="text-center">Se verifică permisiunile și se încarcă datele...</div>;
