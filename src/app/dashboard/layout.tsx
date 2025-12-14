@@ -8,8 +8,10 @@ import { User, signOut, onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebaseConfig";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Users, FileText, Menu, X, UserCircle } from "lucide-react";
+import { LayoutDashboard, Users, FileText, Menu, X, UserCircle, ShieldCheck } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet";
+
+const ADMIN_EMAILS = ["alinmflavius@gmail.com"];
 
 const NavLink = ({ href, children, icon: Icon, onClick }: { href: string; children: ReactNode; icon: React.ElementType, onClick?: () => void }) => {
     const pathname = usePathname();
@@ -32,12 +34,14 @@ const NavLink = ({ href, children, icon: Icon, onClick }: { href: string; childr
 
 const SidebarContent = ({ onLinkClick }: { onLinkClick?: () => void }) => {
     const [user, setUser] = useState<User | null>(null);
+    const [isAdmin, setIsAdmin] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             if (currentUser) {
                 setUser(currentUser);
+                setIsAdmin(ADMIN_EMAILS.includes(currentUser.email || ""));
             }
         });
         return () => unsubscribe();
@@ -57,6 +61,9 @@ const SidebarContent = ({ onLinkClick }: { onLinkClick?: () => void }) => {
                     <NavLink href="/dashboard/leads" icon={Users} onClick={onLinkClick}>Clienții Tăi</NavLink>
                     <NavLink href="/dashboard/forms" icon={FileText} onClick={onLinkClick}>Formulare</NavLink>
                     <NavLink href="/dashboard/profile" icon={UserCircle} onClick={onLinkClick}>Profil & Abonament</NavLink>
+                    {isAdmin && (
+                         <NavLink href="/dashboard/admin" icon={ShieldCheck} onClick={onLinkClick}>Panou Admin</NavLink>
+                    )}
                 </nav>
             </div>
         </div>
