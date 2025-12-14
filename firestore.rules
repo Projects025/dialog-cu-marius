@@ -18,6 +18,7 @@ service cloud.firestore {
       allow read: if isOwner(agentId) || isAdmin();
       allow list: if isAdmin();
       allow write: if isOwner(agentId);
+      allow update: if isOwner(agentId); // Allow user to update their own record (e.g. lastActive)
     }
 
     match /leads/{leadId} {

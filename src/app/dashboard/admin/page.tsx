@@ -21,6 +21,7 @@ interface Agent {
   name?: string;
   email?: string;
   createdAt?: Timestamp;
+  lastActive?: Timestamp;
 }
 
 export default function AdminPage() {
@@ -93,6 +94,7 @@ export default function AdminPage() {
                 <TableHead>Nume Agent</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Data Înregistrării</TableHead>
+                <TableHead>Ultima Activitate</TableHead>
                 <TableHead>User ID</TableHead>
               </TableRow>
             </TableHeader>
@@ -105,12 +107,15 @@ export default function AdminPage() {
                     <TableCell>
                       {agent.createdAt ? format(agent.createdAt.toDate(), 'dd/MM/yyyy HH:mm') : 'N/A'}
                     </TableCell>
+                    <TableCell>
+                      {agent.lastActive ? format(agent.lastActive.toDate(), 'dd/MM/yyyy HH:mm') : 'Niciodată'}
+                    </TableCell>
                     <TableCell className="text-muted-foreground text-xs">{agent.id}</TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={4} className="h-24 text-center">
+                  <TableCell colSpan={5} className="h-24 text-center">
                     Niciun agent găsit sau datele se încarcă.
                   </TableCell>
                 </TableRow>
