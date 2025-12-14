@@ -234,9 +234,8 @@ function LoginContent() {
             name: name,
             email: email,
             uid: user.uid,
-            activeFormId: "master_standard_v1",
             createdAt: new Date(),
-            lastActive: new Date()
+            activeFormId: "master_standard_v1"
         });
 
         if (selectedPlanId) {
