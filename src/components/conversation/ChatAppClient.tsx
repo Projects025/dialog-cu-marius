@@ -270,7 +270,7 @@ export default function ChatAppClient() {
     const hasTrackedStartRef = useRef(false);
     const [hasCheckedParams, setHasCheckedParams] = useState(false);
     
-    const [agentData, setAgentData] = useState<{contactPhone?: string, contactEmail?: string} | null>(null);
+    const [agentData, setAgentData] = useState<{name?: string, contactPhone?: string, contactEmail?: string} | null>(null);
 
     useEffect(() => {
         agentIdRef.current = searchParams.get('agentId');
@@ -452,14 +452,17 @@ export default function ChatAppClient() {
             const agentDoc = await getDoc(agentRef);
             if (!agentDoc.exists()) throw new Error("Agentul nu a fost găsit.");
             
-            const agentData = agentDoc.data();
+            const agentProfile = agentDoc.data();
             setAgentData({ 
-                contactPhone: agentData.contactPhone, 
-                contactEmail: agentData.contactEmail 
+                name: agentProfile.name || 'un consultant',
+                contactPhone: agentProfile.contactPhone, 
+                contactEmail: agentProfile.contactEmail 
             });
+            // Adaugă numele agentului în datele conversației pentru a fi folosit de placeholder
+            userDataRef.current.agentName = agentProfile.name || 'un consultant';
 
             // Admin bypass
-            const isAdmin = agentData.email === 'alinmflavius@gmail.com';
+            const isAdmin = agentProfile.email === 'alinmflavius@gmail.com';
 
             if (!isAdmin) {
                 const subscriptionsQuery = query(
@@ -472,11 +475,11 @@ export default function ChatAppClient() {
                 }
             }
 
-            const activeFormId = agentData.activeFormId;
+            const activeFormId = agentProfile.activeFormId;
             if (!activeFormId) throw new Error("Acest agent nu are un formular activ configurat.");
             
             // Safety check for contact phone
-             if (!agentData.contactPhone) {
+             if (!agentProfile.contactPhone) {
                 throw new Error("Formularul este momentan inactiv. Te rugăm să revii mai târziu.");
             }
 
@@ -542,7 +545,7 @@ export default function ChatAppClient() {
 
     useEffect(() => {
         if (view === 'chat' && agentIdRef.current && loadedFlow && startStepId && conversation.length === 0) {
-            userDataRef.current = {};
+            userDataRef.current = { ...userDataRef.current }; // Keep agentName if already set
             conversationIdRef.current = 0;
             currentProgressStep.current = 0;
             setProgress(0);
@@ -600,3 +603,5 @@ export default function ChatAppClient() {
         </div>
     );
 }
+
+    
