@@ -205,7 +205,7 @@ const performDynamicCalculations = (data: any) => {
 
 const formatMessage = (template: string, data: any): string => {
     if (!template) return "";
-    return template.replace(/\{(\w+)\}/g, (match, key) => {
+    return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
         const value = data[key];
         if (value !== undefined && value !== null) {
             if (typeof value === 'number') {
