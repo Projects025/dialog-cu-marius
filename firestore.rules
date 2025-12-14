@@ -17,8 +17,7 @@ service cloud.firestore {
     match /agents/{agentId} {
       allow read: if isOwner(agentId) || isAdmin();
       allow list: if isAdmin();
-      allow write: if isOwner(agentId);
-      allow update: if isOwner(agentId); // Allow user to update their own record (e.g. lastActive)
+      allow write: if isOwner(agentId); // Acoperă atât crearea, cât și actualizarea (inclusiv setDoc cu merge)
     }
 
     match /leads/{leadId} {
