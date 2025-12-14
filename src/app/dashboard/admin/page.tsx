@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { onAuthStateChanged, type User } from "firebase/auth";
-import { collection, query, getDocs, orderBy, Timestamp } from "firebase/firestore";
+import { collection, query, getDocs, orderBy, Timestamp, doc, where } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { format } from 'date-fns';
 
@@ -12,7 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ShieldAlert } from "lucide-react";
+import { ShieldAlert, CheckCircle, XCircle } from "lucide-react";
 
 const ADMIN_EMAILS = ["alinmflavius@gmail.com"];
 
@@ -22,6 +22,7 @@ interface Agent {
   email?: string;
   createdAt?: Timestamp;
   lastActive?: Timestamp;
+  hasSubscription?: boolean;
 }
 
 export default function AdminPage() {
@@ -53,12 +54,25 @@ export default function AdminPage() {
     try {
         const q = query(collection(db, "agents"), orderBy("createdAt", "desc"));
         const querySnapshot = await getDocs(q);
-        const agentsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Agent[];
+        const agentsDataPromises = querySnapshot.docs.map(async (agentDoc) => {
+            const agentData = { id: agentDoc.id, ...agentDoc.data() } as Agent;
+            
+            // Verifică abonamentul pentru fiecare agent
+            const subsQuery = query(
+                collection(db, 'customers', agentDoc.id, 'subscriptions'), 
+                where('status', 'in', ['trialing', 'active'])
+            );
+            const subsSnap = await getDocs(subsQuery);
+            agentData.hasSubscription = !subsSnap.empty;
+
+            return agentData;
+        });
+        
+        const agentsData = await Promise.all(agentsDataPromises);
         setAllAgents(agentsData);
+
     } catch (error) {
         console.error("Error fetching agents:", error);
-        // This might fail if security rules are not yet propagated.
-        // The UI will show a message.
     } finally {
         setLoading(false);
     }
@@ -94,6 +108,7 @@ export default function AdminPage() {
                 <TableHead className="w-[50px]">#</TableHead>
                 <TableHead>Nume Agent</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Abonament</TableHead>
                 <TableHead>Data Înregistrării</TableHead>
                 <TableHead>Ultima Activitate</TableHead>
                 <TableHead>User ID</TableHead>
@@ -107,6 +122,19 @@ export default function AdminPage() {
                     <TableCell className="font-medium">{agent.name || "N/A"}</TableCell>
                     <TableCell>{agent.email}</TableCell>
                     <TableCell>
+                        {agent.hasSubscription ? (
+                            <Badge variant="secondary" className="bg-green-700/20 text-green-400 border border-green-600/30">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Activ
+                            </Badge>
+                        ) : (
+                             <Badge variant="destructive" className="bg-red-900/40 text-red-400 border border-red-800/50">
+                                <XCircle className="h-3 w-3 mr-1" />
+                                Inactiv
+                            </Badge>
+                        )}
+                    </TableCell>
+                    <TableCell>
                       {agent.createdAt ? format(agent.createdAt.toDate(), 'dd/MM/yyyy HH:mm') : 'N/A'}
                     </TableCell>
                     <TableCell>
@@ -117,7 +145,7 @@ export default function AdminPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
+                  <TableCell colSpan={7} className="h-24 text-center">
                     Niciun agent găsit sau datele se încarcă.
                   </TableCell>
                 </TableRow>
