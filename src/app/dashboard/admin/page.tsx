@@ -91,6 +91,7 @@ export default function AdminPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[50px]">#</TableHead>
                 <TableHead>Nume Agent</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Data Înregistrării</TableHead>
@@ -100,8 +101,9 @@ export default function AdminPage() {
             </TableHeader>
             <TableBody>
               {allAgents.length > 0 ? (
-                allAgents.map((agent) => (
+                allAgents.map((agent, index) => (
                   <TableRow key={agent.id}>
+                    <TableCell className="font-medium">{index + 1}</TableCell>
                     <TableCell className="font-medium">{agent.name || "N/A"}</TableCell>
                     <TableCell>{agent.email}</TableCell>
                     <TableCell>
@@ -115,7 +117,7 @@ export default function AdminPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
+                  <TableCell colSpan={6} className="h-24 text-center">
                     Niciun agent găsit sau datele se încarcă.
                   </TableCell>
                 </TableRow>
