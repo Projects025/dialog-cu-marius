@@ -14,6 +14,9 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ShieldAlert, CheckCircle, XCircle } from "lucide-react";
 
+// Lista de admini este acum singura sursă de adevăr în codul client.
+const ADMIN_EMAILS = ["alinmflavius@gmail.com", "mariusdan12@yahoo.com"];
+
 interface Agent {
   id: string;
   name?: string;
@@ -34,8 +37,13 @@ export default function AdminPage() {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
         if (currentUser) {
             setUser(currentUser);
-            // Verificarea rolului de admin se face acum prin încercarea de a prelua datele
-            checkAdminStatusAndFetchData(currentUser);
+            const userIsAdmin = ADMIN_EMAILS.includes(currentUser.email || "");
+            setIsAdmin(userIsAdmin);
+            if (userIsAdmin) {
+              fetchAdminData();
+            } else {
+              setLoading(false);
+            }
         } else {
             router.push('/login');
         }
@@ -43,42 +51,40 @@ export default function AdminPage() {
     return () => unsubscribe();
   }, [router]);
 
-  // Această funcție verifică implicit rolul de admin.
-  // Doar un admin are permisiunea (conform firestore.rules) să listeze întreaga colecție 'agents'.
-  const checkAdminStatusAndFetchData = async (currentUser: User) => {
+  const fetchAdminData = async () => {
       try {
-          // 1. Încercăm să preluăm datele pe care doar un admin le poate accesa
-          const q = query(collection(db, "agents"), orderBy("createdAt", "desc"));
+          // Un admin poate lista toți agenții conform regulilor de securitate
+          const q = query(collection(db, "agents"));
           const querySnapshot = await getDocs(q);
           
-          // 2. Dacă interogarea reușește, utilizatorul ESTE admin.
-          setIsAdmin(true);
+          let agentsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Agent[];
 
-          const agentsDataPromises = querySnapshot.docs.map(async (agentDoc) => {
-              const agentData = { id: agentDoc.id, ...agentDoc.data() } as Agent;
-              
+          // Sortarea se face acum local, în cod, pentru a evita problemele de indexare.
+          agentsData = agentsData.sort((a, b) => {
+            const dateA = a.createdAt?.toDate() || new Date(0);
+            const dateB = b.createdAt?.toDate() || new Date(0);
+            return dateB.getTime() - dateA.getTime();
+          });
+
+          // Verificarea abonamentelor pentru fiecare agent
+          const agentsDataWithSubs = await Promise.all(
+            agentsData.map(async (agent) => {
               const subsQuery = query(
-                  collection(db, 'customers', agentDoc.id, 'subscriptions'), 
+                  collection(db, 'customers', agent.id, 'subscriptions'), 
                   where('status', 'in', ['trialing', 'active'])
               );
               const subsSnap = await getDocs(subsQuery);
-              agentData.hasSubscription = !subsSnap.empty;
-
-              return agentData;
-          });
+              return { ...agent, hasSubscription: !subsSnap.empty };
+            })
+          );
           
-          const agentsData = await Promise.all(agentsDataPromises);
-          setAllAgents(agentsData);
+          setAllAgents(agentsDataWithSubs);
 
       } catch (error: any) {
-          // 3. Dacă interogarea eșuează cu "permission-denied", utilizatorul NU este admin.
-          if (error.code === 'permission-denied') {
-              console.log("Acces refuzat. Utilizatorul nu este admin.");
-              setIsAdmin(false);
-          } else {
-              // Alte erori (ex: de rețea)
-              console.error("Error fetching agents:", error);
-          }
+          // Eșecul la preluarea datelor arată o problemă de permisiuni în firestore.rules
+          console.error("Error fetching agents data (check firestore.rules for 'list' permission):", error);
+          // Setăm isAdmin pe false pentru a afișa mesajul de eroare
+          setIsAdmin(false);
       } finally {
           setLoading(false);
       }

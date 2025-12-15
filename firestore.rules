@@ -9,31 +9,34 @@ service cloud.firestore {
     }
     
     function isAdmin() {
-      let adminEmails = ["alinmflavius@gmail.com"];
+      // Lista de admini este acum singura sursă de adevăr pentru permisiuni.
+      let adminEmails = ["alinmflavius@gmail.com", "mariusdan12@yahoo.com"];
       return request.auth.token.email in adminEmails;
     }
 
     // 1. REGULI PLATFORMĂ
     match /agents/{agentId} {
-      allow read: if isOwner(agentId) || isAdmin();
+      // Oricine își poate crea propriul document de agent, dar doar proprietarul îl poate modifica ulterior.
+      // Adminii pot citi datele oricărui agent, esențial pentru panoul de admin.
+      allow create: if request.auth.uid == agentId;
+      allow read, update, delete: if isOwner(agentId) || isAdmin();
       allow list: if isAdmin();
-      allow write: if isOwner(agentId); // Acoperă atât crearea, cât și actualizarea (inclusiv setDoc cu merge)
     }
 
     match /leads/{leadId} {
       allow create: if true;
-      allow read, update, delete: if request.auth != null && resource.data.agentId == request.auth.uid;
+      allow read, update, delete: if request.auth != null && (resource.data.agentId == request.auth.uid || isAdmin());
     }
 
     match /formTemplates/{formId} {
       allow read: if true;
       allow create: if request.auth != null;
-      allow update, delete: if request.auth != null && (resource.data.ownerId == request.auth.uid || resource.data.ownerId == null);
+      allow update, delete: if request.auth != null && (resource.data.ownerId == request.auth.uid || resource.data.ownerId == null || isAdmin());
     }
 
     match /analytics/{eventId} {
       allow create: if true;
-      allow read: if request.auth != null && resource.data.agentId == request.auth.uid;
+      allow read: if request.auth != null && (resource.data.agentId == request.auth.uid || isAdmin());
     }
 
     // 2. REGULI STRIPE
@@ -44,7 +47,8 @@ service cloud.firestore {
     }
 
     match /customers/{uid} {
-      allow read: if isOwner(uid);
+      // Adminul trebuie să poată citi datele de client pentru a verifica abonamentele.
+      allow read: if isOwner(uid) || isAdmin();
 
       match /checkout_sessions/{id} {
         allow read, write: if isOwner(uid);
