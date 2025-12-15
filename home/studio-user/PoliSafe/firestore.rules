@@ -9,10 +9,6 @@ service cloud.firestore {
     }
     
     function isAdmin() {
-<<<<<<< HEAD
-      // Lista de admini este acum singura sursă de adevăr pentru permisiuni.
-=======
->>>>>>> c7b5da5f1f29b569e752d48b9740ab7e32a25cb3
       let adminEmails = ["alinmflavius@gmail.com", "mariusdan12@yahoo.com"];
       return request.auth.token.email in adminEmails;
     }
