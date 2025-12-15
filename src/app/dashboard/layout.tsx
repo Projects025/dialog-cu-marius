@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { LayoutDashboard, Users, FileText, Menu, X, UserCircle, ShieldCheck } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 
-const ADMIN_EMAILS = ["alinmflavius@gmail.com"];
+const ADMIN_EMAILS = ["alinmflavius@gmail.com", "mariusdan12@yahoo.com"];
 
 const NavLink = ({ href, children, icon: Icon, onClick }: { href: string; children: ReactNode; icon: React.ElementType, onClick?: () => void }) => {
     const pathname = usePathname();
@@ -144,5 +144,3 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
     );
 }
-
-    
