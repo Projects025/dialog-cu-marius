@@ -137,11 +137,12 @@ const performDynamicCalculations = (data: FinancialData): FinancialData => {
     const parse = (value: any): number => {
         if (typeof value === 'number') return value;
         if (value === undefined || value === null || value === '') return 0;
+        
         const stringValue = String(value)
-            .replace(/[^0-9,.-]/g, '') // Elimină tot ce nu e cifră, virgulă, punct, minus
             .replace(/\./g, '')       // Elimină separatorii de mii (punct)
             .replace(',', '.');       // Înlocuiește virgula zecimală cu punct
-        const num = parseFloat(stringValue);
+        
+        const num = parseFloat(stringValue.replace(/[^0-9.-]/g, ''));
         return isNaN(num) ? 0 : num;
     };
 
@@ -160,9 +161,7 @@ const performDynamicCalculations = (data: FinancialData): FinancialData => {
     }
     
     if (newData.deficit1 !== undefined && data.deces_costuri_eveniment !== undefined && data.deces_proiecte_in_desfasurare !== undefined && data.deces_datorii_credite !== undefined) {
-        const costs = parse(data.deces_costuri_eveniment) + 
-                      parse(data.deces_proiecte_in_desfasurare) + 
-                      parse(data.deces_datorii_credite);
+        const costs = parse(data.deces_costuri_eveniment) + parse(data.deces_proiecte_in_desfasurare) + parse(data.deces_datorii_credite);
         newData.bruteDeficit = parse(newData.deficit1) + costs;
     }
     
@@ -180,15 +179,12 @@ const performDynamicCalculations = (data: FinancialData): FinancialData => {
 
     if (newData.deficit1 !== undefined && data.pensie_suma_proiecte !== undefined && data.pensie_datorii !== undefined && data.pensie_ani_speranta !== undefined) {
         const years = extractNumber(data.pensie_ani_speranta) || 1;
-        const needs = parse(newData.deficit1) + 
-                      (parse(data.pensie_suma_proiecte) * years) +
-                      parse(data.pensie_datorii);
+        const needs = parse(newData.deficit1) + (parse(data.pensie_suma_proiecte) * years) + parse(data.pensie_datorii);
         newData.bruteDeficit = needs;
     }
     
     if (newData.bruteDeficit !== undefined && data.pensie_asigurari_existente !== undefined && data.pensie_economii_existente !== undefined) {
-        const resources = parse(data.pensie_asigurari_existente) + 
-                          parse(data.pensie_economii_existente);
+        const resources = parse(data.pensie_asigurari_existente) + parse(data.pensie_economii_existente);
         newData.finalDeficit = parse(newData.bruteDeficit) - resources;
     }
 
@@ -201,15 +197,12 @@ const performDynamicCalculations = (data: FinancialData): FinancialData => {
 
     if (newData.deficit1 !== undefined && data.studii_suma_extra !== undefined && data.studii_suma_proiecte !== undefined && data.studii_nunta !== undefined && data.studii_ani_sustinere !== undefined) {
         const years = extractNumber(data.studii_ani_sustinere) || 1;
-        const extra = (parse(data.studii_suma_extra) * years) + 
-                      parse(data.studii_suma_proiecte) + 
-                      parse(data.studii_nunta);
+        const extra = (parse(data.studii_suma_extra) * years) + parse(data.studii_suma_proiecte) + parse(data.studii_nunta);
         newData.bruteDeficit = parse(newData.deficit1) + extra;
     }
     
     if (newData.bruteDeficit !== undefined && data.studii_economii_existente !== undefined && data.studii_asigurari_existente !== undefined) {
-        const resources = parse(data.studii_economii_existente) + 
-                          parse(data.studii_asigurari_existente);
+        const resources = parse(data.studii_economii_existente) + parse(data.studii_asigurari_existente);
         const perChild = parse(newData.bruteDeficit) - resources;
         newData.finalDeficitOneChild = perChild;
         
@@ -219,9 +212,9 @@ const performDynamicCalculations = (data: FinancialData): FinancialData => {
         }
     }
 
-
     return newData;
 };
+
 
 const countProgressStepsInPath = (flow: ConversationFlow, startStepId: string): number => {
     if (!startStepId || !flow[startStepId]) return 0;
