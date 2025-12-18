@@ -315,7 +315,6 @@ export default function ChatAppClient() {
     useEffect(() => {
         renderStepRef.current = async (stepId: string) => {
             currentStateRef.current = stepId;
-            userDataRef.current = performDynamicCalculations(userDataRef.current);
             const step = allFlows[stepId];
         
             if (!step) {
@@ -415,6 +414,9 @@ export default function ChatAppClient() {
             if (userMessageContent && userMessageContent.trim() !== '') {
                  addMessage({ author: "user", type: "response" }, userMessageContent);
             }
+            
+            // Call calculation function AFTER saving the user response
+            userDataRef.current = performDynamicCalculations(userDataRef.current);
 
             if (step.branchStart) {
                 const nextStepIdForBranch = typeof response === 'object' && response.nextStep ? response.nextStep : (typeof step.nextStep === 'function' ? step.nextStep(response) : step.nextStep);
@@ -603,5 +605,3 @@ export default function ChatAppClient() {
         </div>
     );
 }
-
-    
