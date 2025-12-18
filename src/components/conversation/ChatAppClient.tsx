@@ -138,9 +138,10 @@ const performDynamicCalculations = (data: FinancialData): FinancialData => {
         if (typeof value === 'number') return value;
         if (value === undefined || value === null || value === '') return 0;
         
+        // Înlocuiește punctele (separator de mii) și virgula zecimală
         const stringValue = String(value)
-            .replace(/\./g, '')       // Elimină separatorii de mii (punct)
-            .replace(',', '.');       // Înlocuiește virgula zecimală cu punct
+            .replace(/\./g, '')       
+            .replace(',', '.');       
         
         const num = parseFloat(stringValue.replace(/[^0-9.-]/g, ''));
         return isNaN(num) ? 0 : num;
@@ -214,6 +215,7 @@ const performDynamicCalculations = (data: FinancialData): FinancialData => {
 
     return newData;
 };
+
 
 
 const countProgressStepsInPath = (flow: ConversationFlow, startStepId: string): number => {
@@ -300,7 +302,7 @@ export default function ChatAppClient() {
     
     const formatMessage = (template: string): string => {
         if (!template) return "";
-        return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+        return template.replace(/\{(\w+)\}/g, (match, key) => {
             const value = userDataRef.current[key as keyof FinancialData];
             if (value !== undefined && value !== null) {
                 if (typeof value === 'number') {
@@ -308,7 +310,7 @@ export default function ChatAppClient() {
                 }
                 return String(value);
             }
-            return match; // Keep placeholder if data not available
+            return match; 
         });
     };
 
@@ -618,3 +620,5 @@ export default function ChatAppClient() {
         </div>
     );
 }
+
+    
