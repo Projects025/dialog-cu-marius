@@ -133,12 +133,12 @@ const calculateDynamicDelay = (text: string): number => {
 
 const performDynamicCalculations = (data: FinancialData): FinancialData => {
     const newData = { ...data };
-    
-    const parse = (val: any): number => {
-        if (val === undefined || val === null) return 0;
-        if (typeof val === 'number') return val;
-        const clean = String(val).replace(/[^0-9.-]/g, '');
-        const num = parseFloat(clean);
+
+    const parse = (value: any): number => {
+        if (value === undefined || value === null || value === '') return 0;
+        if (typeof value === 'number') return value;
+        const stringValue = String(value).replace(/[^0-9,.-]/g, '').replace(',', '.');
+        const num = parseFloat(stringValue);
         return isNaN(num) ? 0 : num;
     };
     
@@ -150,71 +150,72 @@ const performDynamicCalculations = (data: FinancialData): FinancialData => {
     };
 
     // --- DECES ---
-    if (newData.deces_suma_lunara !== undefined && newData.deces_perioada_suport !== undefined) {
-        const sum = parse(newData.deces_suma_lunara);
-        const years = extractNumber(newData.deces_perioada_suport);
+    if (data.deces_suma_lunara !== undefined && data.deces_perioada_suport !== undefined) {
+        const sum = parse(data.deces_suma_lunara);
+        const years = extractNumber(data.deces_perioada_suport);
         newData.deficit1 = sum * years * 12;
     }
     
-    if (newData.deficit1 !== undefined && newData.deces_costuri_eveniment !== undefined && newData.deces_proiecte_in_desfasurare !== undefined && newData.deces_datorii_credite !== undefined) {
-        const costs = parse(newData.deces_costuri_eveniment) + 
-                      parse(newData.deces_proiecte_in_desfasurare) + 
-                      parse(newData.deces_datorii_credite);
-        newData.bruteDeficit = newData.deficit1 + costs;
+    if (data.deficit1 !== undefined && data.deces_costuri_eveniment !== undefined && data.deces_proiecte_in_desfasurare !== undefined && data.deces_datorii_credite !== undefined) {
+        const costs = parse(data.deces_costuri_eveniment) + 
+                      parse(data.deces_proiecte_in_desfasurare) + 
+                      parse(data.deces_datorii_credite);
+        newData.bruteDeficit = parse(newData.deficit1) + costs;
     }
     
-    if (newData.bruteDeficit !== undefined && newData.deces_asigurari_existente !== undefined && newData.deces_economii_existente !== undefined) {
-        const resources = parse(newData.deces_asigurari_existente) + parse(newData.deces_economii_existente);
-        newData.finalDeficit = newData.bruteDeficit - resources;
+    if (data.bruteDeficit !== undefined && data.deces_asigurari_existente !== undefined && data.deces_economii_existente !== undefined) {
+        const resources = parse(data.deces_asigurari_existente) + parse(data.deces_economii_existente);
+        newData.finalDeficit = parse(newData.bruteDeficit) - resources;
     }
     
     // --- PENSIONARE ---
-    if (newData.pensie_suma_lunara_necesara !== undefined && newData.pensie_ani_speranta !== undefined) {
-        const monthly = parse(newData.pensie_suma_lunara_necesara);
-        const years = extractNumber(newData.pensie_ani_speranta);
+    if (data.pensie_suma_lunara_necesara !== undefined && data.pensie_ani_speranta !== undefined) {
+        const monthly = parse(data.pensie_suma_lunara_necesara);
+        const years = extractNumber(data.pensie_ani_speranta);
         newData.deficit1 = monthly * years * 12;
     }
 
-    if (newData.deficit1 !== undefined && newData.pensie_suma_proiecte !== undefined && newData.pensie_datorii !== undefined) {
-        const years = extractNumber(newData.pensie_ani_speranta) || 1; // Default to 1 to avoid multiplying by 0
-        const needs = newData.deficit1 + 
-                      (parse(newData.pensie_suma_proiecte) * years) +
-                      parse(newData.pensie_datorii);
+    if (data.deficit1 !== undefined && data.pensie_suma_proiecte !== undefined && data.pensie_datorii !== undefined && data.pensie_ani_speranta !== undefined) {
+        const years = extractNumber(data.pensie_ani_speranta) || 1; // Default to 1 to avoid multiplying by 0
+        const needs = parse(newData.deficit1) + 
+                      (parse(data.pensie_suma_proiecte) * years) +
+                      parse(data.pensie_datorii);
         newData.bruteDeficit = needs;
     }
     
-    if (newData.bruteDeficit !== undefined && newData.pensie_asigurari_existente !== undefined && newData.pensie_economii_existente !== undefined) {
-        const resources = parse(newData.pensie_asigurari_existente) + 
-                          parse(newData.pensie_economii_existente);
-        newData.finalDeficit = newData.bruteDeficit - resources;
+    if (data.bruteDeficit !== undefined && data.pensie_asigurari_existente !== undefined && data.pensie_economii_existente !== undefined) {
+        const resources = parse(data.pensie_asigurari_existente) + 
+                          parse(data.pensie_economii_existente);
+        newData.finalDeficit = parse(newData.bruteDeficit) - resources;
     }
 
     // --- STUDII COPII ---
-    if (newData.studii_suma_cost_anual !== undefined && newData.studii_ani_sustinere !== undefined) {
-        const annual = parse(newData.studii_suma_cost_anual);
-        const years = extractNumber(newData.studii_ani_sustinere);
+    if (data.studii_suma_cost_anual !== undefined && data.studii_ani_sustinere !== undefined) {
+        const annual = parse(data.studii_suma_cost_anual);
+        const years = extractNumber(data.studii_ani_sustinere);
         newData.deficit1 = annual * years;
     }
 
-    if (newData.deficit1 !== undefined && newData.studii_suma_extra !== undefined && newData.studii_suma_proiecte !== undefined && newData.studii_nunta !== undefined) {
-        const years = extractNumber(newData.studii_ani_sustinere) || 1;
-        const extra = (parse(newData.studii_suma_extra) * years) + 
-                      parse(newData.studii_suma_proiecte) + 
-                      parse(newData.studii_nunta);
-        newData.bruteDeficit = newData.deficit1 + extra;
+    if (data.deficit1 !== undefined && data.studii_suma_extra !== undefined && data.studii_suma_proiecte !== undefined && data.studii_nunta !== undefined && data.studii_ani_sustinere !== undefined) {
+        const years = extractNumber(data.studii_ani_sustinere) || 1;
+        const extra = (parse(data.studii_suma_extra) * years) + 
+                      parse(data.studii_suma_proiecte) + 
+                      parse(data.studii_nunta);
+        newData.bruteDeficit = parse(newData.deficit1) + extra;
     }
-
-    if (newData.bruteDeficit !== undefined && newData.studii_economii_existente !== undefined && newData.studii_asigurari_existente !== undefined) {
-        const resources = parse(newData.studii_economii_existente) + 
-                          parse(newData.studii_asigurari_existente);
-        const perChild = newData.bruteDeficit - resources;
+    
+    if (data.bruteDeficit !== undefined && data.studii_economii_existente !== undefined && data.studii_asigurari_existente !== undefined) {
+        const resources = parse(data.studii_economii_existente) + 
+                          parse(data.studii_asigurari_existente);
+        const perChild = parse(newData.bruteDeficit) - resources;
         newData.finalDeficitOneChild = perChild;
         
-        if (newData.studii_numar_copii !== undefined) {
-            const children = parse(newData.studii_numar_copii) || 1;
+        if (data.studii_numar_copii !== undefined) {
+            const children = parse(data.studii_numar_copii) || 1;
             newData.finalDeficit = perChild * children;
         }
     }
+
 
     return newData;
 };
