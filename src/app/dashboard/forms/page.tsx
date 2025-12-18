@@ -310,7 +310,7 @@ export default function FormsPage() {
             },
             alege_subiect: {
               message: [
-                "Salut! Sunt {{agentName}}, agentul tău de asigurări.",
+                "Salut! Sunt {agentName}, agentul tău de asigurări.",
                 "În următoarele 3 minute te invit la un moment de reflecție și de analiză prin care să descoperi care este gradul tău de expunere financiară.",
                 "Această analiză nu implică nicio obligație din partea ta.",
                 "**Care dintre aceste subiecte ar fi de interes pentru tine la acest moment?**"
