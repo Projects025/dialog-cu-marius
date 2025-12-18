@@ -132,19 +132,22 @@ const calculateDynamicDelay = (text: string): number => {
 }
 
 const performDynamicCalculations = (data: FinancialData): FinancialData => {
-    const newData = { ...data };
+    const newData: FinancialData = { ...data };
 
     const parse = (value: any): number => {
-        if (value === undefined || value === null || value === '') return 0;
         if (typeof value === 'number') return value;
-        const stringValue = String(value).replace(/[^0-9,.-]/g, '').replace(',', '.');
+        if (value === undefined || value === null || value === '') return 0;
+        const stringValue = String(value)
+            .replace(/[^0-9,.-]/g, '') // Elimină tot ce nu e cifră, virgulă, punct, minus
+            .replace(/\./g, '')       // Elimină separatorii de mii (punct)
+            .replace(',', '.');       // Înlocuiește virgula zecimală cu punct
         const num = parseFloat(stringValue);
         return isNaN(num) ? 0 : num;
     };
-    
+
     const extractNumber = (val: any): number => {
-        if (val === undefined || val === null) return 0;
         if (typeof val === 'number') return val;
+        if (val === undefined || val === null) return 0;
         const match = String(val).match(/\d+/);
         return match ? parseInt(match[0], 10) : 0;
     };
@@ -156,14 +159,14 @@ const performDynamicCalculations = (data: FinancialData): FinancialData => {
         newData.deficit1 = sum * years * 12;
     }
     
-    if (data.deficit1 !== undefined && data.deces_costuri_eveniment !== undefined && data.deces_proiecte_in_desfasurare !== undefined && data.deces_datorii_credite !== undefined) {
+    if (newData.deficit1 !== undefined && data.deces_costuri_eveniment !== undefined && data.deces_proiecte_in_desfasurare !== undefined && data.deces_datorii_credite !== undefined) {
         const costs = parse(data.deces_costuri_eveniment) + 
                       parse(data.deces_proiecte_in_desfasurare) + 
                       parse(data.deces_datorii_credite);
         newData.bruteDeficit = parse(newData.deficit1) + costs;
     }
     
-    if (data.bruteDeficit !== undefined && data.deces_asigurari_existente !== undefined && data.deces_economii_existente !== undefined) {
+    if (newData.bruteDeficit !== undefined && data.deces_asigurari_existente !== undefined && data.deces_economii_existente !== undefined) {
         const resources = parse(data.deces_asigurari_existente) + parse(data.deces_economii_existente);
         newData.finalDeficit = parse(newData.bruteDeficit) - resources;
     }
@@ -175,15 +178,15 @@ const performDynamicCalculations = (data: FinancialData): FinancialData => {
         newData.deficit1 = monthly * years * 12;
     }
 
-    if (data.deficit1 !== undefined && data.pensie_suma_proiecte !== undefined && data.pensie_datorii !== undefined && data.pensie_ani_speranta !== undefined) {
-        const years = extractNumber(data.pensie_ani_speranta) || 1; // Default to 1 to avoid multiplying by 0
+    if (newData.deficit1 !== undefined && data.pensie_suma_proiecte !== undefined && data.pensie_datorii !== undefined && data.pensie_ani_speranta !== undefined) {
+        const years = extractNumber(data.pensie_ani_speranta) || 1;
         const needs = parse(newData.deficit1) + 
                       (parse(data.pensie_suma_proiecte) * years) +
                       parse(data.pensie_datorii);
         newData.bruteDeficit = needs;
     }
     
-    if (data.bruteDeficit !== undefined && data.pensie_asigurari_existente !== undefined && data.pensie_economii_existente !== undefined) {
+    if (newData.bruteDeficit !== undefined && data.pensie_asigurari_existente !== undefined && data.pensie_economii_existente !== undefined) {
         const resources = parse(data.pensie_asigurari_existente) + 
                           parse(data.pensie_economii_existente);
         newData.finalDeficit = parse(newData.bruteDeficit) - resources;
@@ -196,7 +199,7 @@ const performDynamicCalculations = (data: FinancialData): FinancialData => {
         newData.deficit1 = annual * years;
     }
 
-    if (data.deficit1 !== undefined && data.studii_suma_extra !== undefined && data.studii_suma_proiecte !== undefined && data.studii_nunta !== undefined && data.studii_ani_sustinere !== undefined) {
+    if (newData.deficit1 !== undefined && data.studii_suma_extra !== undefined && data.studii_suma_proiecte !== undefined && data.studii_nunta !== undefined && data.studii_ani_sustinere !== undefined) {
         const years = extractNumber(data.studii_ani_sustinere) || 1;
         const extra = (parse(data.studii_suma_extra) * years) + 
                       parse(data.studii_suma_proiecte) + 
@@ -204,7 +207,7 @@ const performDynamicCalculations = (data: FinancialData): FinancialData => {
         newData.bruteDeficit = parse(newData.deficit1) + extra;
     }
     
-    if (data.bruteDeficit !== undefined && data.studii_economii_existente !== undefined && data.studii_asigurari_existente !== undefined) {
+    if (newData.bruteDeficit !== undefined && data.studii_economii_existente !== undefined && data.studii_asigurari_existente !== undefined) {
         const resources = parse(data.studii_economii_existente) + 
                           parse(data.studii_asigurari_existente);
         const perChild = parse(newData.bruteDeficit) - resources;
@@ -218,21 +221,6 @@ const performDynamicCalculations = (data: FinancialData): FinancialData => {
 
 
     return newData;
-};
-
-
-const formatMessage = (template: string, data: any): string => {
-    if (!template) return "";
-    return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
-        const value = data[key];
-        if (value !== undefined && value !== null) {
-            if (typeof value === 'number') {
-                return value.toLocaleString('ro-RO');
-            }
-            return String(value);
-        }
-        return match; // Keep placeholder if data not available
-    });
 };
 
 const countProgressStepsInPath = (flow: ConversationFlow, startStepId: string): number => {
@@ -316,6 +304,20 @@ export default function ChatAppClient() {
     const currentProgressStep = useRef(0);
     const totalProgressSteps = useRef(99); // Start with a high number
     const initialProgressStepsCount = useRef(0);
+    
+    const formatMessage = (template: string): string => {
+        if (!template) return "";
+        return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+            const value = userDataRef.current[key as keyof FinancialData];
+            if (value !== undefined && value !== null) {
+                if (typeof value === 'number') {
+                    return value.toLocaleString('ro-RO');
+                }
+                return String(value);
+            }
+            return match; // Keep placeholder if data not available
+        });
+    };
 
     const addMessage = useCallback((message: Omit<Message, "id" | "content">, content: string = "") => {
         const newMessage = { ...message, id: conversationIdRef.current++, content };
@@ -354,7 +356,7 @@ export default function ChatAppClient() {
             const messagesToShow = Array.isArray(rawMessageContent) ? rawMessageContent : (rawMessageContent ? [rawMessageContent] : []);
 
             for (const [index, msg] of messagesToShow.entries()) {
-                const formattedMessage = formatMessage(msg, userDataRef.current);
+                const formattedMessage = formatMessage(msg);
                 setIsTyping(true);
                 await delay(step.delay || 800);
                 setIsTyping(false);
@@ -457,7 +459,7 @@ export default function ChatAppClient() {
             
             await renderStep(nextStepId);
         };
-    }, [allFlows, addMessage, loadedFlow]);
+    }, [allFlows, addMessage, loadedFlow, formatMessage]);
 
 
     const startConversation = useCallback(async () => {
