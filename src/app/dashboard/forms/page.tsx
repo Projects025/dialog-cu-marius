@@ -327,25 +327,25 @@ export default function FormsPage() {
             deces_motiv: {
                 message: "Care sunt motivele pentru care ai ales Deces (Siguranța Familiei)?",
                 actionType: "input",
-                options: { type: "text", placeholder: "Scrie aici (minim 30 caractere)", minLength: 30 },
+                options: { type: "text", placeholder: "Scrie aici (minim 10 caractere)", minLength: 10 },
                 nextStep: "deces_intro_1"
             },
             pensie_motiv: {
                 message: "Care sunt motivele pentru care ai ales Pensionare?",
                 actionType: "input",
-                options: { type: "text", placeholder: "Scrie aici (minim 30 caractere)", minLength: 30 },
+                options: { type: "text", placeholder: "Scrie aici (minim 10 caractere)", minLength: 10 },
                 nextStep: "pensie_intro_1"
             },
             studii_motiv: {
                 message: "Care sunt motivele pentru care ai ales Viitorul Copiilor?",
                 actionType: "input",
-                options: { type: "text", placeholder: "Scrie aici (minim 30 caractere)", minLength: 30 },
+                options: { type: "text", placeholder: "Scrie aici (minim 10 caractere)", minLength: 10 },
                 nextStep: "studii_intro_1"
             },
             sanatate_motiv: {
                 message: "Care sunt motivele pentru care ai ales Sănătate (Boli Grave)?",
                 actionType: "input",
-                options: { type: "text", placeholder: "Scrie aici (minim 30 caractere)", minLength: 30 },
+                options: { type: "text", placeholder: "Scrie aici (minim 10 caractere)", minLength: 10 },
                 nextStep: "sanatate_intro_1"
             },
             deces_intro_1: { 
@@ -950,5 +950,7 @@ export default function FormsPage() {
     </div>
   );
 }
+
+    
 
     
