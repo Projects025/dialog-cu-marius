@@ -10,7 +10,7 @@ export default function TermeniPage() {
           <h1 className="text-4xl font-bold mb-8 text-primary">Termeni și Condiții</h1>
           <div className="prose prose-invert max-w-none text-slate-300 space-y-4">
             <p>Conținutul pentru această pagină va fi adăugat ulterior.</p>
-            <p>Această secțiune va detalia regulile și liniile directoare pentru utilizarea platformei "Dialog cu Marius". Va acoperi aspecte precum responsabilitățile utilizatorilor, drepturile de proprietate intelectuală, limitările de răspundere și legislația aplicabilă.</p>
+            <p>Această secțiune va detalia regulile și liniile directoare pentru utilizarea platformei PoliSafe. Va acoperi aspecte precum responsabilitățile utilizatorilor, drepturile de proprietate intelectuală, limitările de răspundere și legislația aplicabilă.</p>
             <h2 className="text-2xl font-semibold text-white pt-4">1. Definiții</h2>
             <p>Aici vor fi definiți termenii cheie folosiți în document, cum ar fi "Serviciu", "Utilizator", "Agent", "Client Final", "Conținut".</p>
             <h2 className="text-2xl font-semibold text-white pt-4">2. Utilizarea Serviciului</h2>

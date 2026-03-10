@@ -1,4 +1,3 @@
-
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
@@ -13,8 +12,19 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "PoliSafe",
-  description: "Asistentul tău financiar inteligent",
+  title: "PoliSafe - Analiză Financiară Inteligentă",
+  description: "Descoperă gradul tău de expunere financiară și protejează viitorul familiei tale cu PoliSafe.",
+  openGraph: {
+    title: "PoliSafe - Analiză Financiară",
+    description: "Analiză rapidă și inteligentă pentru Deces, Pensie, Studii și Sănătate.",
+    type: "website",
+    siteName: "PoliSafe",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PoliSafe - Analiză Financiară",
+    description: "Analiză rapidă și inteligentă pentru protecția familiei tale.",
+  },
   icons: {
     icon: '/icon.png?v=2',
     apple: '/icon.png?v=2',
